@@ -18,7 +18,7 @@ Antes de clonar el proyecto, asegurate de tener instalado:
 |---|---|---|
 | Java (JDK) | 21 | https://adoptium.net |
 | Maven | 3.9+ | https://maven.apache.org/download.cgi |
-| Node.js | 18+ | https://nodejs.org |
+| Node.js | 20+ | https://nodejs.org |
 | Angular CLI | latest | `npm install -g @angular/cli` |
 | Docker | latest | https://www.docker.com/get-started |
 
@@ -57,7 +57,7 @@ Esto levanta PostgreSQL automáticamente en el puerto `5432` con la base de dato
 
 ```bash
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 El backend queda disponible en `http://localhost:8080`
@@ -68,6 +68,7 @@ Abrí otra terminal:
 
 ```bash
 cd frontend
+npm install
 ng serve
 ```
 
@@ -82,7 +83,7 @@ El frontend queda disponible en `http://localhost:4200`
 docker compose up -d
 
 # Levantar el backend (en una terminal)
-cd backend && mvn spring-boot:run
+cd backend && ./mvnw spring-boot:run
 
 # Levantar el frontend (en otra terminal)
 cd frontend && ng serve
