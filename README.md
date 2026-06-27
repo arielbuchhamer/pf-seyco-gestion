@@ -19,7 +19,7 @@ Antes de clonar el proyecto, asegurate de tener instalado:
 | Java (JDK) | 21 | https://adoptium.net |
 | Maven | 3.9+ | https://maven.apache.org/download.cgi |
 | Node.js | 20+ | https://nodejs.org |
-| Angular CLI | latest | `npm install -g @angular/cli` |
+| Angular CLI | latest | incluido en `node_modules` (no requiere instalación global) |
 | Docker | latest | https://www.docker.com/get-started |
 
 ---
@@ -69,7 +69,7 @@ Abrí otra terminal:
 ```bash
 cd frontend
 npm install
-ng serve
+npm start
 ```
 
 El frontend queda disponible en `http://localhost:4200`
@@ -86,7 +86,7 @@ docker compose up -d
 cd backend && ./mvnw spring-boot:run
 
 # Levantar el frontend (en otra terminal)
-cd frontend && ng serve
+cd frontend && npm start
 ```
 
 ### Apagar la base de datos
