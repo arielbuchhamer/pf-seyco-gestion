@@ -57,7 +57,7 @@ Esto levanta PostgreSQL automáticamente en el puerto `5432` con la base de dato
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 El backend queda disponible en `http://localhost:8080`
@@ -83,7 +83,7 @@ El frontend queda disponible en `http://localhost:4200`
 docker compose up -d
 
 # Levantar el backend (en una terminal)
-cd backend && ./mvnw spring-boot:run
+cd backend && mvn spring-boot:run
 
 # Levantar el frontend (en otra terminal)
 cd frontend && npm start
