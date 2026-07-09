@@ -1,1 +1,39 @@
-/* You can add global styles to this file, and also import other style files */
+/* Paleta y variables compartidas por toda la app — mantiene el CSS de cada
+   componente liviano (hay un budget de 4kB/8kB por componente en angular.json). */
+:root {
+  --color-bg: #f4f6fb;
+  --color-surface: #ffffff;
+  --color-ink: #12131a;
+  --color-primary: #2f6fed;
+  --color-primary-dark: #1c4fd6;
+  --color-primary-light: #7fb1ff;
+  --color-text: #1c1f2a;
+  --color-text-muted: #6b7280;
+  --color-border: #e2e5ec;
+  --color-danger: #d6483f;
+
+  --radius-lg: 24px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+
+  --shadow-card: 0 24px 60px -24px rgba(31, 45, 90, 0.35);
+
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+}

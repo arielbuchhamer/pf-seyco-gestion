@@ -27,3 +27,6 @@ yarn-error.log
 # ── OS ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Notas internas (no forman parte de la entrega) ────
+CLAUDE.md
