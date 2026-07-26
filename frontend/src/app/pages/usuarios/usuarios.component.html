@@ -22,8 +22,8 @@
       <tbody>
         @for (usuario of usuarios(); track usuario.id) {
           <tr>
-            <td>{{ usuario.email }}</td>
-            <td>{{ usuario.rol }}</td>
+            <td data-label="Email">{{ usuario.email }}</td>
+            <td data-label="Rol">{{ usuario.rol }}</td>
             <td class="table__actions">
               <button
                 type="button"

@@ -12,6 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
 
@@ -213,4 +215,69 @@
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.25rem;
+  }
+
+  .table {
+    box-shadow: none;
+    background: none;
+    border-radius: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .table tr {
+    display: block;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .table tr td:last-child {
+    border-bottom: 0;
+  }
+
+  .table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
+
+  .table td.table__actions {
+    justify-content: flex-end;
+  }
+
+  .icon-btn:first-child {
+    margin-left: 0;
+  }
+
+  .dialog {
+    width: min(26rem, 92vw);
+    padding: 1.5rem;
+  }
 }
