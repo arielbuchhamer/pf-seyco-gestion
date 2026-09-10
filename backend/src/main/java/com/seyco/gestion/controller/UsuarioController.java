@@ -15,14 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.seyco.gestion.entity.Usuario;
-import com.seyco.gestion.service.DatosInvalidosException;
-import com.seyco.gestion.service.EmailYaRegistradoException;
-import com.seyco.gestion.service.PasswordInvalidoException;
-import com.seyco.gestion.service.UsuarioNoEncontradoException;
 import com.seyco.gestion.service.UsuarioService;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 // Solo accesible para ADMINISTRADOR: restringido en SecurityConfig por path (/api/usuarios/**).
 @RestController
@@ -55,27 +50,5 @@ public class UsuarioController {
 	public ResponseEntity<Void> eliminar(@PathVariable Long id, Authentication authentication) {
 		usuarioService.eliminar(id, authentication.getName());
 		return ResponseEntity.noContent().build();
-	}
-
-	// Spring Boot oculta el mensaje real de la excepción en el body por defecto (server.error.include-message=never);
-	// estos handlers lo devuelven explícito para que el frontend pueda mostrar el motivo real, no un genérico.
-	@ExceptionHandler(PasswordInvalidoException.class)
-	public ResponseEntity<String> handlePasswordInvalido(PasswordInvalidoException ex) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-	}
-
-	@ExceptionHandler(EmailYaRegistradoException.class)
-	public ResponseEntity<String> handleEmailYaRegistrado(EmailYaRegistradoException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-	}
-
-	@ExceptionHandler(DatosInvalidosException.class)
-	public ResponseEntity<String> handleDatosInvalidos(DatosInvalidosException ex) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-	}
-
-	@ExceptionHandler(UsuarioNoEncontradoException.class)
-	public ResponseEntity<String> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
 	}
 }

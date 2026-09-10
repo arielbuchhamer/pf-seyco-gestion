@@ -19,10 +19,10 @@ public class AuthService {
 
 	public Usuario login(Usuario credenciales) {
 		Usuario usuario = usuarioRepository.findByEmail(credenciales.getEmail())
-				.orElseThrow(CredencialesInvalidasException::new);
+				.orElseThrow(ServiceException::credencialesInvalidas);
 
 		if (!passwordEncoder.matches(credenciales.getClave(), usuario.getClave())) {
-			throw new CredencialesInvalidasException();
+			throw ServiceException.credencialesInvalidas();
 		}
 
 		return usuario;
@@ -30,6 +30,6 @@ public class AuthService {
 
 	public Usuario buscarPorEmail(String email) {
 		return usuarioRepository.findByEmail(email)
-				.orElseThrow(CredencialesInvalidasException::new);
+				.orElseThrow(ServiceException::credencialesInvalidas);
 	}
 }

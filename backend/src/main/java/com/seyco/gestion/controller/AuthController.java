@@ -4,11 +4,9 @@ import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.security.JwtAuthenticationFilter;
 import com.seyco.gestion.service.AuthService;
-import com.seyco.gestion.service.CredencialesInvalidasException;
 import com.seyco.gestion.service.JwtService;
 
 import jakarta.validation.Valid;
@@ -59,11 +56,6 @@ public class AuthController {
 	public ResponseEntity<Usuario> me(Authentication authentication) {
 		Usuario usuario = authService.buscarPorEmail(authentication.getName());
 		return ResponseEntity.ok(usuario);
-	}
-
-	@ExceptionHandler(CredencialesInvalidasException.class)
-	public ResponseEntity<String> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
 	}
 
 	private ResponseCookie buildCookie(String token, long maxAgeMs) {

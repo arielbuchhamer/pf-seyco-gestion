@@ -30,13 +30,13 @@ public class UsuarioService {
 
 	public Usuario crear(Usuario nuevo) {
 		if (nuevo.getRol() == null) {
-			throw new DatosInvalidosException("El rol es obligatorio.");
+			throw ServiceException.datosInvalidos("El rol es obligatorio.");
 		}
 		if (!PASSWORD_PATTERN.matcher(nuevo.getClave()).matches()) {
-			throw new PasswordInvalidoException();
+			throw ServiceException.datosInvalidos("La contraseña debe tener al menos 8 caracteres y un número.");
 		}
 		if (usuarioRepository.findByEmail(nuevo.getEmail()).isPresent()) {
-			throw new EmailYaRegistradoException();
+			throw ServiceException.conflicto("Ya existe un usuario registrado con ese email.");
 		}
 
 		nuevo.setClave(passwordEncoder.encode(nuevo.getClave()));
@@ -47,19 +47,19 @@ public class UsuarioService {
 	// por eso las validaciones se hacen a mano en vez de con anotaciones de la entidad.
 	public Usuario actualizar(Long id, Usuario cambios) {
 		Usuario existente = usuarioRepository.findById(id)
-				.orElseThrow(UsuarioNoEncontradoException::new);
+				.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
 
 		if (cambios.getEmail() == null || cambios.getEmail().isBlank()) {
-			throw new DatosInvalidosException("El email es obligatorio.");
+			throw ServiceException.datosInvalidos("El email es obligatorio.");
 		}
 		if (cambios.getRol() == null) {
-			throw new DatosInvalidosException("El rol es obligatorio.");
+			throw ServiceException.datosInvalidos("El rol es obligatorio.");
 		}
 
 		usuarioRepository.findByEmail(cambios.getEmail())
 				.filter(otro -> !otro.getId().equals(id))
 				.ifPresent(otro -> {
-					throw new EmailYaRegistradoException();
+					throw ServiceException.conflicto("Ya existe un usuario registrado con ese email.");
 				});
 
 		existente.setEmail(cambios.getEmail());
@@ -68,7 +68,7 @@ public class UsuarioService {
 		String nuevaClave = cambios.getClave();
 		if (nuevaClave != null && !nuevaClave.isBlank()) {
 			if (!PASSWORD_PATTERN.matcher(nuevaClave).matches()) {
-				throw new PasswordInvalidoException();
+				throw ServiceException.datosInvalidos("La contraseña debe tener al menos 8 caracteres y un número.");
 			}
 			existente.setClave(passwordEncoder.encode(nuevaClave));
 		}
@@ -78,10 +78,10 @@ public class UsuarioService {
 
 	public void eliminar(Long id, String emailSolicitante) {
 		Usuario existente = usuarioRepository.findById(id)
-				.orElseThrow(UsuarioNoEncontradoException::new);
+				.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
 
 		if (existente.getEmail().equalsIgnoreCase(emailSolicitante)) {
-			throw new DatosInvalidosException("No podés eliminar tu propio usuario.");
+			throw ServiceException.datosInvalidos("No podés eliminar tu propio usuario.");
 		}
 
 		usuarioRepository.delete(existente);
