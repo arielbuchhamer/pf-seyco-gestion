@@ -1,0 +1,252 @@
+:host {
+  display: block;
+}
+
+/* .page (styles.css global) trae max-width:60rem pensado para formularios/tablas angostas;
+   acá hace falta más ancho real para que seguimiento/rendimiento y tareas convivan
+   lado a lado. El selector combinado .page.proyecto-page gana por especificidad sin
+   tocar la clase compartida ni duplicar el resto de sus reglas (padding, centrado). */
+.page.proyecto-page {
+  max-width: 90rem;
+}
+
+.proyecto-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) 1fr;
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.proyecto-layout__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Queda a la vista mientras se scrollea el tablero de tareas, para comparar los
+     números contra las tarjetas sin tener que volver arriba. */
+  position: sticky;
+  top: 1.5rem;
+}
+
+.proyecto-layout__main {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .proyecto-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .proyecto-layout__side {
+    position: static;
+  }
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.page__header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.descripcion {
+  margin: 0 0 1.5rem;
+  color: var(--color-text);
+}
+
+/* Seguimiento (foto del ahora) en azul, Rendimiento (evaluación) en cobre — mismo código
+   de color que separa "en curso" (azul) de un juicio de valor (bien/mal) en el resto de la
+   vista, para que las dos cards no se lean como bloques blancos intercambiables. */
+.proyecto-layout__side .card {
+  border-top: 3px solid var(--color-primary);
+}
+
+.proyecto-layout__side .card:nth-child(2) {
+  border-top-color: var(--color-accent);
+}
+
+.proyecto-layout__side h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--color-ink);
+}
+
+.stat-number {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.stat-number--bad {
+  color: var(--color-danger);
+}
+
+.stat-number--good {
+  color: var(--color-success-dark);
+}
+
+.progress-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+}
+
+.estado-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.estado-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.table--compact th,
+.table--compact td {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.desvio--malo {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.desvio--bueno {
+  color: var(--color-success-dark);
+  font-weight: 600;
+}
+
+.tareas-header {
+  margin-top: 0.5rem;
+}
+
+.tareas-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-ink);
+}
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.kanban__column h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.kanban__column h3::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Mismo mapeo de color que .badge--* en styles.css: pendiente neutro, en progreso azul,
+   completada verde. El orden de las columnas es fijo (ver estadosTarea en el componente). */
+.kanban__column:nth-child(2) h3::before {
+  background: var(--color-primary);
+}
+
+.kanban__column:nth-child(3) h3::before {
+  background: var(--color-success);
+}
+
+.kanban__card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.kanban__column:nth-child(2) .kanban__card {
+  border-left-color: var(--color-primary);
+}
+
+.kanban__column:nth-child(3) .kanban__card {
+  border-left-color: var(--color-success);
+}
+
+.kanban__card-title {
+  margin: 0 0 0.3rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.kanban__card-desc {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+}
+
+.kanban__card-meta {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+}
+
+.kanban__estado-select {
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.kanban__empty {
+  font-size: 0.85rem;
+}
+
+.kanban__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.kanban__pager .icon-btn {
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-left: 0;
+}
+
+@media (max-width: 900px) {
+  .kanban {
+    grid-template-columns: 1fr;
+  }
+}

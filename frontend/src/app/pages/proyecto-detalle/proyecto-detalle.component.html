@@ -1,0 +1,269 @@
+<section class="page proyecto-page">
+  <a routerLink="/proyectos" class="back-link">← Proyectos</a>
+
+  @if (proyectoResource.isLoading()) {
+    <p class="muted">Cargando…</p>
+  } @else if (proyectoResource.error()) {
+    <p class="error" role="alert">No se pudo cargar el proyecto.</p>
+  } @else if (proyectoResource.value(); as proyecto) {
+    <header class="page__header">
+      <div>
+        <h1>
+          {{ proyecto.nombre }}
+          <span class="badge" [class]="'badge--' + proyecto.estado.toLowerCase()">
+            {{ estadoProyectoLabel[proyecto.estado] }}
+          </span>
+        </h1>
+        <p class="muted">
+          {{ proyecto.fechaInicio || '—' }} → {{ proyecto.fechaFin || '—' }}
+        </p>
+      </div>
+      <button type="button" class="btn btn--ghost" (click)="abrirEditarProyecto()">Editar proyecto</button>
+    </header>
+
+    @if (proyecto.descripcion) {
+      <p class="card descripcion">{{ proyecto.descripcion }}</p>
+    }
+
+    <div class="proyecto-layout">
+      <div class="proyecto-layout__side">
+        <div class="card">
+          <h2>Seguimiento</h2>
+          @if (progresoResource.isLoading()) {
+            <p class="muted">Cargando…</p>
+          } @else if (progresoResource.value(); as progreso) {
+            <p class="stat-number">{{ progreso.porcentajeAvance.toFixed(0) }}%</p>
+            <div class="progress-bar">
+              <div class="progress-bar__fill" [style.width.%]="progreso.porcentajeAvance"></div>
+            </div>
+            <p class="muted">{{ progreso.totalTareas }} tareas en total</p>
+            <ul class="estado-list">
+              @for (estado of estadosTarea; track estado) {
+                <li>
+                  <span class="badge" [class]="'badge--' + estado.toLowerCase()">
+                    {{ estadoTareaLabel[estado] }}
+                  </span>
+                  <span>{{ progreso.tareasPorEstado[estado] ?? 0 }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="card">
+          <h2>Rendimiento</h2>
+          @if (rendimientoResource.isLoading()) {
+            <p class="muted">Cargando…</p>
+          } @else if (rendimientoResource.value(); as rendimiento) {
+            @if (rendimiento.tareasConsideradas === 0) {
+              <p class="muted">
+                Todavía no hay tareas completadas con historial suficiente para calcular el rendimiento.
+              </p>
+            } @else {
+              <p
+                class="stat-number"
+                [class.stat-number--bad]="rendimiento.desvioPromedioDias > 0"
+                [class.stat-number--good]="rendimiento.desvioPromedioDias < 0"
+              >
+                {{ rendimiento.desvioPromedioDias > 0 ? '+' : '' }}{{ rendimiento.desvioPromedioDias.toFixed(1) }}
+                días
+              </p>
+              <p class="muted">
+                Desvío promedio sobre {{ rendimiento.tareasConsideradas }}
+                {{ rendimiento.tareasConsideradas === 1 ? 'tarea' : 'tareas' }} (real vs. planificado)
+              </p>
+              <table class="table table--compact">
+                <thead>
+                  <tr>
+                    <th>Tarea</th>
+                    <th>Planif.</th>
+                    <th>Real</th>
+                    <th>Desvío</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of rendimiento.detalle; track item.tareaId) {
+                    <tr>
+                      <td data-label="Tarea">{{ item.nombre }}</td>
+                      <td data-label="Planificado">{{ item.diasPlanificados }}d</td>
+                      <td data-label="Real">{{ item.diasReales.toFixed(1) }}d</td>
+                      <td
+                        data-label="Desvío"
+                        [class.desvio--malo]="item.desvioDias > 0"
+                        [class.desvio--bueno]="item.desvioDias < 0"
+                      >
+                        {{ item.desvioDias > 0 ? '+' : '' }}{{ item.desvioDias.toFixed(1) }}d
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="proyecto-layout__main">
+        <div class="page__header tareas-header">
+          <h2>Tareas</h2>
+          <button type="button" class="btn btn--primary" (click)="abrirCrearTarea()">Nueva tarea</button>
+        </div>
+
+        @if (tareasResource.isLoading()) {
+          <p class="muted">Cargando…</p>
+        } @else {
+          <div class="kanban">
+            @for (estado of estadosTarea; track estado) {
+              <div class="kanban__column">
+                <h3>{{ estadoTareaLabel[estado] }} ({{ columnasTareas()[estado].total }})</h3>
+                @for (tarea of columnasTareas()[estado].items; track tarea.id) {
+                  <div class="kanban__card">
+                    <p class="kanban__card-title">{{ tarea.nombre }}</p>
+                    @if (tarea.descripcion) {
+                      <p class="muted kanban__card-desc">{{ tarea.descripcion }}</p>
+                    }
+                    <p class="muted kanban__card-meta">
+                      {{ tarea.fechaInicio || '—' }} → {{ tarea.fechaFin || '—' }}
+                      @if (tarea.responsable) {
+                        · {{ tarea.responsable.email }}
+                      }
+                    </p>
+                    <select
+                      class="kanban__estado-select"
+                      (change)="cambiarEstadoTarea(tarea, $any($event.target).value, $any($event.target))"
+                    >
+                      @for (opcion of estadosTarea; track opcion) {
+                        <option [value]="opcion" [selected]="opcion === tarea.estado">
+                          {{ estadoTareaLabel[opcion] }}
+                        </option>
+                      }
+                    </select>
+                  </div>
+                } @empty {
+                  <p class="muted kanban__empty">Sin tareas</p>
+                }
+
+                @if (columnasTareas()[estado].totalPaginas > 1) {
+                  <div class="kanban__pager">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [disabled]="columnasTareas()[estado].pagina === 1"
+                      (click)="cambiarPagina(estado, -1)"
+                      aria-label="Página anterior"
+                    >
+                      ‹
+                    </button>
+                    <span class="muted">
+                      {{ columnasTareas()[estado].pagina }} / {{ columnasTareas()[estado].totalPaginas }}
+                    </span>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [disabled]="columnasTareas()[estado].pagina === columnasTareas()[estado].totalPaginas"
+                      (click)="cambiarPagina(estado, 1)"
+                      aria-label="Página siguiente"
+                    >
+                      ›
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (showEditForm()) {
+      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarEditarProyecto()"></button>
+      <div class="dialog" role="dialog" aria-modal="true">
+        <h2>Editar proyecto</h2>
+        <form [formGroup]="proyectoForm" (ngSubmit)="guardarProyecto()" novalidate>
+          @if (proyectoFormError()) {
+            <p class="error" role="alert">{{ proyectoFormError() }}</p>
+          }
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" formControlName="nombre" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Descripción</span>
+            <textarea formControlName="descripcion" rows="3"></textarea>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Fecha inicio</span>
+              <input type="date" formControlName="fechaInicio" />
+            </label>
+            <label class="field">
+              <span>Fecha fin</span>
+              <input type="date" formControlName="fechaFin" />
+            </label>
+          </div>
+          <div class="dialog__actions">
+            <button type="button" class="btn btn--ghost" (click)="cerrarEditarProyecto()">Cancelar</button>
+            <button type="submit" class="btn btn--primary" [disabled]="savingProyecto()">
+              {{ savingProyecto() ? 'Guardando…' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (showTareaForm()) {
+      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarCrearTarea()"></button>
+      <div class="dialog" role="dialog" aria-modal="true">
+        <h2>Nueva tarea</h2>
+        <form [formGroup]="tareaForm" (ngSubmit)="guardarTarea()" novalidate>
+          @if (tareaFormError()) {
+            <p class="error" role="alert">{{ tareaFormError() }}</p>
+          }
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" formControlName="nombre" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Descripción</span>
+            <textarea formControlName="descripcion" rows="2"></textarea>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Fecha inicio</span>
+              <input type="date" formControlName="fechaInicio" />
+            </label>
+            <label class="field">
+              <span>Fecha fin</span>
+              <input type="date" formControlName="fechaFin" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Prioridad</span>
+            <select formControlName="prioridad">
+              <option value="BAJA">Baja</option>
+              <option value="MEDIA">Media</option>
+              <option value="ALTA">Alta</option>
+            </select>
+          </label>
+          @if (auth.currentUser()?.rol === 'ADMINISTRADOR') {
+            <label class="field">
+              <span>Responsable</span>
+              <select formControlName="responsableId">
+                <option value="">Sin asignar</option>
+                @for (usuario of usuariosResource.value(); track usuario.id) {
+                  <option [value]="usuario.id">{{ usuario.email }}</option>
+                }
+              </select>
+            </label>
+          }
+          <div class="dialog__actions">
+            <button type="button" class="btn btn--ghost" (click)="cerrarCrearTarea()">Cancelar</button>
+            <button type="submit" class="btn btn--primary" [disabled]="savingTarea()">
+              {{ savingTarea() ? 'Guardando…' : 'Crear' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  }
+</section>

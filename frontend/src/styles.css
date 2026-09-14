@@ -4,9 +4,15 @@
   --color-bg: #f4f6fb;
   --color-surface: #ffffff;
   --color-ink: #12131a;
-  --color-primary: #2f6fed;
-  --color-primary-dark: #1c4fd6;
-  --color-primary-light: #7fb1ff;
+  /* Azul "tablero eléctrico" (más saturado que un azul de SaaS genérico) + verde de
+     "trabajo terminado" + cobre como acento — ligado al rubro de Seyco (montajes
+     industriales eléctricos), no una paleta decorativa. */
+  --color-primary: #0f5fa6;
+  --color-primary-dark: #0b4880;
+  --color-primary-light: #4d9bd6;
+  --color-success: #1f9d55;
+  --color-success-dark: #167a41;
+  --color-accent: #c8790f;
   --color-text: #1c1f2a;
   --color-text-muted: #6b7280;
   --color-border: #e2e5ec;
@@ -36,4 +42,353 @@ body {
   font-family: var(--font-sans);
   color: var(--color-text);
   background: var(--color-bg);
+}
+
+/* Clases compartidas entre páginas de ABM (proyectos, tareas, etc.) — sacadas acá para no
+   duplicar el mismo bloque de tabla/dialog/form en cada component.css y así no pisar el
+   budget de 4kB/8kB por componente (ver angular.json). usuarios.component.css es anterior
+   a este acuerdo y define su propia copia; las páginas nuevas usan estas. */
+.page {
+  padding: 2rem;
+  max-width: 60rem;
+  margin-inline: auto;
+}
+
+.page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.page__header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--color-ink);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.error {
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem 1.5rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.table tbody tr[data-clickable] {
+  cursor: pointer;
+}
+
+.table tbody tr[data-clickable]:hover {
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+
+.table__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  margin-left: 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.icon-btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.icon-btn:hover {
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+}
+
+.icon-btn--danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+}
+
+.icon-btn--danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: none;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn--primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.btn--ghost {
+  background: none;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Pendiente/planificado se deja neutro a propósito (todavía no pasó nada); en curso/en
+   progreso y finalizado/completada van con color sólido para que salten a la vista en el
+   listado y el kanban — son los dos estados que importa distinguir de un vistazo. */
+.badge--planificado,
+.badge--pendiente {
+  background: color-mix(in srgb, var(--color-text-muted) 16%, transparent);
+  color: var(--color-text-muted);
+}
+
+.badge--en_curso,
+.badge--en_progreso {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.badge--finalizado,
+.badge--completada {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.filters input[type='search'] {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.filters input,
+.filters select {
+  font: inherit;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 10;
+}
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  width: min(26rem, 90vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 1.75rem;
+}
+
+.dialog h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+  color: var(--color-ink);
+}
+
+.dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.field__hint {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.field__error {
+  color: var(--color-danger);
+  font-weight: 400;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.25rem;
+  }
+
+  .table {
+    box-shadow: none;
+    background: none;
+    border-radius: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .table tr {
+    display: block;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .table tr td:last-child {
+    border-bottom: 0;
+  }
+
+  .table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
+
+  .table td.table__actions {
+    justify-content: flex-end;
+  }
+
+  .icon-btn:first-child {
+    margin-left: 0;
+  }
+
+  .dialog {
+    width: min(26rem, 92vw);
+    padding: 1.5rem;
+  }
 }

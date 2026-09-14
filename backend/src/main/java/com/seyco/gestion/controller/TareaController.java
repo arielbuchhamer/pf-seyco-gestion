@@ -33,8 +33,8 @@ public class TareaController {
 	}
 
 	@GetMapping
-	public List<Tarea> listar() {
-		return tareaService.listar();
+	public List<Tarea> listar(@RequestParam(required = false) Long proyectoId) {
+		return tareaService.listar(proyectoId);
 	}
 
 	@GetMapping("/{id}")

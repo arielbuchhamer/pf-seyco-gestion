@@ -7,13 +7,14 @@ interface MenuItem {
   label: string;
   path: string;
   roles: Rol[];
-  icon: 'usuarios';
+  icon: 'usuarios' | 'proyectos';
 }
 
 // Patrón a repetir: cada opción nueva del menú declara qué roles pueden verla (y un ícono, ver
-// el @switch en shell.component.html). Hoy solo existe "Usuarios" (admin-only); para USUARIO el
-// menú queda vacío a propósito.
+// el @switch en shell.component.html). "Usuarios" es admin-only; "Proyectos" lo ven ambos roles
+// (oficina técnica/gerencia y resto del equipo trabajan sobre proyectos y tareas por igual).
 const MENU_ITEMS: MenuItem[] = [
+  { label: 'Proyectos', path: '/proyectos', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'proyectos' },
   { label: 'Usuarios', path: '/usuarios', roles: ['ADMINISTRADOR'], icon: 'usuarios' },
 ];
 

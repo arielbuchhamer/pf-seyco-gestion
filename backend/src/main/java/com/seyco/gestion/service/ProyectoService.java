@@ -1,5 +1,6 @@
 package com.seyco.gestion.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -66,6 +67,29 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		return listar();
 	}
 
+	// Ciclo de vida automático del proyecto (según el diagrama de estados: la transición la
+	// dispara CUU_8/CUU_7, no una acción manual de "cerrar proyecto"). Se llama desde
+	// TareaService después de crear una tarea o cambiar su estado.
+	// - Sin tareas: no se toca (queda como esté, típicamente PLANIFICADO).
+	// - Con al menos una tarea, todas COMPLETADA: FINALIZADO.
+	// - Con al menos una tarea, no todas completadas: EN_CURSO (cubre también reabrir una
+	//   tarea de un proyecto FINALIZADO, que lo vuelve a EN_CURSO).
+	public void recalcularEstado(Long proyectoId) {
+		List<Tarea> tareas = tareaRepository.findByProyectoId(proyectoId);
+		if (tareas.isEmpty()) {
+			return;
+		}
+
+		boolean todasCompletadas = tareas.stream().allMatch(t -> t.getEstado() == EstadoTarea.COMPLETADA);
+		EstadoProyecto nuevoEstado = todasCompletadas ? EstadoProyecto.FINALIZADO : EstadoProyecto.EN_CURSO;
+
+		Proyecto proyecto = buscarPorId(proyectoId);
+		if (proyecto.getEstado() != nuevoEstado) {
+			proyecto.setEstado(nuevoEstado);
+			proyectoRepository.save(proyecto);
+		}
+	}
+
 	public Proyecto actualizar(Long id, Proyecto cambios) {
 		Proyecto existente = buscarPorId(id);
 
@@ -109,9 +133,10 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		return resultado;
 	}
 
-	// Rendimiento: duración real de cada tarea (según HistorialEstadoTarea: cuándo pasó a
-	// EN_PROGRESO y cuándo a COMPLETADA) contra la duración planificada (fechaInicio/fechaFin).
-	// Tareas sin ambos datos (nunca pasaron por esos estados, o sin fechas planificadas) se excluyen.
+	// Rendimiento: duración real de cada tarea COMPLETADA (suma de todos los tramos
+	// EN_PROGRESO -> COMPLETADA de su historial, contemplando reaperturas) contra la duración
+	// planificada (fechaInicio/fechaFin). Tareas sin ningún tramo completo, sin fechas
+	// planificadas, o que ya no están completadas ahora mismo, se excluyen.
 	public Map<String, Object> rendimiento(Long proyectoId) {
 		Proyecto proyecto = buscarPorId(proyectoId);
 		List<Tarea> tareas = tareaRepository.findByProyectoId(proyectoId);
@@ -121,18 +146,28 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		int tareasConsideradas = 0;
 
 		for (Tarea tarea : tareas) {
+			// Sólo cuentan las que están COMPLETADA ahora mismo — si se reabrió (está
+			// PENDIENTE/EN_PROGRESO de nuevo), no tiene un cierre vigente que medir, aunque
+			// haya estado completada en el pasado. Mantiene esto consistente con "progreso"
+			// (Seguimiento), que también cuenta por el estado actual.
+			if (tarea.getEstado() != EstadoTarea.COMPLETADA) {
+				continue;
+			}
+
 			List<HistorialEstadoTarea> historial =
 					historialEstadoTareaRepository.findByTareaIdOrderByFechaHoraAsc(tarea.getId());
 
-			LocalDateTime inicioReal = primeraFechaHacia(historial, EstadoTarea.EN_PROGRESO);
-			LocalDateTime finReal = primeraFechaHacia(historial, EstadoTarea.COMPLETADA);
+			// Suma todos los tramos "pasó a EN_PROGRESO" → "pasó a COMPLETADA" del historial,
+			// no sólo el último: si se reabrió una o más veces antes de terminar, cada tramo de
+			// trabajo cuenta para la duración real (ej.: 2 días trabajados, se reabre porque
+			// faltaba algo, 1 día más → 3 días reales en total, no sólo el último tramo).
+			Double diasReales = sumaDiasEnProgreso(historial);
 
-			if (inicioReal == null || finReal == null || tarea.getFechaInicio() == null || tarea.getFechaFin() == null) {
+			if (diasReales == null || tarea.getFechaInicio() == null || tarea.getFechaFin() == null) {
 				continue;
 			}
 
 			long diasPlanificados = ChronoUnit.DAYS.between(tarea.getFechaInicio(), tarea.getFechaFin());
-			double diasReales = ChronoUnit.HOURS.between(inicioReal, finReal) / 24.0;
 			double desvioDias = diasReales - diasPlanificados;
 
 			Map<String, Object> item = new LinkedHashMap<>();
@@ -155,11 +190,25 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		return resultado;
 	}
 
-	private LocalDateTime primeraFechaHacia(List<HistorialEstadoTarea> historial, EstadoTarea estado) {
-		return historial.stream()
-				.filter(h -> h.getEstadoNuevo() == estado)
-				.map(HistorialEstadoTarea::getFechaHora)
-				.findFirst()
-				.orElse(null);
+	// Recorre el historial (ascendente) sumando cada tramo EN_PROGRESO -> COMPLETADA que
+	// encuentra. Null si no hubo ningún tramo completo (ej.: pasó directo de PENDIENTE a
+	// COMPLETADA sin pasar por EN_PROGRESO en ningún momento) — a diferencia de un resultado
+	// de 0 días, que sí es un dato real (un tramo que duró menos de un día).
+	private Double sumaDiasEnProgreso(List<HistorialEstadoTarea> historial) {
+		long totalSegundos = 0;
+		boolean huboTramo = false;
+		LocalDateTime inicioTramo = null;
+
+		for (HistorialEstadoTarea h : historial) {
+			if (h.getEstadoNuevo() == EstadoTarea.EN_PROGRESO) {
+				inicioTramo = h.getFechaHora();
+			} else if (h.getEstadoNuevo() == EstadoTarea.COMPLETADA && inicioTramo != null) {
+				totalSegundos += Duration.between(inicioTramo, h.getFechaHora()).getSeconds();
+				huboTramo = true;
+				inicioTramo = null;
+			}
+		}
+
+		return huboTramo ? totalSegundos / 86400.0 : null;
 	}
 }

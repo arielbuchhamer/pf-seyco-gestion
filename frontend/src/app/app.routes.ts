@@ -19,6 +19,18 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        path: 'proyectos',
+        loadComponent: () =>
+          import('./pages/proyectos/proyectos.component').then((m) => m.ProyectosComponent),
+      },
+      {
+        path: 'proyectos/:id',
+        loadComponent: () =>
+          import('./pages/proyecto-detalle/proyecto-detalle.component').then(
+            (m) => m.ProyectoDetalleComponent,
+          ),
+      },
+      {
         // Patrón a repetir para futuras rutas admin-only: canActivate propio además
         // de no aparecer en el menú (ver MENU_ITEMS en layout/shell.component.ts).
         path: 'usuarios',

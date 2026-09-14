@@ -1,6 +1,7 @@
 package com.seyco.gestion.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -22,19 +23,26 @@ public class TareaService extends BaseService<Tarea, Long> {
 	private final ProyectoRepository proyectoRepository;
 	private final UsuarioRepository usuarioRepository;
 	private final HistorialEstadoTareaRepository historialEstadoTareaRepository;
+	private final ProyectoService proyectoService;
 
 	public TareaService(TareaRepository tareaRepository, ProyectoRepository proyectoRepository,
-			UsuarioRepository usuarioRepository, HistorialEstadoTareaRepository historialEstadoTareaRepository) {
+			UsuarioRepository usuarioRepository, HistorialEstadoTareaRepository historialEstadoTareaRepository,
+			ProyectoService proyectoService) {
 		super("La tarea no existe.");
 		this.tareaRepository = tareaRepository;
 		this.proyectoRepository = proyectoRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.historialEstadoTareaRepository = historialEstadoTareaRepository;
+		this.proyectoService = proyectoService;
 	}
 
 	@Override
 	protected JpaRepository<Tarea, Long> getRepository() {
 		return tareaRepository;
+	}
+
+	public List<Tarea> listar(Long proyectoId) {
+		return proyectoId == null ? listar() : tareaRepository.findByProyectoId(proyectoId);
 	}
 
 	// El body sólo trae los ids de proyecto/responsable (no hay DTO): acá se resuelven
@@ -61,6 +69,8 @@ public class TareaService extends BaseService<Tarea, Long> {
 
 		Tarea creada = tareaRepository.save(nueva);
 		registrarHistorial(creada, null, creada.getEstado(), emailCreador);
+		// CUU_7: apenas el proyecto tiene una tarea, deja de estar PLANIFICADO.
+		proyectoService.recalcularEstado(proyecto.getId());
 		return creada;
 	}
 
@@ -101,6 +111,9 @@ public class TareaService extends BaseService<Tarea, Long> {
 		Tarea guardada = tareaRepository.save(tarea);
 
 		registrarHistorial(guardada, anterior, nuevoEstado, emailUsuario);
+		// CUU_8: recalcula si el proyecto pasa a FINALIZADO (todas sus tareas completadas)
+		// o vuelve a EN_CURSO (si se reabre una tarea de un proyecto ya finalizado).
+		proyectoService.recalcularEstado(guardada.getProyecto().getId());
 		return guardada;
 	}
 
