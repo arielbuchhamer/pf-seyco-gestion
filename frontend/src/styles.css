@@ -157,6 +157,18 @@ body {
   background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 }
 
+/* Cobre/ámbar (mismo --color-accent que la card de Rendimiento) en vez de azul: el azul ya
+   significa "en curso" en los badges, así que usarlo también para una acción (editar)
+   podía confundir estado con acción. */
+.icon-btn--edit {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+}
+
+.icon-btn--edit:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
 .icon-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -201,9 +213,9 @@ body {
   white-space: nowrap;
 }
 
-/* Pendiente/planificado se deja neutro a propósito (todavía no pasó nada); en curso/en
-   progreso y finalizado/completada van con color sólido para que salten a la vista en el
-   listado y el kanban — son los dos estados que importa distinguir de un vistazo. */
+/* Pendiente/planificado se deja neutro a propósito (todavía no pasó nada). El resto usa un
+   fondo pastel (mezcla con blanco, no con transparente) + texto en el tono oscuro del mismo
+   color — se nota más que un tinte apenas visible, sin ser un bloque sólido tipo botón. */
 .badge--planificado,
 .badge--pendiente {
   background: color-mix(in srgb, var(--color-text-muted) 16%, transparent);
@@ -212,14 +224,14 @@ body {
 
 .badge--en_curso,
 .badge--en_progreso {
-  background: var(--color-primary);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-primary) 22%, white);
+  color: var(--color-primary-dark);
 }
 
 .badge--finalizado,
 .badge--completada {
-  background: var(--color-success);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-success) 22%, white);
+  color: var(--color-success-dark);
 }
 
 .filters {
@@ -227,6 +239,20 @@ body {
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 1.25rem;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  /* margin-top:auto empuja el paginador al fondo cuando el contenedor es flex-column con
+     min-height (ver proyectos.component.css) — así queda a la misma altura sin importar
+     cuántos ítems entren en la página actual. Sin ese contexto flex, se comporta como un
+     margin normal (no rompe nada donde .pager se use sin el wrapper). */
+  margin-top: auto;
+  padding-top: 1.5rem;
+  font-size: 0.9rem;
 }
 
 .filters input[type='search'] {

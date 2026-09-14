@@ -1,0 +1,18 @@
+/* .page (styles.css global) trae max-width:60rem pensado para formularios/tablas angostas
+   — acá, como en el detalle de proyecto, hace falta más ancho real para que el grid de
+   tarjetas no quede apretado en el medio de una pantalla ancha. */
+.page.proyectos-page {
+  max-width: 90rem;
+  /* Flex column con altura mínima de viewport para que el paginador (margin-top:auto en
+     .pager, styles.css) quede siempre pegado abajo, sin importar cuántas tarjetas entren
+     en la página actual — si no, con pocos resultados subía pegado al grid. */
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 6rem);
+}
+
+.proyectos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+  gap: 1.25rem;
+}

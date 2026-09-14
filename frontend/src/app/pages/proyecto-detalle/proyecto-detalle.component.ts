@@ -14,6 +14,7 @@ import {
 } from '../../core/models/proyecto.model';
 import { ProyectoService } from '../../core/services/proyecto.service';
 import { UsuarioService } from '../../core/services/usuario.service';
+import { estaVencido } from '../../core/utils/fecha';
 import {
   ESTADOS_TAREA,
   ESTADO_TAREA_LABEL,
@@ -49,6 +50,11 @@ export class ProyectoDetalleComponent {
   protected readonly proyectoResource = httpResource<Proyecto>(() => ({
     url: `/api/proyectos/${this.proyectoId()}`,
   }));
+
+  protected readonly vencido = computed(() => {
+    const proyecto = this.proyectoResource.value();
+    return proyecto ? estaVencido(proyecto.fechaFin, proyecto.estado) : false;
+  });
 
   protected readonly progresoResource = httpResource<Progreso>(() => ({
     url: `/api/proyectos/${this.proyectoId()}/progreso`,

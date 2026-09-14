@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page proyectos-page">
   <header class="page__header">
     <h1>Proyectos</h1>
     <button type="button" class="btn btn--primary" (click)="abrirCrear()">Nuevo proyecto</button>
@@ -9,7 +9,7 @@
       type="search"
       placeholder="Buscar por nombre…"
       [value]="filtroNombre()"
-      (input)="filtroNombre.set($any($event.target).value)"
+      (input)="onNombreChange($any($event.target).value)"
     />
     <select [value]="filtroEstado()" (change)="onEstadoChange($event)">
       <option value="">Todos los estados</option>
@@ -26,67 +26,43 @@
   @if (proyectosResource.isLoading()) {
     <p class="muted">Cargando…</p>
   } @else {
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Estado</th>
-          <th>Fecha inicio</th>
-          <th>Fecha fin</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (proyecto of proyectosResource.value(); track proyecto.id) {
-          <tr data-clickable (click)="abrirDetalle(proyecto)">
-            <td data-label="Nombre">{{ proyecto.nombre }}</td>
-            <td data-label="Estado">
-              <span class="badge" [class]="'badge--' + proyecto.estado.toLowerCase()">
-                {{ estadoLabel[proyecto.estado] }}
-              </span>
-            </td>
-            <td data-label="Fecha inicio">{{ proyecto.fechaInicio || '—' }}</td>
-            <td data-label="Fecha fin">{{ proyecto.fechaFin || '—' }}</td>
-            <td class="table__actions">
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label="Editar proyecto"
-                title="Editar"
-                (click)="abrirEditar(proyecto, $event)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="icon-btn icon-btn--danger"
-                aria-label="Eliminar proyecto"
-                title="Eliminar"
-                (click)="eliminar(proyecto, $event)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="muted">No hay proyectos que coincidan con la búsqueda.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <div class="proyectos-grid">
+      @for (proyecto of proyectosPaginados().items; track proyecto.id) {
+        <app-proyecto-card
+          [proyecto]="proyecto"
+          (editar)="abrirEditar(proyecto)"
+          (eliminar)="eliminar(proyecto)"
+        />
+      } @empty {
+        <p class="muted">No hay proyectos que coincidan con la búsqueda.</p>
+      }
+    </div>
+
+    @if (proyectosPaginados().totalPaginas > 1) {
+      <div class="pager">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="proyectosPaginados().pagina === 1"
+          (click)="cambiarPagina(-1)"
+          aria-label="Página anterior"
+        >
+          ‹
+        </button>
+        <span class="muted">
+          Página {{ proyectosPaginados().pagina }} de {{ proyectosPaginados().totalPaginas }}
+        </span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="proyectosPaginados().pagina === proyectosPaginados().totalPaginas"
+          (click)="cambiarPagina(1)"
+          aria-label="Página siguiente"
+        >
+          ›
+        </button>
+      </div>
+    }
   }
 
   @if (showForm()) {

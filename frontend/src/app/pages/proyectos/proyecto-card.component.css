@@ -1,0 +1,75 @@
+:host {
+  display: block;
+}
+
+.proyecto-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 12rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem 1.6rem;
+  cursor: pointer;
+}
+
+.proyecto-card:hover {
+  background: color-mix(in srgb, var(--color-ink) 3%, var(--color-surface));
+}
+
+.proyecto-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.proyecto-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.proyecto-card__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-ink);
+}
+
+.proyecto-card__desc {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.proyecto-card__footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  padding-top: 0.5rem;
+}
+
+.proyecto-card__fecha--vencida {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.proyecto-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.6rem;
+}
+
+.proyecto-card__actions .icon-btn {
+  margin-left: 0;
+}

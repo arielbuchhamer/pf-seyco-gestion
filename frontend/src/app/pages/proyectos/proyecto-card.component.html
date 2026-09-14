@@ -1,0 +1,65 @@
+<article
+  class="proyecto-card"
+  (click)="abrirDetalle()"
+  (keydown.enter)="abrirDetalle()"
+  tabindex="0"
+  role="link"
+>
+  <div class="proyecto-card__header">
+    <h2>{{ proyecto().nombre }}</h2>
+    <span class="badge" [class]="'badge--' + proyecto().estado.toLowerCase()">
+      {{ estadoLabel[proyecto().estado] }}
+    </span>
+  </div>
+
+  @if (proyecto().descripcion) {
+    <p class="muted proyecto-card__desc">{{ proyecto().descripcion }}</p>
+  }
+
+  <div class="proyecto-card__footer">
+    <span [class]="vencido() ? 'proyecto-card__fecha--vencida' : 'muted'">
+      @if (proyecto().fechaFin) {
+        Fecha fin: {{ proyecto().fechaFin }}{{ vencido() ? ' · vencido' : '' }}
+      }
+    </span>
+    <span class="muted">
+      @if (progresoResource.value(); as progreso) {
+        {{ progreso.totalTareas }} {{ progreso.totalTareas === 1 ? 'tarea' : 'tareas' }}
+      }
+    </span>
+  </div>
+
+  <div class="proyecto-card__actions">
+    <button
+      type="button"
+      class="icon-btn icon-btn--edit"
+      aria-label="Editar proyecto"
+      title="Editar"
+      (click)="onEditar($event)"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 20h9" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="icon-btn icon-btn--danger"
+      aria-label="Eliminar proyecto"
+      title="Eliminar"
+      (click)="onEliminar($event)"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path
+          d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+  </div>
+</article>

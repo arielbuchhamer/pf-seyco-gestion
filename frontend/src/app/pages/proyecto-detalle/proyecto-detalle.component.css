@@ -10,6 +10,11 @@
   max-width: 90rem;
 }
 
+.fecha-fin--vencida {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
 .proyecto-layout {
   display: grid;
   grid-template-columns: minmax(18rem, 24rem) 1fr;

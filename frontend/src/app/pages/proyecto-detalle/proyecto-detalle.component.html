@@ -15,7 +15,10 @@
           </span>
         </h1>
         <p class="muted">
-          {{ proyecto.fechaInicio || '—' }} → {{ proyecto.fechaFin || '—' }}
+          {{ proyecto.fechaInicio || '—' }} →
+          <span [class.fecha-fin--vencida]="vencido()">
+            {{ proyecto.fechaFin || '—' }}{{ vencido() ? ' (vencido)' : '' }}
+          </span>
         </p>
       </div>
       <button type="button" class="btn btn--ghost" (click)="abrirEditarProyecto()">Editar proyecto</button>
