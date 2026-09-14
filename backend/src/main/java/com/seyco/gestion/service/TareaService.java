@@ -117,6 +117,23 @@ public class TareaService extends BaseService<Tarea, Long> {
 		return guardada;
 	}
 
+	// El historial no cae en cascada solo: no hay @OneToMany desde Tarea hacia
+	// HistorialEstadoTarea, y ddl-auto=update no agrega ON DELETE CASCADE a una FK ya
+	// creada. Sin este borrado manual, eliminar cualquier tarea tira un 500 (toda tarea
+	// tiene al menos un registro de historial desde que se crea).
+	@Override
+	public void eliminar(Long id) {
+		Tarea tarea = buscarPorId(id);
+		Long proyectoId = tarea.getProyecto().getId();
+
+		historialEstadoTareaRepository.deleteAll(
+				historialEstadoTareaRepository.findByTareaIdOrderByFechaHoraAsc(id));
+		tareaRepository.delete(tarea);
+
+		// Si era la última tarea pendiente/en progreso, el proyecto puede pasar a FINALIZADO.
+		proyectoService.recalcularEstado(proyectoId);
+	}
+
 	private void registrarHistorial(Tarea tarea, EstadoTarea anterior, EstadoTarea nuevo, String emailUsuario) {
 		HistorialEstadoTarea historial = new HistorialEstadoTarea();
 		historial.setTarea(tarea);

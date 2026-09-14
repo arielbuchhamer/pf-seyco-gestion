@@ -201,6 +201,20 @@
   border-left-color: var(--color-success);
 }
 
+.kanban__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kanban__card-header .icon-btn {
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
 .kanban__card-title {
   margin: 0 0 0.3rem;
   font-weight: 600;

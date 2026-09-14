@@ -242,6 +242,17 @@ export class ProyectoDetalleComponent {
     });
   }
 
+  eliminarTarea(tarea: Tarea): void {
+    if (!confirm(`¿Eliminar la tarea "${tarea.nombre}"? También se borra su historial de estados.`)) {
+      return;
+    }
+
+    this.tareaService.eliminar(tarea.id).subscribe({
+      next: () => this.recargarSeguimiento(),
+      error: (err) => alert(extraerMensajeError(err, 'No se pudo eliminar la tarea.')),
+    });
+  }
+
   private recargarSeguimiento(): void {
     this.tareasResource.reload();
     this.progresoResource.reload();

@@ -118,7 +118,24 @@
                 <h3>{{ estadoTareaLabel[estado] }} ({{ columnasTareas()[estado].total }})</h3>
                 @for (tarea of columnasTareas()[estado].items; track tarea.id) {
                   <div class="kanban__card">
-                    <p class="kanban__card-title">{{ tarea.nombre }}</p>
+                    <div class="kanban__card-header">
+                      <p class="kanban__card-title">{{ tarea.nombre }}</p>
+                      <button
+                        type="button"
+                        class="icon-btn icon-btn--danger"
+                        aria-label="Eliminar tarea"
+                        title="Eliminar"
+                        (click)="eliminarTarea(tarea)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path
+                            d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     @if (tarea.descripcion) {
                       <p class="muted kanban__card-desc">{{ tarea.descripcion }}</p>
                     }
