@@ -1,3 +1,5 @@
+import { Usuario } from './usuario.model';
+
 export type EstadoProyecto = 'PLANIFICADO' | 'EN_CURSO' | 'FINALIZADO';
 
 export const ESTADOS_PROYECTO: EstadoProyecto[] = ['PLANIFICADO', 'EN_CURSO', 'FINALIZADO'];
@@ -31,6 +33,8 @@ export interface Progreso {
   totalTareas: number;
   tareasPorEstado: Partial<Record<'PENDIENTE' | 'EN_PROGRESO' | 'COMPLETADA', number>>;
   porcentajeAvance: number;
+  // Responsables de las tareas del proyecto, sin repetir (avatares de la tarjeta del listado).
+  responsables: Usuario[];
 }
 
 // GET /api/proyectos/{id}/rendimiento — duración real (según el historial de estados de

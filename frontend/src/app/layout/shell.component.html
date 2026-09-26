@@ -10,6 +10,12 @@
       <span></span><span></span><span></span>
     </button>
     <span class="topbar__brand">Seyco S.A</span>
+    @if (auth.currentUser(); as usuario) {
+      <span class="topbar__usuario">
+        <app-avatar [usuario]="usuario" tamano="md" />
+        <span class="topbar__usuario-nombre">{{ nombreCompleto(usuario) }}</span>
+      </span>
+    }
     <button type="button" class="topbar__logout" (click)="logout()">Cerrar sesión</button>
   </header>
 

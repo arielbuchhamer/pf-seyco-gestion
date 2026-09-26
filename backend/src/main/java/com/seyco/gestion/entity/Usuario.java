@@ -36,6 +36,16 @@ public class Usuario {
 	@Column(nullable = false, length = 20)
 	private Rol rol;
 
+	// Obligatorios, pero validados a mano en UsuarioService y no con @NotBlank: el login también
+	// recibe un Usuario con @Valid (sólo email/clave) y lo rompería. Nullables en la base porque
+	// ddl-auto=update no puede agregar una columna NOT NULL a una tabla que ya tiene filas: los
+	// usuarios anteriores a este cambio quedan sin nombre hasta que se los edite.
+	@Column(length = 60)
+	private String nombre;
+
+	@Column(length = 60)
+	private String apellido;
+
 	public Long getId() {
 		return id;
 	}
@@ -58,6 +68,22 @@ public class Usuario {
 
 	public void setClave(String clave) {
 		this.clave = clave;
+	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public String getApellido() {
+		return apellido;
+	}
+
+	public void setApellido(String apellido) {
+		this.apellido = apellido;
 	}
 
 	public Rol getRol() {

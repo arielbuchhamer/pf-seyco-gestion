@@ -28,6 +28,8 @@ public class DataSeeder {
 			if (usuarioRepository.findByEmail(ADMIN_EMAIL).isEmpty()) {
 				Usuario admin = new Usuario();
 				admin.setEmail(ADMIN_EMAIL);
+				admin.setNombre("Admin");
+				admin.setApellido("Seyco");
 				admin.setClave(passwordEncoder.encode(ADMIN_PASSWORD));
 				admin.setRol(Rol.ADMINISTRADOR);
 				usuarioRepository.save(admin);

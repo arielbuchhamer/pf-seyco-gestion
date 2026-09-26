@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,7 @@ import com.seyco.gestion.entity.EstadoTarea;
 import com.seyco.gestion.entity.HistorialEstadoTarea;
 import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.entity.Tarea;
+import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
 import com.seyco.gestion.repository.ProyectoRepository;
 import com.seyco.gestion.repository.TareaRepository;
@@ -130,6 +132,13 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		resultado.put("totalTareas", total);
 		resultado.put("tareasPorEstado", tareasPorEstado);
 		resultado.put("porcentajeAvance", porcentajeAvance);
+		// Equipo del proyecto = responsables de sus tareas, sin repetir (avatares del listado,
+		// como en el prototipo). No hay una entidad "miembros del proyecto" aparte.
+		resultado.put("responsables", tareas.stream()
+				.map(Tarea::getResponsable)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toMap(Usuario::getId, u -> u, (a, b) -> a, LinkedHashMap::new))
+				.values());
 		return resultado;
 	}
 

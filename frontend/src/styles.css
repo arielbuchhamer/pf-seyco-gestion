@@ -340,6 +340,10 @@ body {
 
 .field-row .field {
   flex: 1;
+  /* Sin esto un ítem flex no se achica por debajo del ancho intrínseco de su input
+     (~20ch): en diálogos angostos (ej. Nombre/Apellido en Usuarios) desborda y aparece
+     un scroll horizontal. */
+  min-width: 0;
 }
 
 .field__error {

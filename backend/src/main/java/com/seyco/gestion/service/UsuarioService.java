@@ -39,6 +39,7 @@ public class UsuarioService {
 		if (nuevo.getRol() == null) {
 			throw ServiceException.datosInvalidos("El rol es obligatorio.");
 		}
+		validarNombreYApellido(nuevo);
 		if (!PASSWORD_PATTERN.matcher(nuevo.getClave()).matches()) {
 			throw ServiceException.datosInvalidos("La contraseña debe tener al menos 8 caracteres y un número.");
 		}
@@ -62,6 +63,7 @@ public class UsuarioService {
 		if (cambios.getRol() == null) {
 			throw ServiceException.datosInvalidos("El rol es obligatorio.");
 		}
+		validarNombreYApellido(cambios);
 
 		usuarioRepository.findByEmail(cambios.getEmail())
 				.filter(otro -> !otro.getId().equals(id))
@@ -71,6 +73,8 @@ public class UsuarioService {
 
 		existente.setEmail(cambios.getEmail());
 		existente.setRol(cambios.getRol());
+		existente.setNombre(cambios.getNombre());
+		existente.setApellido(cambios.getApellido());
 
 		String nuevaClave = cambios.getClave();
 		if (nuevaClave != null && !nuevaClave.isBlank()) {
@@ -81,6 +85,18 @@ public class UsuarioService {
 		}
 
 		return usuarioRepository.save(existente);
+	}
+
+	// Además de validar, normaliza espacios: se usan para las iniciales del avatar en el front.
+	private void validarNombreYApellido(Usuario usuario) {
+		if (usuario.getNombre() == null || usuario.getNombre().isBlank()) {
+			throw ServiceException.datosInvalidos("El nombre es obligatorio.");
+		}
+		if (usuario.getApellido() == null || usuario.getApellido().isBlank()) {
+			throw ServiceException.datosInvalidos("El apellido es obligatorio.");
+		}
+		usuario.setNombre(usuario.getNombre().trim());
+		usuario.setApellido(usuario.getApellido().trim());
 	}
 
 	public void eliminar(Long id, String emailSolicitante) {

@@ -281,3 +281,9 @@
     padding: 1.5rem;
   }
 }
+
+.usuario-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

@@ -205,7 +205,7 @@
             <select formControlName="responsableId">
               <option value="">Sin asignar</option>
               @for (usuario of usuariosResource.value(); track usuario.id) {
-                <option [value]="usuario.id">{{ usuario.email }}</option>
+                <option [value]="usuario.id">{{ nombreCompleto(usuario) }}</option>
               }
             </select>
           </label>

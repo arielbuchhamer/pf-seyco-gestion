@@ -9,7 +9,7 @@ import {
 } from '../../shared/tareas-kanban/tareas-kanban.component';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { AuthService } from '../../core/services/auth.service';
-import { Usuario } from '../../core/models/usuario.model';
+import { Usuario, nombreCompleto } from '../../core/models/usuario.model';
 import {
   ESTADO_PROYECTO_LABEL,
   Progreso,
@@ -45,6 +45,7 @@ export class ProyectoDetalleComponent {
   protected readonly estadoProyectoLabel = ESTADO_PROYECTO_LABEL;
   protected readonly estadoTareaLabel = ESTADO_TAREA_LABEL;
   protected readonly estadosTarea = ESTADOS_TAREA;
+  protected readonly nombreCompleto = nombreCompleto;
 
   protected readonly proyectoResource = httpResource<Proyecto>(() => ({
     url: `/api/proyectos/${this.proyectoId()}`,

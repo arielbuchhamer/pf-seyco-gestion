@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
-import { Rol } from '../core/models/usuario.model';
+import { Rol, nombreCompleto } from '../core/models/usuario.model';
+import { AvatarComponent } from '../shared/avatar/avatar.component';
 
 interface MenuItem {
   label: string;
@@ -22,7 +23,7 @@ const MENU_ITEMS: MenuItem[] = [
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, AvatarComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
 })
@@ -31,6 +32,7 @@ export class ShellComponent {
   private readonly router = inject(Router);
 
   protected readonly menuOpen = signal(false);
+  protected readonly nombreCompleto = nombreCompleto;
 
   protected readonly visibleMenuItems = computed(() => {
     return MENU_ITEMS.filter((item) => this.auth.tieneRol(...item.roles));

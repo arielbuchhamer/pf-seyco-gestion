@@ -49,11 +49,18 @@
 .proyecto-card__footer {
   margin-top: auto;
   display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  padding-top: 0.5rem;
+}
+
+.proyecto-card__equipo {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  font-size: 0.8rem;
-  padding-top: 0.5rem;
+  min-height: 1.6rem;
 }
 
 .proyecto-card__fecha--vencida {

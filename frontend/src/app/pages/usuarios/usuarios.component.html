@@ -14,6 +14,7 @@
     <table class="table">
       <thead>
         <tr>
+          <th>Nombre</th>
           <th>Email</th>
           <th>Rol</th>
           <th></th>
@@ -22,6 +23,16 @@
       <tbody>
         @for (usuario of usuarios(); track usuario.id) {
           <tr>
+            <td data-label="Nombre">
+              <span class="usuario-nombre">
+                <app-avatar [usuario]="usuario" />
+                @if (usuario.nombre) {
+                  {{ nombreCompleto(usuario) }}
+                } @else {
+                  <span class="muted">Sin nombre</span>
+                }
+              </span>
+            </td>
             <td data-label="Email">{{ usuario.email }}</td>
             <td data-label="Rol">{{ rolLabel[usuario.rol] }}</td>
             <td class="table__actions">
@@ -60,7 +71,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="3" class="muted">Todavía no hay usuarios cargados.</td>
+            <td colspan="4" class="muted">Todavía no hay usuarios cargados.</td>
           </tr>
         }
       </tbody>
@@ -76,6 +87,23 @@
         @if (formError()) {
           <p class="error" role="alert">{{ formError() }}</p>
         }
+
+        <div class="field-row">
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" formControlName="nombre" autocomplete="off" />
+            @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+              <small class="field__error">El nombre es obligatorio.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Apellido</span>
+            <input type="text" formControlName="apellido" autocomplete="off" />
+            @if (form.controls.apellido.invalid && form.controls.apellido.touched) {
+              <small class="field__error">El apellido es obligatorio.</small>
+            }
+          </label>
+        </div>
 
         <label class="field">
           <span>Email</span>

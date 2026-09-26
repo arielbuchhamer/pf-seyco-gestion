@@ -7,7 +7,9 @@ import {
   EstadoTarea,
   Tarea,
 } from '../../core/models/tarea.model';
+import { nombreCompleto } from '../../core/models/usuario.model';
 import { AuthService } from '../../core/services/auth.service';
+import { AvatarComponent } from '../avatar/avatar.component';
 
 export interface CambioEstadoTarea {
   tarea: Tarea;
@@ -22,7 +24,7 @@ export interface CambioEstadoTarea {
 @Component({
   selector: 'app-tareas-kanban',
   standalone: true,
-  imports: [RouterLink, TieneRolDirective],
+  imports: [RouterLink, TieneRolDirective, AvatarComponent],
   templateUrl: './tareas-kanban.component.html',
   styleUrl: './tareas-kanban.component.css',
 })
@@ -41,6 +43,7 @@ export class TareasKanbanComponent {
 
   protected readonly estadosTarea = ESTADOS_TAREA;
   protected readonly estadoTareaLabel = ESTADO_TAREA_LABEL;
+  protected readonly nombreCompleto = nombreCompleto;
 
   // Paginación independiente por columna (Pendiente/En progreso/Completada): con muchas
   // tareas, cada columna escala sola sin volverse un scroll infinito y sin que el tamaño

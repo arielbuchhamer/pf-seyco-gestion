@@ -2,6 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
 import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
+import { AvatarGroupComponent } from '../../shared/avatar/avatar-group.component';
 import { ESTADO_PROYECTO_LABEL, Progreso, Proyecto } from '../../core/models/proyecto.model';
 import { estaVencido } from '../../core/utils/fecha';
 
@@ -11,7 +12,7 @@ import { estaVencido } from '../../core/utils/fecha';
 @Component({
   selector: 'app-proyecto-card',
   standalone: true,
-  imports: [TieneRolDirective],
+  imports: [TieneRolDirective, AvatarGroupComponent],
   templateUrl: './proyecto-card.component.html',
   styleUrl: './proyecto-card.component.css',
 })

@@ -1,13 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ROLES, ROL_LABEL, Rol, Usuario, UsuarioInput } from '../../core/models/usuario.model';
+import { ROLES, ROL_LABEL, Rol, Usuario, UsuarioInput, nombreCompleto } from '../../core/models/usuario.model';
+import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { AuthService } from '../../core/services/auth.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AvatarComponent],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css',
 })
@@ -18,6 +19,7 @@ export class UsuariosComponent {
 
   protected readonly roles = ROLES;
   protected readonly rolLabel = ROL_LABEL;
+  protected readonly nombreCompleto = nombreCompleto;
 
   protected readonly usuarios = signal<Usuario[]>([]);
   protected readonly loading = signal(false);
@@ -29,6 +31,8 @@ export class UsuariosComponent {
   protected readonly showPassword = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required]],
+    apellido: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     clave: [''],
     rol: ['USUARIO' as Rol, [Validators.required]],
@@ -57,7 +61,7 @@ export class UsuariosComponent {
     this.editingUsuario.set(null);
     this.formError.set(null);
     this.showPassword.set(false);
-    this.form.reset({ email: '', clave: '', rol: 'USUARIO' });
+    this.form.reset({ nombre: '', apellido: '', email: '', clave: '', rol: 'USUARIO' });
     this.showForm.set(true);
   }
 
@@ -65,7 +69,13 @@ export class UsuariosComponent {
     this.editingUsuario.set(usuario);
     this.formError.set(null);
     this.showPassword.set(false);
-    this.form.reset({ email: usuario.email, clave: '', rol: usuario.rol });
+    this.form.reset({
+      nombre: usuario.nombre ?? '',
+      apellido: usuario.apellido ?? '',
+      email: usuario.email,
+      clave: '',
+      rol: usuario.rol,
+    });
     this.showForm.set(true);
   }
 
@@ -83,7 +93,7 @@ export class UsuariosComponent {
       return;
     }
 
-    const { email, clave, rol } = this.form.getRawValue();
+    const { nombre, apellido, email, clave, rol } = this.form.getRawValue();
     const editing = this.editingUsuario();
 
     // Al crear la contraseña es obligatoria; al editar, vacía = "no cambiarla".
@@ -92,7 +102,9 @@ export class UsuariosComponent {
       return;
     }
 
-    const payload: UsuarioInput = clave ? { email, clave, rol } : { email, rol };
+    const payload: UsuarioInput = clave
+      ? { nombre, apellido, email, clave, rol }
+      : { nombre, apellido, email, rol };
 
     this.saving.set(true);
     this.formError.set(null);
@@ -115,7 +127,7 @@ export class UsuariosComponent {
   }
 
   eliminar(usuario: Usuario): void {
-    if (!confirm(`¿Eliminar el usuario ${usuario.email}?`)) {
+    if (!confirm(`¿Eliminar el usuario ${nombreCompleto(usuario)}?`)) {
       return;
     }
 

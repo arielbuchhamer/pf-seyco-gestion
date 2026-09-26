@@ -17,16 +17,19 @@
   }
 
   <div class="proyecto-card__footer">
-    <span [class]="vencido() ? 'proyecto-card__fecha--vencida' : 'muted'">
-      @if (proyecto().fechaFin) {
+    @if (proyecto().fechaFin) {
+      <span class="proyecto-card__fecha" [class]="vencido() ? 'proyecto-card__fecha--vencida' : 'muted'">
         Fecha fin: {{ proyecto().fechaFin }}{{ vencido() ? ' · vencido' : '' }}
-      }
-    </span>
-    <span class="muted">
-      @if (progresoResource.value(); as progreso) {
-        {{ progreso.totalTareas }} {{ progreso.totalTareas === 1 ? 'tarea' : 'tareas' }}
-      }
-    </span>
+      </span>
+    }
+    @if (progresoResource.value(); as progreso) {
+      <div class="proyecto-card__equipo">
+        <app-avatar-group [usuarios]="progreso.responsables" />
+        <span class="muted">
+          {{ progreso.totalTareas }} {{ progreso.totalTareas === 1 ? 'tarea' : 'tareas' }}
+        </span>
+      </div>
+    }
   </div>
 
   <div class="proyecto-card__actions" *tieneRol="'ADMINISTRADOR'">

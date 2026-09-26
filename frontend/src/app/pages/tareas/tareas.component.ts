@@ -1,7 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Tarea } from '../../core/models/tarea.model';
-import { Usuario } from '../../core/models/usuario.model';
+import { Usuario, nombreCompleto } from '../../core/models/usuario.model';
 import { AuthService } from '../../core/services/auth.service';
 import { TareaService } from '../../core/services/tarea.service';
 import { extraerMensajeError } from '../../core/utils/http-error';
@@ -23,6 +23,7 @@ import {
 export class TareasComponent {
   private readonly tareaService = inject(TareaService);
   protected readonly auth = inject(AuthService);
+  protected readonly nombreCompleto = nombreCompleto;
 
   protected readonly esAdmin = computed(() => this.auth.tieneRol('ADMINISTRADOR'));
 

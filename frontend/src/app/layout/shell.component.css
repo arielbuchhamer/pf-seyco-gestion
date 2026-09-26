@@ -43,8 +43,22 @@
   color: var(--color-ink);
 }
 
-.topbar__logout {
+.topbar__usuario {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-ink);
+}
+
+@media (max-width: 640px) {
+  .topbar__usuario-nombre {
+    display: none;
+  }
+}
+
+.topbar__logout {
   font: inherit;
   font-size: 0.85rem;
   padding: 0.5rem 0.9rem;

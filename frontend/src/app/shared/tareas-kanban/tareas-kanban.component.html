@@ -50,10 +50,11 @@
           @if (tarea.descripcion) {
             <p class="muted kanban__card-desc">{{ tarea.descripcion }}</p>
           }
-          <p class="muted kanban__card-meta">
-            {{ tarea.fechaInicio || '—' }} → {{ tarea.fechaFin || '—' }} ·
+          <p class="muted kanban__card-meta">{{ tarea.fechaInicio || '—' }} → {{ tarea.fechaFin || '—' }}</p>
+          <p class="muted kanban__card-responsable">
+            <app-avatar [usuario]="tarea.responsable" />
             @if (tarea.responsable) {
-              {{ tarea.responsable.email }}
+              {{ nombreCompleto(tarea.responsable) }}
             } @else {
               <span class="kanban__sin-asignar">Sin asignar</span>
             }
