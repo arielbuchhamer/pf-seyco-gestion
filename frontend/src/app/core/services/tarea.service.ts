@@ -13,6 +13,11 @@ export class TareaService {
     return this.http.get<Tarea[]>(this.baseUrl, { params });
   }
 
+  // Tareas asignadas al usuario logueado, de todos los proyectos.
+  listarMias(): Observable<Tarea[]> {
+    return this.http.get<Tarea[]>(`${this.baseUrl}/mias`);
+  }
+
   crear(tarea: TareaInput): Observable<Tarea> {
     return this.http.post<Tarea>(this.baseUrl, tarea);
   }

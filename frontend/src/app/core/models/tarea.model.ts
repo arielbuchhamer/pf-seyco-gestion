@@ -11,11 +11,11 @@ export interface Tarea {
   fechaFin: string | null;
   estado: EstadoTarea;
   prioridad: Prioridad | null;
-  proyecto: { id: number };
+  proyecto: { id: number; nombre: string };
   responsable: Usuario | null;
 }
 
-// Al crear, el backend sólo necesita los ids de proyecto/responsable (no hay DTO en el
+// Al crear/editar, el backend sólo necesita los ids de proyecto/responsable (no hay DTO en el
 // back: la entidad se resuelve contra la base — ver TareaService.crear en el backend).
 export interface TareaInput {
   nombre: string;

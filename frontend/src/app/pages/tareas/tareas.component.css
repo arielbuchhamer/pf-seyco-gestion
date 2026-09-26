@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+/* Mismo ancho que el detalle de proyecto: tres columnas de kanban no entran en los
+   60rem de .page (styles.css), pensados para formularios/tablas angostas. */
+.page.tareas-page {
+  max-width: 90rem;
+}

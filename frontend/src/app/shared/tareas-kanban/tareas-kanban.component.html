@@ -1,0 +1,106 @@
+<div class="kanban">
+  @for (estado of estadosTarea; track estado) {
+    <div class="kanban__column">
+      <h3>{{ estadoTareaLabel[estado] }} ({{ columnas()[estado].total }})</h3>
+      @for (tarea of columnas()[estado].items; track tarea.id) {
+        <div class="kanban__card">
+          <div class="kanban__card-header">
+            <p class="kanban__card-title">{{ tarea.nombre }}</p>
+            @if (conAcciones()) {
+              <div class="kanban__card-actions" *tieneRol="'ADMINISTRADOR'">
+                <button
+                  type="button"
+                  class="icon-btn icon-btn--edit"
+                  aria-label="Editar tarea"
+                  title="Editar / reasignar"
+                  (click)="editar.emit(tarea)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9" stroke-linecap="round" stroke-linejoin="round" />
+                    <path
+                      d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn icon-btn--danger"
+                  aria-label="Eliminar tarea"
+                  title="Eliminar"
+                  (click)="eliminar.emit(tarea)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+          @if (mostrarProyecto()) {
+            <a class="kanban__card-proyecto" [routerLink]="['/proyectos', tarea.proyecto.id]">
+              {{ tarea.proyecto.nombre }}
+            </a>
+          }
+          @if (tarea.descripcion) {
+            <p class="muted kanban__card-desc">{{ tarea.descripcion }}</p>
+          }
+          <p class="muted kanban__card-meta">
+            {{ tarea.fechaInicio || '—' }} → {{ tarea.fechaFin || '—' }} ·
+            @if (tarea.responsable) {
+              {{ tarea.responsable.email }}
+            } @else {
+              <span class="kanban__sin-asignar">Sin asignar</span>
+            }
+          </p>
+          <select
+            #estadoSelect
+            class="kanban__estado-select"
+            [disabled]="!puedeCambiarEstado(tarea)"
+            [title]="puedeCambiarEstado(tarea) ? '' : 'Sólo el responsable de la tarea puede cambiar su estado'"
+            (change)="onCambiarEstado(tarea, estadoSelect)"
+          >
+            @for (opcion of estadosTarea; track opcion) {
+              <option [value]="opcion" [selected]="opcion === tarea.estado">
+                {{ estadoTareaLabel[opcion] }}
+              </option>
+            }
+          </select>
+        </div>
+      } @empty {
+        <p class="muted kanban__empty">Sin tareas</p>
+      }
+
+      @if (columnas()[estado].totalPaginas > 1) {
+        <div class="kanban__pager">
+          <button
+            type="button"
+            class="icon-btn"
+            [disabled]="columnas()[estado].pagina === 1"
+            (click)="cambiarPagina(estado, -1)"
+            aria-label="Página anterior"
+          >
+            ‹
+          </button>
+          <span class="muted">
+            {{ columnas()[estado].pagina }} / {{ columnas()[estado].totalPaginas }}
+          </span>
+          <button
+            type="button"
+            class="icon-btn"
+            [disabled]="columnas()[estado].pagina === columnas()[estado].totalPaginas"
+            (click)="cambiarPagina(estado, 1)"
+            aria-label="Página siguiente"
+          >
+            ›
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

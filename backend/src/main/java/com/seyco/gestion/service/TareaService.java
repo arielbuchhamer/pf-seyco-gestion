@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.seyco.gestion.entity.EstadoTarea;
 import com.seyco.gestion.entity.HistorialEstadoTarea;
 import com.seyco.gestion.entity.Proyecto;
+import com.seyco.gestion.entity.Rol;
 import com.seyco.gestion.entity.Tarea;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
@@ -45,6 +46,11 @@ public class TareaService extends BaseService<Tarea, Long> {
 		return proyectoId == null ? listar() : tareaRepository.findByProyectoId(proyectoId);
 	}
 
+	// Historia #7: "la tarea asignada aparece en la lista de tareas del miembro correspondiente".
+	public List<Tarea> listarAsignadas(String emailResponsable) {
+		return tareaRepository.findByResponsableEmail(emailResponsable);
+	}
+
 	// El body sólo trae los ids de proyecto/responsable (no hay DTO): acá se resuelven
 	// contra la base para no persistir una referencia a una entidad no gestionada por JPA.
 	public Tarea crear(Tarea nueva, String emailCreador) {
@@ -68,7 +74,7 @@ public class TareaService extends BaseService<Tarea, Long> {
 		}
 
 		Tarea creada = tareaRepository.save(nueva);
-		registrarHistorial(creada, null, creada.getEstado(), emailCreador);
+		registrarHistorial(creada, null, creada.getEstado(), usuarioRepository.findByEmail(emailCreador).orElse(null));
 		// CUU_7: apenas el proyecto tiene una tarea, deja de estar PLANIFICADO.
 		proyectoService.recalcularEstado(proyecto.getId());
 		return creada;
@@ -103,14 +109,24 @@ public class TareaService extends BaseService<Tarea, Long> {
 	// Único punto donde cambia el estado de una tarea: además de persistirlo, deja
 	// registrado el cambio en HistorialEstadoTarea sin que el usuario haga nada extra
 	// (Historia #8: "el historial de cambios de estado se guarda y puede ser consultado").
+	// El administrador puede cambiar cualquier tarea; el resto, sólo las que tiene asignadas.
+	// No alcanza con @PreAuthorize en el controller: depende de la tarea, no sólo del rol.
 	public Tarea cambiarEstado(Long id, EstadoTarea nuevoEstado, String emailUsuario) {
 		Tarea tarea = buscarPorId(id);
-		EstadoTarea anterior = tarea.getEstado();
+		Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+				.orElseThrow(ServiceException::credencialesInvalidas);
 
+		boolean esResponsable = tarea.getResponsable() != null
+				&& tarea.getResponsable().getId().equals(usuario.getId());
+		if (usuario.getRol() != Rol.ADMINISTRADOR && !esResponsable) {
+			throw ServiceException.prohibido("Sólo podés cambiar el estado de las tareas que tenés asignadas.");
+		}
+
+		EstadoTarea anterior = tarea.getEstado();
 		tarea.setEstado(nuevoEstado);
 		Tarea guardada = tareaRepository.save(tarea);
 
-		registrarHistorial(guardada, anterior, nuevoEstado, emailUsuario);
+		registrarHistorial(guardada, anterior, nuevoEstado, usuario);
 		// CUU_8: recalcula si el proyecto pasa a FINALIZADO (todas sus tareas completadas)
 		// o vuelve a EN_CURSO (si se reabre una tarea de un proyecto ya finalizado).
 		proyectoService.recalcularEstado(guardada.getProyecto().getId());
@@ -134,13 +150,13 @@ public class TareaService extends BaseService<Tarea, Long> {
 		proyectoService.recalcularEstado(proyectoId);
 	}
 
-	private void registrarHistorial(Tarea tarea, EstadoTarea anterior, EstadoTarea nuevo, String emailUsuario) {
+	private void registrarHistorial(Tarea tarea, EstadoTarea anterior, EstadoTarea nuevo, Usuario usuario) {
 		HistorialEstadoTarea historial = new HistorialEstadoTarea();
 		historial.setTarea(tarea);
 		historial.setEstadoAnterior(anterior);
 		historial.setEstadoNuevo(nuevo);
 		historial.setFechaHora(LocalDateTime.now());
-		usuarioRepository.findByEmail(emailUsuario).ifPresent(historial::setUsuario);
+		historial.setUsuario(usuario);
 		historialEstadoTareaRepository.save(historial);
 	}
 }

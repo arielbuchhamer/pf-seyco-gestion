@@ -1,0 +1,39 @@
+<section class="page tareas-page">
+  <header class="page__header">
+    <h1>{{ esAdmin() ? 'Tareas' : 'Mis tareas' }}</h1>
+  </header>
+
+  <div class="filters">
+    <input
+      type="search"
+      placeholder="Buscar por tarea o proyecto…"
+      [value]="busqueda()"
+      (input)="busqueda.set($any($event.target).value)"
+    />
+    @if (esAdmin()) {
+      <select [value]="filtroResponsable()" (change)="filtroResponsable.set($any($event.target).value)">
+        <option value="">Todos los responsables</option>
+        <option value="sin-asignar">Sin asignar</option>
+        @for (usuario of usuariosResource.value(); track usuario.id) {
+          <option [value]="usuario.id">{{ usuario.email }}</option>
+        }
+      </select>
+    }
+  </div>
+
+  @if (tareasResource.error()) {
+    <p class="error" role="alert">No se pudieron cargar las tareas.</p>
+  }
+
+  @if (tareasResource.isLoading()) {
+    <p class="muted">Cargando…</p>
+  } @else if ((tareasResource.value() ?? []).length === 0 && !esAdmin()) {
+    <p class="muted">No tenés tareas asignadas.</p>
+  } @else {
+    <app-tareas-kanban
+      [tareas]="tareasFiltradas()"
+      [mostrarProyecto]="true"
+      (cambiarEstado)="cambiarEstadoTarea($event)"
+    />
+  }
+</section>

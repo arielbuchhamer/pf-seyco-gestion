@@ -9,4 +9,6 @@ import com.seyco.gestion.entity.HistorialEstadoTarea;
 public interface HistorialEstadoTareaRepository extends JpaRepository<HistorialEstadoTarea, Long> {
 
 	List<HistorialEstadoTarea> findByTareaIdOrderByFechaHoraAsc(Long tareaId);
+
+	boolean existsByUsuarioId(Long usuarioId);
 }

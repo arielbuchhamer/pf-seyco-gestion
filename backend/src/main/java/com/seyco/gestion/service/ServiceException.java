@@ -22,6 +22,10 @@ public class ServiceException extends RuntimeException {
 		return new ServiceException(HttpStatus.CONFLICT, mensaje);
 	}
 
+	public static ServiceException prohibido(String mensaje) {
+		return new ServiceException(HttpStatus.FORBIDDEN, mensaje);
+	}
+
 	public static ServiceException datosInvalidos(String mensaje) {
 		return new ServiceException(HttpStatus.BAD_REQUEST, mensaje);
 	}

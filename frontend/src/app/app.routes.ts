@@ -31,6 +31,10 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'tareas',
+        loadComponent: () => import('./pages/tareas/tareas.component').then((m) => m.TareasComponent),
+      },
+      {
         // Patrón para proteger una view por rol: rolGuard(...roles) acá, y los mismos roles
         // en su entrada de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú.
         path: 'usuarios',

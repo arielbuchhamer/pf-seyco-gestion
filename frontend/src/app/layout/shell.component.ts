@@ -7,7 +7,7 @@ interface MenuItem {
   label: string;
   path: string;
   roles: Rol[];
-  icon: 'usuarios' | 'proyectos';
+  icon: 'usuarios' | 'proyectos' | 'tareas';
 }
 
 // Patrón a repetir: cada opción nueva del menú declara qué roles pueden verla (y un ícono, ver
@@ -15,6 +15,7 @@ interface MenuItem {
 // (oficina técnica/gerencia y resto del equipo trabajan sobre proyectos y tareas por igual).
 const MENU_ITEMS: MenuItem[] = [
   { label: 'Proyectos', path: '/proyectos', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'proyectos' },
+  { label: 'Tareas', path: '/tareas', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'tareas' },
   { label: 'Usuarios', path: '/usuarios', roles: ['ADMINISTRADOR'], icon: 'usuarios' },
 ];
 

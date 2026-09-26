@@ -9,4 +9,8 @@ import com.seyco.gestion.entity.Tarea;
 public interface TareaRepository extends JpaRepository<Tarea, Long> {
 
 	List<Tarea> findByProyectoId(Long proyectoId);
+
+	List<Tarea> findByResponsableEmail(String email);
+
+	long countByResponsableId(Long responsableId);
 }

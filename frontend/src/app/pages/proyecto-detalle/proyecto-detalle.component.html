@@ -109,88 +109,21 @@
       <div class="proyecto-layout__main">
         <div class="page__header tareas-header">
           <h2>Tareas</h2>
-          <button type="button" class="btn btn--primary" (click)="abrirCrearTarea()">Nueva tarea</button>
+          <button type="button" class="btn btn--primary" *tieneRol="'ADMINISTRADOR'" (click)="abrirCrearTarea()">
+            Nueva tarea
+          </button>
         </div>
 
         @if (tareasResource.isLoading()) {
           <p class="muted">Cargando…</p>
         } @else {
-          <div class="kanban">
-            @for (estado of estadosTarea; track estado) {
-              <div class="kanban__column">
-                <h3>{{ estadoTareaLabel[estado] }} ({{ columnasTareas()[estado].total }})</h3>
-                @for (tarea of columnasTareas()[estado].items; track tarea.id) {
-                  <div class="kanban__card">
-                    <div class="kanban__card-header">
-                      <p class="kanban__card-title">{{ tarea.nombre }}</p>
-                      <button
-                        type="button"
-                        class="icon-btn icon-btn--danger"
-                        aria-label="Eliminar tarea"
-                        title="Eliminar"
-                        (click)="eliminarTarea(tarea)"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path
-                            d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    @if (tarea.descripcion) {
-                      <p class="muted kanban__card-desc">{{ tarea.descripcion }}</p>
-                    }
-                    <p class="muted kanban__card-meta">
-                      {{ tarea.fechaInicio || '—' }} → {{ tarea.fechaFin || '—' }}
-                      @if (tarea.responsable) {
-                        · {{ tarea.responsable.email }}
-                      }
-                    </p>
-                    <select
-                      class="kanban__estado-select"
-                      (change)="cambiarEstadoTarea(tarea, $any($event.target).value, $any($event.target))"
-                    >
-                      @for (opcion of estadosTarea; track opcion) {
-                        <option [value]="opcion" [selected]="opcion === tarea.estado">
-                          {{ estadoTareaLabel[opcion] }}
-                        </option>
-                      }
-                    </select>
-                  </div>
-                } @empty {
-                  <p class="muted kanban__empty">Sin tareas</p>
-                }
-
-                @if (columnasTareas()[estado].totalPaginas > 1) {
-                  <div class="kanban__pager">
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      [disabled]="columnasTareas()[estado].pagina === 1"
-                      (click)="cambiarPagina(estado, -1)"
-                      aria-label="Página anterior"
-                    >
-                      ‹
-                    </button>
-                    <span class="muted">
-                      {{ columnasTareas()[estado].pagina }} / {{ columnasTareas()[estado].totalPaginas }}
-                    </span>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      [disabled]="columnasTareas()[estado].pagina === columnasTareas()[estado].totalPaginas"
-                      (click)="cambiarPagina(estado, 1)"
-                      aria-label="Página siguiente"
-                    >
-                      ›
-                    </button>
-                  </div>
-                }
-              </div>
-            }
-          </div>
+          <app-tareas-kanban
+            [tareas]="tareasResource.value()"
+            [conAcciones]="true"
+            (cambiarEstado)="cambiarEstadoTarea($event)"
+            (editar)="abrirEditarTarea($event)"
+            (eliminar)="eliminarTarea($event)"
+          />
         }
       </div>
     </div>
@@ -232,9 +165,9 @@
     }
 
     @if (showTareaForm()) {
-      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarCrearTarea()"></button>
+      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarFormTarea()"></button>
       <div class="dialog" role="dialog" aria-modal="true">
-        <h2>Nueva tarea</h2>
+        <h2>{{ editingTarea() ? 'Editar tarea' : 'Nueva tarea' }}</h2>
         <form [formGroup]="tareaForm" (ngSubmit)="guardarTarea()" novalidate>
           @if (tareaFormError()) {
             <p class="error" role="alert">{{ tareaFormError() }}</p>
@@ -265,7 +198,7 @@
               <option value="ALTA">Alta</option>
             </select>
           </label>
-          <label class="field" *tieneRol="'ADMINISTRADOR'">
+          <label class="field">
             <span>Responsable</span>
             <select formControlName="responsableId">
               <option value="">Sin asignar</option>
@@ -275,9 +208,9 @@
             </select>
           </label>
           <div class="dialog__actions">
-            <button type="button" class="btn btn--ghost" (click)="cerrarCrearTarea()">Cancelar</button>
+            <button type="button" class="btn btn--ghost" (click)="cerrarFormTarea()">Cancelar</button>
             <button type="submit" class="btn btn--primary" [disabled]="savingTarea()">
-              {{ savingTarea() ? 'Guardando…' : 'Crear' }}
+              {{ savingTarea() ? 'Guardando…' : editingTarea() ? 'Guardar' : 'Crear' }}
             </button>
           </div>
         </form>

@@ -3,6 +3,10 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
+import {
+  CambioEstadoTarea,
+  TareasKanbanComponent,
+} from '../../shared/tareas-kanban/tareas-kanban.component';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { AuthService } from '../../core/services/auth.service';
 import { Usuario } from '../../core/models/usuario.model';
@@ -16,19 +20,13 @@ import {
 import { ProyectoService } from '../../core/services/proyecto.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { estaVencido } from '../../core/utils/fecha';
-import {
-  ESTADOS_TAREA,
-  ESTADO_TAREA_LABEL,
-  EstadoTarea,
-  Tarea,
-  TareaInput,
-} from '../../core/models/tarea.model';
+import { ESTADOS_TAREA, ESTADO_TAREA_LABEL, Tarea, TareaInput } from '../../core/models/tarea.model';
 import { TareaService } from '../../core/services/tarea.service';
 
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TieneRolDirective],
+  imports: [ReactiveFormsModule, RouterLink, TieneRolDirective, TareasKanbanComponent],
   templateUrl: './proyecto-detalle.component.html',
   styleUrl: './proyecto-detalle.component.css',
 })
@@ -76,43 +74,6 @@ export class ProyectoDetalleComponent {
     () => (this.auth.tieneRol('ADMINISTRADOR') ? { url: '/api/usuarios' } : undefined),
     { defaultValue: [] },
   );
-
-  protected readonly tareasPorEstado = computed(() => {
-    const tareas = this.tareasResource.value() ?? [];
-    return Object.fromEntries(
-      this.estadosTarea.map((estado) => [estado, tareas.filter((t) => t.estado === estado)]),
-    ) as Record<EstadoTarea, Tarea[]>;
-  });
-
-  // Paginación independiente por columna del kanban (Pendiente/En progreso/Completada):
-  // con muchas tareas, cada columna escala sola sin volverse un scroll infinito y sin que
-  // el tamaño de una tape a las demás (a diferencia del prototipo, que usa un único
-  // paginador para las 3 columnas juntas).
-  private static readonly TAREAS_POR_PAGINA = 5;
-  protected readonly paginaPorEstado = signal<Record<EstadoTarea, number>>({
-    PENDIENTE: 1,
-    EN_PROGRESO: 1,
-    COMPLETADA: 1,
-  });
-
-  protected readonly columnasTareas = computed(() => {
-    const porEstado = this.tareasPorEstado();
-    const paginas = this.paginaPorEstado();
-    const tam = ProyectoDetalleComponent.TAREAS_POR_PAGINA;
-    return Object.fromEntries(
-      this.estadosTarea.map((estado) => {
-        const todas = porEstado[estado];
-        const totalPaginas = Math.max(1, Math.ceil(todas.length / tam));
-        const pagina = Math.min(paginas[estado], totalPaginas);
-        const inicio = (pagina - 1) * tam;
-        return [estado, { items: todas.slice(inicio, inicio + tam), pagina, totalPaginas, total: todas.length }];
-      }),
-    ) as Record<EstadoTarea, { items: Tarea[]; pagina: number; totalPaginas: number; total: number }>;
-  });
-
-  cambiarPagina(estado: EstadoTarea, delta: number): void {
-    this.paginaPorEstado.update((actual) => ({ ...actual, [estado]: actual[estado] + delta }));
-  }
 
   // ── Editar proyecto ──
   protected readonly showEditForm = signal(false);
@@ -166,8 +127,9 @@ export class ProyectoDetalleComponent {
     });
   }
 
-  // ── Tareas ──
+  // ── Tareas (crear / editar-reasignar: sólo ADMINISTRADOR, ver @PreAuthorize en TareaController) ──
   protected readonly showTareaForm = signal(false);
+  protected readonly editingTarea = signal<Tarea | null>(null);
   protected readonly savingTarea = signal(false);
   protected readonly tareaFormError = signal<string | null>(null);
 
@@ -181,6 +143,7 @@ export class ProyectoDetalleComponent {
   });
 
   abrirCrearTarea(): void {
+    this.editingTarea.set(null);
     this.tareaFormError.set(null);
     this.tareaForm.reset({
       nombre: '',
@@ -193,7 +156,21 @@ export class ProyectoDetalleComponent {
     this.showTareaForm.set(true);
   }
 
-  cerrarCrearTarea(): void {
+  abrirEditarTarea(tarea: Tarea): void {
+    this.editingTarea.set(tarea);
+    this.tareaFormError.set(null);
+    this.tareaForm.reset({
+      nombre: tarea.nombre,
+      descripcion: tarea.descripcion ?? '',
+      fechaInicio: tarea.fechaInicio ?? '',
+      fechaFin: tarea.fechaFin ?? '',
+      prioridad: tarea.prioridad ?? '',
+      responsableId: tarea.responsable ? String(tarea.responsable.id) : '',
+    });
+    this.showTareaForm.set(true);
+  }
+
+  cerrarFormTarea(): void {
     this.showTareaForm.set(false);
   }
 
@@ -219,7 +196,12 @@ export class ProyectoDetalleComponent {
     this.savingTarea.set(true);
     this.tareaFormError.set(null);
 
-    this.tareaService.crear(payload).subscribe({
+    const editing = this.editingTarea();
+    const request = editing
+      ? this.tareaService.actualizar(editing.id, payload)
+      : this.tareaService.crear(payload);
+
+    request.subscribe({
       next: () => {
         this.savingTarea.set(false);
         this.showTareaForm.set(false);
@@ -227,23 +209,19 @@ export class ProyectoDetalleComponent {
       },
       error: (err) => {
         this.savingTarea.set(false);
-        this.tareaFormError.set(extraerMensajeError(err, 'No se pudo crear la tarea.'));
+        this.tareaFormError.set(extraerMensajeError(err, 'No se pudo guardar la tarea.'));
       },
     });
   }
 
   // Único punto de cambio de estado: dispara el registro de historial en el backend,
   // que es la base de seguimiento (progreso) y rendimiento (duración real vs. planificada).
-  // Recibe el <select> nativo para poder revertirlo a mano si la llamada falla: el browser ya
-  // cambió su valor visualmente apenas el usuario elige una opción, y como no hay [value] atado
-  // reactivamente (ver el fix del bug de "Pendiente" fijo), Angular no lo corrige solo.
-  cambiarEstadoTarea(tarea: Tarea, estado: EstadoTarea, selectEl: HTMLSelectElement): void {
-    if (estado === tarea.estado) return;
-    const estadoOriginal = tarea.estado;
+  // Si la llamada falla se revierte el <select> a mano (ver CambioEstadoTarea).
+  cambiarEstadoTarea({ tarea, estado, select }: CambioEstadoTarea): void {
     this.tareaService.cambiarEstado(tarea.id, estado).subscribe({
       next: () => this.recargarSeguimiento(),
       error: (err) => {
-        selectEl.value = estadoOriginal;
+        select.value = tarea.estado;
         alert(extraerMensajeError(err, 'No se pudo cambiar el estado de la tarea.'));
       },
     });
