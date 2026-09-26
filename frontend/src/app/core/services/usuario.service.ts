@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Usuario, UsuarioInput } from '../models/usuario.model';
 
-// Endpoints admin-only (ver SecurityConfig.requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")).
+// Endpoints admin-only (ver @PreAuthorize en UsuarioController del back).
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private readonly http = inject(HttpClient);

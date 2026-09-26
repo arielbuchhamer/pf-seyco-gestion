@@ -11,7 +11,7 @@ interface MenuItem {
 }
 
 // Patrón a repetir: cada opción nueva del menú declara qué roles pueden verla (y un ícono, ver
-// el @switch en shell.component.html). "Usuarios" es admin-only; "Proyectos" lo ven ambos roles
+// el @switch en shell.component.html). Deben ser los mismos roles que el rolGuard de su ruta. "Usuarios" es admin-only; "Proyectos" lo ven ambos roles
 // (oficina técnica/gerencia y resto del equipo trabajan sobre proyectos y tareas por igual).
 const MENU_ITEMS: MenuItem[] = [
   { label: 'Proyectos', path: '/proyectos', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'proyectos' },
@@ -32,8 +32,7 @@ export class ShellComponent {
   protected readonly menuOpen = signal(false);
 
   protected readonly visibleMenuItems = computed(() => {
-    const rol = this.auth.currentUser()?.rol;
-    return MENU_ITEMS.filter((item) => rol != null && item.roles.includes(rol));
+    return MENU_ITEMS.filter((item) => this.auth.tieneRol(...item.roles));
   });
 
   toggleMenu(): void {

@@ -2,6 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { AuthService } from '../../core/services/auth.service';
 import { Usuario } from '../../core/models/usuario.model';
@@ -27,7 +28,7 @@ import { TareaService } from '../../core/services/tarea.service';
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TieneRolDirective],
   templateUrl: './proyecto-detalle.component.html',
   styleUrl: './proyecto-detalle.component.css',
 })
@@ -70,9 +71,9 @@ export class ProyectoDetalleComponent {
   );
 
   // Solo se pide si es administrador (único rol que puede listar usuarios, ver
-  // SecurityConfig.requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR") en el back).
+  // @PreAuthorize en UsuarioController del back).
   protected readonly usuariosResource = httpResource<Usuario[]>(
-    () => (this.auth.currentUser()?.rol === 'ADMINISTRADOR' ? { url: '/api/usuarios' } : undefined),
+    () => (this.auth.tieneRol('ADMINISTRADOR') ? { url: '/api/usuarios' } : undefined),
     { defaultValue: [] },
   );
 

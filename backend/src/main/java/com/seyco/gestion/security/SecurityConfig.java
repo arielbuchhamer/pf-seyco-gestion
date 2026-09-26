@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,7 +19,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+// @EnableMethodSecurity: los permisos por rol se declaran en cada controller con
+// @PreAuthorize("hasRole('ADMINISTRADOR')") / hasAnyRole(...) (a nivel clase o método),
+// en vez de ir acumulando paths acá. Acá sólo queda "público vs. autenticado".
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	@Value("${app.cors.allowed-origins}")
@@ -39,9 +44,6 @@ public class SecurityConfig {
 						// /error para renderizarlo. Si ese forward vuelve a pasar por la cadena de
 						// seguridad como no-autenticado, pisa el status original con un 401 propio.
 						.requestMatchers("/error").permitAll()
-						// Patrón a repetir para futuros endpoints admin-only: restringir por path acá,
-						// ya que no usamos @PreAuthorize (no hay @EnableMethodSecurity habilitado).
-						.requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.exceptionHandling(ex -> ex.authenticationEntryPoint(

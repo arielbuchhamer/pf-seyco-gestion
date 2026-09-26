@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Usuario, UsuarioInput } from '../../core/models/usuario.model';
+import { ROLES, ROL_LABEL, Rol, Usuario, UsuarioInput } from '../../core/models/usuario.model';
 import { AuthService } from '../../core/services/auth.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 
@@ -16,6 +16,9 @@ export class UsuariosComponent {
   private readonly fb = inject(FormBuilder);
   protected readonly auth = inject(AuthService);
 
+  protected readonly roles = ROLES;
+  protected readonly rolLabel = ROL_LABEL;
+
   protected readonly usuarios = signal<Usuario[]>([]);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
@@ -28,7 +31,7 @@ export class UsuariosComponent {
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     clave: [''],
-    rol: ['USUARIO' as 'ADMINISTRADOR' | 'USUARIO', [Validators.required]],
+    rol: ['USUARIO' as Rol, [Validators.required]],
   });
 
   constructor() {

@@ -265,17 +265,15 @@
               <option value="ALTA">Alta</option>
             </select>
           </label>
-          @if (auth.currentUser()?.rol === 'ADMINISTRADOR') {
-            <label class="field">
-              <span>Responsable</span>
-              <select formControlName="responsableId">
-                <option value="">Sin asignar</option>
-                @for (usuario of usuariosResource.value(); track usuario.id) {
-                  <option [value]="usuario.id">{{ usuario.email }}</option>
-                }
-              </select>
-            </label>
-          }
+          <label class="field" *tieneRol="'ADMINISTRADOR'">
+            <span>Responsable</span>
+            <select formControlName="responsableId">
+              <option value="">Sin asignar</option>
+              @for (usuario of usuariosResource.value(); track usuario.id) {
+                <option [value]="usuario.id">{{ usuario.email }}</option>
+              }
+            </select>
+          </label>
           <div class="dialog__actions">
             <button type="button" class="btn btn--ghost" (click)="cerrarCrearTarea()">Cancelar</button>
             <button type="submit" class="btn btn--primary" [disabled]="savingTarea()">

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { rolGuard } from './core/guards/rol.guard';
 
 export const routes: Routes = [
   {
@@ -31,10 +31,10 @@ export const routes: Routes = [
           ),
       },
       {
-        // Patrón a repetir para futuras rutas admin-only: canActivate propio además
-        // de no aparecer en el menú (ver MENU_ITEMS en layout/shell.component.ts).
+        // Patrón para proteger una view por rol: rolGuard(...roles) acá, y los mismos roles
+        // en su entrada de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú.
         path: 'usuarios',
-        canActivate: [adminGuard],
+        canActivate: [rolGuard('ADMINISTRADOR')],
         loadComponent: () =>
           import('./pages/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
       },

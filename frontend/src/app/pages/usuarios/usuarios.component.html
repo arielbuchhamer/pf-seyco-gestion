@@ -23,7 +23,7 @@
         @for (usuario of usuarios(); track usuario.id) {
           <tr>
             <td data-label="Email">{{ usuario.email }}</td>
-            <td data-label="Rol">{{ usuario.rol }}</td>
+            <td data-label="Rol">{{ rolLabel[usuario.rol] }}</td>
             <td class="table__actions">
               <button
                 type="button"
@@ -130,8 +130,9 @@
         <label class="field">
           <span>Rol</span>
           <select formControlName="rol">
-            <option value="USUARIO">Usuario</option>
-            <option value="ADMINISTRADOR">Administrador</option>
+            @for (rol of roles; track rol) {
+              <option [value]="rol">{{ rolLabel[rol] }}</option>
+            }
           </select>
         </label>
 

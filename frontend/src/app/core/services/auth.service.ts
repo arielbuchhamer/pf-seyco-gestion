@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, of, tap } from 'rxjs';
-import { Usuario } from '../models/usuario.model';
+import { Rol, Usuario } from '../models/usuario.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,6 +10,13 @@ export class AuthService {
 
   readonly currentUser = signal<Usuario | null>(null);
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
+
+  // Chequeo de rol para usar desde código TS (en templates, preferir *tieneRol).
+  // Lee el signal, así que dentro de computed()/httpResource() se re-evalúa solo al cambiar de usuario.
+  tieneRol(...roles: Rol[]): boolean {
+    const rol = this.currentUser()?.rol;
+    return rol != null && roles.includes(rol);
+  }
 
   login(email: string, clave: string): Observable<Usuario> {
     return this.http

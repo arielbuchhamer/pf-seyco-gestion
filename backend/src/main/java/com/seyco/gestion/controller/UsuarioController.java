@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +20,10 @@ import com.seyco.gestion.service.UsuarioService;
 
 import jakarta.validation.Valid;
 
-// Solo accesible para ADMINISTRADOR: restringido en SecurityConfig por path (/api/usuarios/**).
+// Patrón para restringir por rol: @PreAuthorize a nivel clase (todo el controller) o en
+// un método puntual. Un usuario sin el rol recibe 403.
 @RestController
+@PreAuthorize("hasRole('ADMINISTRADOR')")
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
