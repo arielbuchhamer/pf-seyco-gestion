@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,13 +43,17 @@ public class ProyectoController {
 		return proyectoService.buscarPorId(id);
 	}
 
+	// Alta, modificación y baja de proyectos son del Gerente de Proyecto (Historia #5, CUU_9,
+	// CUU_10), que en esta app es el ADMINISTRADOR. Ver/seguir proyectos queda para todos.
 	@PostMapping
+	@PreAuthorize("hasRole('ADMINISTRADOR')")
 	public ResponseEntity<Proyecto> crear(@Valid @RequestBody Proyecto proyecto) {
 		Proyecto creado = proyectoService.crear(proyecto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(creado);
 	}
 
 	@PutMapping("/{id}")
+	@PreAuthorize("hasRole('ADMINISTRADOR')")
 	public Proyecto actualizar(@PathVariable Long id, @RequestBody Proyecto cambios) {
 		return proyectoService.actualizar(id, cambios);
 	}
@@ -64,6 +69,7 @@ public class ProyectoController {
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMINISTRADOR')")
 	public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 		proyectoService.eliminar(id);
 		return ResponseEntity.noContent().build();

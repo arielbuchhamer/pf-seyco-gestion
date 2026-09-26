@@ -4,12 +4,13 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { EstadoProyecto, Proyecto, ProyectoInput } from '../../core/models/proyecto.model';
 import { ProyectoService } from '../../core/services/proyecto.service';
+import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
 import { ProyectoCardComponent } from './proyecto-card.component';
 
 @Component({
   selector: 'app-proyectos',
   standalone: true,
-  imports: [ReactiveFormsModule, ProyectoCardComponent],
+  imports: [ReactiveFormsModule, ProyectoCardComponent, TieneRolDirective],
   templateUrl: './proyectos.component.html',
   styleUrl: './proyectos.component.css',
 })

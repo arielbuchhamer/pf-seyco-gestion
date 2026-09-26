@@ -21,7 +21,9 @@
           </span>
         </p>
       </div>
-      <button type="button" class="btn btn--ghost" (click)="abrirEditarProyecto()">Editar proyecto</button>
+      <button type="button" class="btn btn--ghost" *tieneRol="'ADMINISTRADOR'" (click)="abrirEditarProyecto()">
+        Editar proyecto
+      </button>
     </header>
 
     @if (proyecto.descripcion) {
