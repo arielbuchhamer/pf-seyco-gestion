@@ -1,70 +1,62 @@
 package com.seyco.gestion.controller;
 
-import java.time.Duration;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.seyco.gestion.entity.Usuario;
-import com.seyco.gestion.security.JwtAuthenticationFilter;
+import com.seyco.gestion.dto.AuthDtos.LoginRequest;
+import com.seyco.gestion.dto.AuthDtos.RecuperarRequest;
+import com.seyco.gestion.dto.AuthDtos.RespuestaAuth;
+import com.seyco.gestion.dto.AuthDtos.RestablecerRequest;
+import com.seyco.gestion.dto.Mensaje;
+import com.seyco.gestion.security.UsuarioAutenticado;
 import com.seyco.gestion.service.AuthService;
-import com.seyco.gestion.service.JwtService;
+import com.seyco.gestion.service.RecuperacionService;
 
-import jakarta.validation.Valid;
-
+// Públicas (ver SecurityConfig): login, recuperar y restablecer. El resto exige sesión.
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
 	private final AuthService authService;
-	private final JwtService jwtService;
+	private final RecuperacionService recuperacionService;
 
-	@Value("${app.cookie.secure}")
-	private boolean cookieSecure;
-
-	public AuthController(AuthService authService, JwtService jwtService) {
+	public AuthController(AuthService authService, RecuperacionService recuperacionService) {
 		this.authService = authService;
-		this.jwtService = jwtService;
+		this.recuperacionService = recuperacionService;
 	}
 
+	// Devuelve el token de sesión, el usuario con sus roles y sus permisos (paneles y módulos).
 	@PostMapping("/login")
-	public ResponseEntity<Usuario> login(@Valid @RequestBody Usuario credenciales) {
-		Usuario usuario = authService.login(credenciales);
-		String token = jwtService.generateToken(usuario);
-
-		return ResponseEntity.ok()
-				.header(HttpHeaders.SET_COOKIE, buildCookie(token, jwtService.getExpirationMs()).toString())
-				.body(usuario);
+	public RespuestaAuth login(@RequestBody LoginRequest credenciales) {
+		return authService.login(credenciales);
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout() {
-		return ResponseEntity.noContent()
-				.header(HttpHeaders.SET_COOKIE, buildCookie("", 0).toString())
-				.build();
+	public Mensaje logout(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+		authService.logout(usuario.token());
+		return new Mensaje("Sesión cerrada correctamente.");
 	}
 
 	@GetMapping("/me")
-	public ResponseEntity<Usuario> me(Authentication authentication) {
-		Usuario usuario = authService.buscarPorEmail(authentication.getName());
-		return ResponseEntity.ok(usuario);
+	public RespuestaAuth me(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+		return authService.perfil(usuario.id());
 	}
 
-	private ResponseCookie buildCookie(String token, long maxAgeMs) {
-		return ResponseCookie.from(JwtAuthenticationFilter.COOKIE_NAME, token)
-				.httpOnly(true)
-				.secure(cookieSecure)
-				.sameSite("Lax")
-				.path("/")
-				.maxAge(Duration.ofMillis(maxAgeMs))
-				.build();
+	// "¿Olvidaste tu contraseña?": mismo mensaje exista o no la cuenta.
+	@PostMapping("/recuperar")
+	public Mensaje recuperar(@RequestBody RecuperarRequest pedido) {
+		recuperacionService.solicitar(pedido.email());
+		return new Mensaje("Si el correo está registrado, te enviamos un enlace para restablecer la contraseña. "
+				+ "Revisá tu bandeja de entrada (y la carpeta de spam).");
+	}
+
+	@PostMapping("/restablecer")
+	public Mensaje restablecer(@RequestBody RestablecerRequest pedido) {
+		recuperacionService.restablecer(pedido.token(), pedido.contrasena());
+		return new Mensaje("¡Listo! Tu contraseña fue actualizada. Ya podés iniciar sesión.");
 	}
 }

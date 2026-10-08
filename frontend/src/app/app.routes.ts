@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { rolGuard } from './core/guards/rol.guard';
+import { panelGuard } from './core/guards/panel.guard';
+import { PANELES } from './core/models/acceso.model';
 
 export const routes: Routes = [
   {
+    // También recibe el link del correo de recuperación: /login?restablecer=<token>
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
@@ -19,12 +21,17 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        // Patrón para proteger una view: panelGuard(panel) acá, y el mismo panel en su entrada
+        // de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú. Qué roles
+        // ven cada panel se configura en la base (roles_paneles) desde la pantalla Roles.
         path: 'proyectos',
+        canActivate: [panelGuard(PANELES.proyectos)],
         loadComponent: () =>
           import('./pages/proyectos/proyectos.component').then((m) => m.ProyectosComponent),
       },
       {
         path: 'proyectos/:id',
+        canActivate: [panelGuard(PANELES.proyectos)],
         loadComponent: () =>
           import('./pages/proyecto-detalle/proyecto-detalle.component').then(
             (m) => m.ProyectoDetalleComponent,
@@ -32,15 +39,19 @@ export const routes: Routes = [
       },
       {
         path: 'tareas',
+        canActivate: [panelGuard(PANELES.tareas)],
         loadComponent: () => import('./pages/tareas/tareas.component').then((m) => m.TareasComponent),
       },
       {
-        // Patrón para proteger una view por rol: rolGuard(...roles) acá, y los mismos roles
-        // en su entrada de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú.
         path: 'usuarios',
-        canActivate: [rolGuard('ADMINISTRADOR')],
+        canActivate: [panelGuard(PANELES.usuarios)],
         loadComponent: () =>
           import('./pages/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
+      },
+      {
+        path: 'roles',
+        canActivate: [panelGuard(PANELES.roles)],
+        loadComponent: () => import('./pages/roles/roles.component').then((m) => m.RolesComponent),
       },
     ],
   },

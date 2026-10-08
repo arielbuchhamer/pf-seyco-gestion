@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.seyco.gestion.entity.EstadoTarea;
 import com.seyco.gestion.entity.HistorialEstadoTarea;
 import com.seyco.gestion.entity.Proyecto;
-import com.seyco.gestion.entity.Rol;
 import com.seyco.gestion.entity.Tarea;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
@@ -25,16 +24,18 @@ public class TareaService extends BaseService<Tarea, Long> {
 	private final UsuarioRepository usuarioRepository;
 	private final HistorialEstadoTareaRepository historialEstadoTareaRepository;
 	private final ProyectoService proyectoService;
+	private final PermisoService permisoService;
 
 	public TareaService(TareaRepository tareaRepository, ProyectoRepository proyectoRepository,
 			UsuarioRepository usuarioRepository, HistorialEstadoTareaRepository historialEstadoTareaRepository,
-			ProyectoService proyectoService) {
+			ProyectoService proyectoService, PermisoService permisoService) {
 		super("La tarea no existe.");
 		this.tareaRepository = tareaRepository;
 		this.proyectoRepository = proyectoRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.historialEstadoTareaRepository = historialEstadoTareaRepository;
 		this.proyectoService = proyectoService;
+		this.permisoService = permisoService;
 	}
 
 	@Override
@@ -62,7 +63,7 @@ public class TareaService extends BaseService<Tarea, Long> {
 		nueva.setProyecto(proyecto);
 
 		if (nueva.getResponsable() != null && nueva.getResponsable().getId() != null) {
-			Usuario responsable = usuarioRepository.findById(nueva.getResponsable().getId())
+			Usuario responsable = usuarioRepository.findByIdAndFechaBajaIsNull(nueva.getResponsable().getId())
 					.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
 			nueva.setResponsable(responsable);
 		} else {
@@ -74,7 +75,7 @@ public class TareaService extends BaseService<Tarea, Long> {
 		}
 
 		Tarea creada = tareaRepository.save(nueva);
-		registrarHistorial(creada, null, creada.getEstado(), usuarioRepository.findByEmail(emailCreador).orElse(null));
+		registrarHistorial(creada, null, creada.getEstado(), usuarioRepository.findByEmailIgnoreCaseAndFechaBajaIsNull(emailCreador).orElse(null));
 		// CUU_7: apenas el proyecto tiene una tarea, deja de estar PLANIFICADO.
 		proyectoService.recalcularEstado(proyecto.getId());
 		return creada;
@@ -96,7 +97,7 @@ public class TareaService extends BaseService<Tarea, Long> {
 		existente.setPrioridad(cambios.getPrioridad());
 
 		if (cambios.getResponsable() != null && cambios.getResponsable().getId() != null) {
-			Usuario responsable = usuarioRepository.findById(cambios.getResponsable().getId())
+			Usuario responsable = usuarioRepository.findByIdAndFechaBajaIsNull(cambios.getResponsable().getId())
 					.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
 			existente.setResponsable(responsable);
 		} else {
@@ -109,16 +110,16 @@ public class TareaService extends BaseService<Tarea, Long> {
 	// Único punto donde cambia el estado de una tarea: además de persistirlo, deja
 	// registrado el cambio en HistorialEstadoTarea sin que el usuario haga nada extra
 	// (Historia #8: "el historial de cambios de estado se guarda y puede ser consultado").
-	// El administrador puede cambiar cualquier tarea; el resto, sólo las que tiene asignadas.
-	// No alcanza con @PreAuthorize en el controller: depende de la tarea, no sólo del rol.
+	// Quien puede editar el módulo `tareas` cambia cualquier tarea; el resto, sólo las que tiene
+	// asignadas. No alcanza con @PreAuthorize en el controller: depende de la tarea, no sólo de los permisos.
 	public Tarea cambiarEstado(Long id, EstadoTarea nuevoEstado, String emailUsuario) {
 		Tarea tarea = buscarPorId(id);
-		Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+		Usuario usuario = usuarioRepository.findByEmailIgnoreCaseAndFechaBajaIsNull(emailUsuario)
 				.orElseThrow(ServiceException::credencialesInvalidas);
 
 		boolean esResponsable = tarea.getResponsable() != null
 				&& tarea.getResponsable().getId().equals(usuario.getId());
-		if (usuario.getRol() != Rol.ADMINISTRADOR && !esResponsable) {
+		if (!esResponsable && !permisoService.tienePermiso(usuario.getId(), "tareas", PermisoService.EDITAR)) {
 			throw ServiceException.prohibido("Sólo podés cambiar el estado de las tareas que tenés asignadas.");
 		}
 

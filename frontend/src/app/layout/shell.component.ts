@@ -1,29 +1,37 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
-import { Rol, nombreCompleto } from '../core/models/usuario.model';
-import { AvatarComponent } from '../shared/avatar/avatar.component';
+import { PANELES } from '../core/models/acceso.model';
+import { FaqDialogComponent } from '../shared/faq/faq-dialog.component';
+import { SnackbarComponent } from '../shared/snackbar/snackbar.component';
+import { UsuarioMenuComponent } from './usuario-menu.component';
 
 interface MenuItem {
   label: string;
   path: string;
-  roles: Rol[];
-  icon: 'usuarios' | 'proyectos' | 'tareas';
+  panel: string;
+  // Título del grupo en el menú (opcional). Los ítems de un mismo grupo van seguidos.
+  seccion?: string;
+  icon: 'usuarios' | 'roles' | 'proyectos' | 'tareas';
 }
 
-// Patrón a repetir: cada opción nueva del menú declara qué roles pueden verla (y un ícono, ver
-// el @switch en shell.component.html). Deben ser los mismos roles que el rolGuard de su ruta. "Usuarios" es admin-only; "Proyectos" lo ven ambos roles
-// (oficina técnica/gerencia y resto del equipo trabajan sobre proyectos y tareas por igual).
+// Patrón a repetir: cada opción nueva del menú declara qué panel la habilita (y un ícono, ver
+// el @switch en shell.component.html). Debe ser el mismo panel que el panelGuard de su ruta.
+// Qué roles ven cada panel se configura en la base (roles_paneles) desde la pantalla Roles.
+// La sección "Gestión global" todavía no tiene paneles: se muestra fija en shell.component.html
+// como "Próximamente" hasta que se agreguen.
 const MENU_ITEMS: MenuItem[] = [
-  { label: 'Proyectos', path: '/proyectos', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'proyectos' },
-  { label: 'Tareas', path: '/tareas', roles: ['ADMINISTRADOR', 'USUARIO'], icon: 'tareas' },
-  { label: 'Usuarios', path: '/usuarios', roles: ['ADMINISTRADOR'], icon: 'usuarios' },
+  { label: 'Proyectos', path: '/proyectos', panel: PANELES.proyectos, seccion: 'Gestión de proyecto', icon: 'proyectos' },
+  { label: 'Tareas', path: '/tareas', panel: PANELES.tareas, seccion: 'Gestión de proyecto', icon: 'tareas' },
+  // Igual que el sidebar del proyecto de referencia: Roles y Usuarios agrupados (en la base, sólo admin).
+  { label: 'Usuarios', path: '/usuarios', panel: PANELES.usuarios, seccion: 'Gestión de usuarios', icon: 'usuarios' },
+  { label: 'Roles', path: '/roles', panel: PANELES.roles, seccion: 'Gestión de usuarios', icon: 'roles' },
 ];
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, AvatarComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SnackbarComponent, UsuarioMenuComponent, FaqDialogComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
 })
@@ -32,11 +40,18 @@ export class ShellComponent {
   private readonly router = inject(Router);
 
   protected readonly menuOpen = signal(false);
-  protected readonly nombreCompleto = nombreCompleto;
+  protected readonly faqOpen = signal(false);
 
   protected readonly visibleMenuItems = computed(() => {
-    return MENU_ITEMS.filter((item) => this.auth.tieneRol(...item.roles));
+    return MENU_ITEMS.filter((item) => this.auth.puedeVerPanel(item.panel));
   });
+
+  // Se muestra el título del grupo antes del primer ítem de cada sección.
+  iniciaSeccion(indice: number): boolean {
+    const items = this.visibleMenuItems();
+    const seccion = items[indice].seccion;
+    return !!seccion && (indice === 0 || items[indice - 1].seccion !== seccion);
+  }
 
   toggleMenu(): void {
     this.menuOpen.update((open) => !open);

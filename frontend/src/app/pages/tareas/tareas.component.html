@@ -1,6 +1,6 @@
 <section class="page tareas-page">
   <header class="page__header">
-    <h1>{{ esAdmin() ? 'Tareas' : 'Mis tareas' }}</h1>
+    <h1>{{ veTodas() ? 'Tareas' : 'Mis tareas' }}</h1>
   </header>
 
   <div class="filters">
@@ -10,7 +10,7 @@
       [value]="busqueda()"
       (input)="busqueda.set($any($event.target).value)"
     />
-    @if (esAdmin()) {
+    @if (veTodas()) {
       <select [value]="filtroResponsable()" (change)="filtroResponsable.set($any($event.target).value)">
         <option value="">Todos los responsables</option>
         <option value="sin-asignar">Sin asignar</option>
@@ -27,7 +27,7 @@
 
   @if (tareasResource.isLoading()) {
     <p class="muted">Cargando…</p>
-  } @else if ((tareasResource.value() ?? []).length === 0 && !esAdmin()) {
+  } @else if ((tareasResource.value() ?? []).length === 0 && !veTodas()) {
     <p class="muted">No tenés tareas asignadas.</p>
   } @else {
     <app-tareas-kanban

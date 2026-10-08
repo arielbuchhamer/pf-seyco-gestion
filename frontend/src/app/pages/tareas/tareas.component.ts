@@ -11,8 +11,8 @@ import {
 } from '../../shared/tareas-kanban/tareas-kanban.component';
 
 // Historia #7: "la tarea asignada aparece en la lista de tareas del miembro correspondiente"
-// (prototipo "User Tasks"). El USUARIO ve sus tareas de todos los proyectos; el ADMINISTRADOR
-// ve todas, con un filtro por responsable (prototipo "Admin Tasks").
+// (prototipo "User Tasks"). Cada usuario ve sus tareas de todos los proyectos; quien gestiona
+// tareas (permiso tareas:editar) ve todas, con un filtro por responsable (prototipo "Admin Tasks").
 @Component({
   selector: 'app-tareas',
   standalone: true,
@@ -25,16 +25,16 @@ export class TareasComponent {
   protected readonly auth = inject(AuthService);
   protected readonly nombreCompleto = nombreCompleto;
 
-  protected readonly esAdmin = computed(() => this.auth.tieneRol('ADMINISTRADOR'));
+  protected readonly veTodas = computed(() => this.auth.puede('tareas', 'editar'));
 
   protected readonly tareasResource = httpResource<Tarea[]>(
-    () => ({ url: this.esAdmin() ? '/api/tareas' : '/api/tareas/mias' }),
+    () => ({ url: this.veTodas() ? '/api/tareas' : '/api/tareas/mias' }),
     { defaultValue: [] },
   );
 
-  // Solo el administrador lista usuarios (ver @PreAuthorize en UsuarioController del back).
+  // Para el filtro por responsable; requiere leer el módulo `usuarios` (ver UsuarioController del back).
   protected readonly usuariosResource = httpResource<Usuario[]>(
-    () => (this.esAdmin() ? { url: '/api/usuarios' } : undefined),
+    () => (this.veTodas() && this.auth.puede('usuarios', 'leer') ? { url: '/api/usuarios' } : undefined),
     { defaultValue: [] },
   );
 

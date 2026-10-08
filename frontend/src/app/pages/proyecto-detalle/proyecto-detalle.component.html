@@ -21,7 +21,7 @@
           </span>
         </p>
       </div>
-      <button type="button" class="btn btn--ghost" *tieneRol="'ADMINISTRADOR'" (click)="abrirEditarProyecto()">
+      <button type="button" class="btn btn--ghost" *puede="'proyectos:editar'" (click)="abrirEditarProyecto()">
         Editar proyecto
       </button>
     </header>
@@ -111,7 +111,7 @@
       <div class="proyecto-layout__main">
         <div class="page__header tareas-header">
           <h2>Tareas</h2>
-          <button type="button" class="btn btn--primary" *tieneRol="'ADMINISTRADOR'" (click)="abrirCrearTarea()">
+          <button type="button" class="btn btn--primary" *puede="'tareas:escribir'" (click)="abrirCrearTarea()">
             Nueva tarea
           </button>
         </div>

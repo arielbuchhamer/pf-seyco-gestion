@@ -33,43 +33,48 @@ public class ProyectoController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAuthority('proyectos:leer')")
 	public List<Proyecto> listar(@RequestParam(required = false) String nombre,
 			@RequestParam(required = false) EstadoProyecto estado) {
 		return proyectoService.listar(nombre, estado);
 	}
 
 	@GetMapping("/{id}")
+	@PreAuthorize("hasAuthority('proyectos:leer')")
 	public Proyecto buscarPorId(@PathVariable Long id) {
 		return proyectoService.buscarPorId(id);
 	}
 
 	// Alta, modificación y baja de proyectos son del Gerente de Proyecto (Historia #5, CUU_9,
-	// CUU_10), que en esta app es el ADMINISTRADOR. Ver/seguir proyectos queda para todos.
+	// CUU_10): permisos escribir/editar del módulo `proyectos` (en la base, el rol admin).
+	// Ver/seguir proyectos sólo pide leer (también lo tiene el rol visor).
 	@PostMapping
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('proyectos:escribir')")
 	public ResponseEntity<Proyecto> crear(@Valid @RequestBody Proyecto proyecto) {
 		Proyecto creado = proyectoService.crear(proyecto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(creado);
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('proyectos:editar')")
 	public Proyecto actualizar(@PathVariable Long id, @RequestBody Proyecto cambios) {
 		return proyectoService.actualizar(id, cambios);
 	}
 
 	@GetMapping("/{id}/progreso")
+	@PreAuthorize("hasAuthority('proyectos:leer')")
 	public Map<String, Object> progreso(@PathVariable Long id) {
 		return proyectoService.progreso(id);
 	}
 
 	@GetMapping("/{id}/rendimiento")
+	@PreAuthorize("hasAuthority('proyectos:leer')")
 	public Map<String, Object> rendimiento(@PathVariable Long id) {
 		return proyectoService.rendimiento(id);
 	}
 
 	@DeleteMapping("/{id}")
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('proyectos:editar')")
 	public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 		proyectoService.eliminar(id);
 		return ResponseEntity.noContent().build();

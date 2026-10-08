@@ -1,7 +1,7 @@
 <section class="page proyectos-page">
   <header class="page__header">
     <h1>Proyectos</h1>
-    <button type="button" class="btn btn--primary" *tieneRol="'ADMINISTRADOR'" (click)="abrirCrear()">
+    <button type="button" class="btn btn--primary" *puede="'proyectos:escribir'" (click)="abrirCrear()">
       Nuevo proyecto
     </button>
   </header>

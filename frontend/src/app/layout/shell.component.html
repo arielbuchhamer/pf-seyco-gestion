@@ -9,22 +9,26 @@
     >
       <span></span><span></span><span></span>
     </button>
-    <span class="topbar__brand">Seyco S.A</span>
+    <a class="topbar__brand" routerLink="/dashboard" title="Ir al menú principal" aria-label="Seyco S.A - Ir al menú principal">
+      <img src="assets/img/Logo_seyco.png" alt="Seyco S.A" class="topbar__logo" />
+    </a>
     @if (auth.currentUser(); as usuario) {
-      <span class="topbar__usuario">
-        <app-avatar [usuario]="usuario" tamano="md" />
-        <span class="topbar__usuario-nombre">{{ nombreCompleto(usuario) }}</span>
-      </span>
+      <app-usuario-menu [usuario]="usuario" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
     }
-    <button type="button" class="topbar__logout" (click)="logout()">Cerrar sesión</button>
   </header>
 
   @if (menuOpen()) {
     <button type="button" class="backdrop" aria-label="Cerrar menú" (click)="closeMenu()"></button>
     <nav class="menu">
+      <p class="menu__seccion">Gestión global</p>
+      <span class="menu__pronto">Próximamente</span>
+
       @if (visibleMenuItems().length > 0) {
         @for (item of visibleMenuItems(); track item.path) {
-          <a class="menu__item" [routerLink]="item.path" (click)="closeMenu()">
+          @if (iniciaSeccion($index)) {
+            <p class="menu__seccion">{{ item.seccion }}</p>
+          }
+          <a class="menu__item" [routerLink]="item.path" routerLinkActive="menu__item--activo" (click)="closeMenu()">
             @switch (item.icon) {
               @case ('usuarios') {
                 <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
@@ -35,6 +39,17 @@
                     stroke-width="1.6"
                     stroke-linecap="round"
                   />
+                </svg>
+              }
+              @case ('roles') {
+                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 3.5l7 2.8v5.2c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.3l7-2.8Z"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linejoin="round"
+                  />
+                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               }
               @case ('tareas') {
@@ -69,4 +84,10 @@
   <main class="content">
     <router-outlet />
   </main>
+
+  @if (faqOpen()) {
+    <app-faq-dialog (cerrar)="faqOpen.set(false)" />
+  }
+
+  <app-snackbar />
 </div>

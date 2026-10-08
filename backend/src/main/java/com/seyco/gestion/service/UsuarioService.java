@@ -1,128 +1,170 @@
 package com.seyco.gestion.service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.seyco.gestion.dto.AccesoDtos.RolResumen;
+import com.seyco.gestion.dto.AccesoDtos.UsuarioListado;
 import com.seyco.gestion.entity.Usuario;
-import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
+import com.seyco.gestion.repository.RolUsuarioRepository;
+import com.seyco.gestion.repository.SesionRepository;
 import com.seyco.gestion.repository.TareaRepository;
 import com.seyco.gestion.repository.UsuarioRepository;
 
+// Los roles del usuario no se cambian acá sino con /api/roles/{id}/usuarios (módulo `roles`):
+// así quien sólo administra usuarios no puede darse a sí mismo (ni a nadie) el rol admin.
 @Service
 public class UsuarioService {
 
-	// Regla simplificada respecto al relevamiento original (mayúscula + carácter especial quedaron afuera): 8+ caracteres y 1 número.
-	private static final Pattern PASSWORD_PATTERN =
-			Pattern.compile("^(?=.*\\d).{8,}$");
+	// Regla simplificada respecto al relevamiento original (mayúscula + carácter especial quedaron afuera):
+	// 8+ caracteres y 1 número. Máximo 72: BCrypt ignora lo que pase de 72 bytes.
+	private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*\\d).{8,72}$");
+	private static final int LARGO_MAXIMO = 50;
 
 	private final UsuarioRepository usuarioRepository;
-	private final PasswordEncoder passwordEncoder;
+	private final RolUsuarioRepository rolUsuarioRepository;
+	private final SesionRepository sesionRepository;
 	private final TareaRepository tareaRepository;
-	private final HistorialEstadoTareaRepository historialEstadoTareaRepository;
+	private final PasswordEncoder passwordEncoder;
 
-	public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-			TareaRepository tareaRepository, HistorialEstadoTareaRepository historialEstadoTareaRepository) {
+	public UsuarioService(UsuarioRepository usuarioRepository, RolUsuarioRepository rolUsuarioRepository,
+			SesionRepository sesionRepository, TareaRepository tareaRepository, PasswordEncoder passwordEncoder) {
 		this.usuarioRepository = usuarioRepository;
-		this.passwordEncoder = passwordEncoder;
+		this.rolUsuarioRepository = rolUsuarioRepository;
+		this.sesionRepository = sesionRepository;
 		this.tareaRepository = tareaRepository;
-		this.historialEstadoTareaRepository = historialEstadoTareaRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
-	public List<Usuario> listar() {
-		return usuarioRepository.findAll();
+	// También la usa RecuperacionService al restablecer la contraseña.
+	public static void validarContrasena(String contrasena) {
+		if (contrasena == null || !PASSWORD_PATTERN.matcher(contrasena).matches()) {
+			throw ServiceException.datosInvalidos(
+					"La contraseña debe tener entre 8 y 72 caracteres y al menos un número.");
+		}
 	}
 
+	@Transactional(readOnly = true)
+	public List<UsuarioListado> listar() {
+		Map<Long, List<RolResumen>> rolesPorUsuario = rolUsuarioRepository.findAllConRol().stream()
+				.collect(Collectors.groupingBy(ru -> ru.getUsuario().getId(),
+						Collectors.mapping(ru -> new RolResumen(ru.getRol().getId(), ru.getRol().getNombre()),
+								Collectors.toList())));
+
+		Map<Long, Long> sesionesPorUsuario = sesionRepository.contarPorUsuario().stream()
+				.collect(Collectors.toMap(fila -> (Long) fila[0], fila -> (Long) fila[1]));
+
+		return usuarioRepository.findByFechaBajaIsNullOrderByApellidoAscNombreAsc().stream()
+				.map(u -> new UsuarioListado(u.getId(), u.getEmail(), u.getNombre(), u.getApellido(), u.getDni(),
+						u.getTelefono(), u.getFechaAlta(), u.getFechaActualizacion(), u.getFechaBaja(),
+						rolesPorUsuario.getOrDefault(u.getId(), List.of()),
+						sesionesPorUsuario.getOrDefault(u.getId(), 0L)))
+				.toList();
+	}
+
+	@Transactional
 	public Usuario crear(Usuario nuevo) {
-		if (nuevo.getRol() == null) {
-			throw ServiceException.datosInvalidos("El rol es obligatorio.");
-		}
-		validarNombreYApellido(nuevo);
-		if (!PASSWORD_PATTERN.matcher(nuevo.getClave()).matches()) {
-			throw ServiceException.datosInvalidos("La contraseña debe tener al menos 8 caracteres y un número.");
-		}
-		if (usuarioRepository.findByEmail(nuevo.getEmail()).isPresent()) {
+		validarDatos(nuevo);
+		validarContrasena(nuevo.getContrasena());
+		if (usuarioRepository.existsByEmailIgnoreCaseAndFechaBajaIsNull(nuevo.getEmail())) {
 			throw ServiceException.conflicto("Ya existe un usuario registrado con ese email.");
 		}
 
-		nuevo.setClave(passwordEncoder.encode(nuevo.getClave()));
+		nuevo.setId(null);
+		nuevo.setContrasena(passwordEncoder.encode(nuevo.getContrasena()));
+		nuevo.setFechaAlta(Instant.now());
+		nuevo.setFechaActualizacion(null);
+		nuevo.setFechaBaja(null);
 		return usuarioRepository.save(nuevo);
 	}
 
 	// Sin @Valid en el controller: acá la contraseña es opcional (vacía = no cambiarla),
 	// por eso las validaciones se hacen a mano en vez de con anotaciones de la entidad.
+	@Transactional
 	public Usuario actualizar(Long id, Usuario cambios) {
-		Usuario existente = usuarioRepository.findById(id)
-				.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
+		Usuario existente = buscarActivo(id);
+		validarDatos(cambios);
 
-		if (cambios.getEmail() == null || cambios.getEmail().isBlank()) {
-			throw ServiceException.datosInvalidos("El email es obligatorio.");
+		if (usuarioRepository.existsByEmailIgnoreCaseAndFechaBajaIsNullAndIdNot(cambios.getEmail(), id)) {
+			throw ServiceException.conflicto("Ya existe un usuario registrado con ese email.");
 		}
-		if (cambios.getRol() == null) {
-			throw ServiceException.datosInvalidos("El rol es obligatorio.");
-		}
-		validarNombreYApellido(cambios);
-
-		usuarioRepository.findByEmail(cambios.getEmail())
-				.filter(otro -> !otro.getId().equals(id))
-				.ifPresent(otro -> {
-					throw ServiceException.conflicto("Ya existe un usuario registrado con ese email.");
-				});
 
 		existente.setEmail(cambios.getEmail());
-		existente.setRol(cambios.getRol());
 		existente.setNombre(cambios.getNombre());
 		existente.setApellido(cambios.getApellido());
+		existente.setDni(cambios.getDni());
+		existente.setTelefono(cambios.getTelefono());
 
-		String nuevaClave = cambios.getClave();
-		if (nuevaClave != null && !nuevaClave.isBlank()) {
-			if (!PASSWORD_PATTERN.matcher(nuevaClave).matches()) {
-				throw ServiceException.datosInvalidos("La contraseña debe tener al menos 8 caracteres y un número.");
-			}
-			existente.setClave(passwordEncoder.encode(nuevaClave));
+		String nuevaContrasena = cambios.getContrasena();
+		if (nuevaContrasena != null && !nuevaContrasena.isBlank()) {
+			validarContrasena(nuevaContrasena);
+			existente.setContrasena(passwordEncoder.encode(nuevaContrasena));
 		}
 
+		existente.setFechaActualizacion(Instant.now());
 		return usuarioRepository.save(existente);
 	}
 
-	// Además de validar, normaliza espacios: se usan para las iniciales del avatar en el front.
-	private void validarNombreYApellido(Usuario usuario) {
-		if (usuario.getNombre() == null || usuario.getNombre().isBlank()) {
-			throw ServiceException.datosInvalidos("El nombre es obligatorio.");
-		}
-		if (usuario.getApellido() == null || usuario.getApellido().isBlank()) {
-			throw ServiceException.datosInvalidos("El apellido es obligatorio.");
-		}
-		usuario.setNombre(usuario.getNombre().trim());
-		usuario.setApellido(usuario.getApellido().trim());
-	}
-
+	// Baja lógica (fecha_baja): el usuario no puede volver a iniciar sesión ni aparece en los
+	// listados, pero sigue figurando en el historial de tareas (quién hizo cada cambio).
+	@Transactional
 	public void eliminar(Long id, String emailSolicitante) {
-		Usuario existente = usuarioRepository.findById(id)
-				.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
+		Usuario existente = buscarActivo(id);
 
 		if (existente.getEmail().equalsIgnoreCase(emailSolicitante)) {
 			throw ServiceException.datosInvalidos("No podés eliminar tu propio usuario.");
 		}
 
-		// Sin este chequeo el borrado tira 500 por la FK tarea.responsable_id. Se bloquea en vez
-		// de desasignar solo, para que nadie pierda de vista tareas que quedarían huérfanas.
+		// Se bloquea en vez de desasignar solo, para que nadie pierda de vista tareas que
+		// quedarían a cargo de alguien que ya no está.
 		long tareasAsignadas = tareaRepository.countByResponsableId(id);
 		if (tareasAsignadas > 0) {
 			throw ServiceException.conflicto("El usuario tiene " + tareasAsignadas
 					+ (tareasAsignadas == 1 ? " tarea asignada" : " tareas asignadas") + ". Reasignalas antes de eliminarlo.");
 		}
 
-		// Tampoco si figura en el historial de estados (FK historial_estado_tarea.usuario_id):
-		// borrarlo o dejar el registro sin usuario haría perder quién hizo cada cambio, que es
-		// la base de seguimiento/rendimiento y de la futura auditoría.
-		if (historialEstadoTareaRepository.existsByUsuarioId(id)) {
-			throw ServiceException.conflicto(
-					"El usuario tiene cambios registrados en el historial de tareas, por lo que no se puede eliminar.");
-		}
+		Instant ahora = Instant.now();
+		existente.setFechaBaja(ahora);
+		sesionRepository.cerrarTodas(id, ahora);
+	}
 
-		usuarioRepository.delete(existente);
+	private Usuario buscarActivo(Long id) {
+		return usuarioRepository.findByIdAndFechaBajaIsNull(id)
+				.orElseThrow(() -> ServiceException.noEncontrado("El usuario no existe."));
+	}
+
+	// Además de validar, normaliza espacios: se usan para las iniciales del avatar en el front.
+	private void validarDatos(Usuario usuario) {
+		if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+			throw ServiceException.datosInvalidos("El email es obligatorio.");
+		}
+		if (usuario.getNombre() == null || usuario.getNombre().isBlank()) {
+			throw ServiceException.datosInvalidos("El nombre es obligatorio.");
+		}
+		if (usuario.getApellido() == null || usuario.getApellido().isBlank()) {
+			throw ServiceException.datosInvalidos("El apellido es obligatorio.");
+		}
+		usuario.setEmail(usuario.getEmail().trim());
+		usuario.setNombre(usuario.getNombre().trim());
+		usuario.setApellido(usuario.getApellido().trim());
+
+		if (usuario.getEmail().length() > LARGO_MAXIMO || usuario.getNombre().length() > LARGO_MAXIMO
+				|| usuario.getApellido().length() > LARGO_MAXIMO) {
+			throw ServiceException.datosInvalidos("El email, el nombre y el apellido pueden tener hasta 50 caracteres.");
+		}
+		if (usuario.getDni() != null && usuario.getDni() <= 0) {
+			throw ServiceException.datosInvalidos("El DNI debe ser un número positivo.");
+		}
+		if (usuario.getTelefono() != null) {
+			String telefono = usuario.getTelefono().trim();
+			usuario.setTelefono(telefono.isEmpty() ? null : telefono);
+		}
 	}
 }

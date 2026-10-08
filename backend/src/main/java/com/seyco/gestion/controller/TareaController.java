@@ -33,33 +33,38 @@ public class TareaController {
 		this.tareaService = tareaService;
 	}
 
+	// Las tareas de un proyecto son parte de verlo (proyectos:leer alcanza); el listado de todas
+	// las tareas (pantalla Tareas con filtro por responsable) es de quien gestiona tareas.
 	@GetMapping
+	@PreAuthorize("#proyectoId != null ? hasAnyAuthority('proyectos:leer', 'tareas:leer') : hasAuthority('tareas:editar')")
 	public List<Tarea> listar(@RequestParam(required = false) Long proyectoId) {
 		return tareaService.listar(proyectoId);
 	}
 
 	// Tareas asignadas al usuario logueado, de todos los proyectos (pantalla "Tareas").
 	@GetMapping("/mias")
+	@PreAuthorize("hasAuthority('tareas:leer')")
 	public List<Tarea> listarMias(Authentication authentication) {
 		return tareaService.listarAsignadas(authentication.getName());
 	}
 
 	@GetMapping("/{id}")
+	@PreAuthorize("hasAnyAuthority('proyectos:leer', 'tareas:leer')")
 	public Tarea buscarPorId(@PathVariable Long id) {
 		return tareaService.buscarPorId(id);
 	}
 
 	// Crear, editar (incluye reasignar el responsable) y borrar tareas es del Gerente de
-	// Proyecto (Historias #6 y #7), que en esta app es el ADMINISTRADOR.
+	// Proyecto (Historias #6 y #7): permisos escribir/editar del módulo `tareas`.
 	@PostMapping
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('tareas:escribir')")
 	public ResponseEntity<Tarea> crear(@Valid @RequestBody Tarea tarea, Authentication authentication) {
 		Tarea creada = tareaService.crear(tarea, authentication.getName());
 		return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('tareas:editar')")
 	public Tarea actualizar(@PathVariable Long id, @RequestBody Tarea cambios) {
 		return tareaService.actualizar(id, cambios);
 	}
@@ -73,7 +78,7 @@ public class TareaController {
 	}
 
 	@DeleteMapping("/{id}")
-	@PreAuthorize("hasRole('ADMINISTRADOR')")
+	@PreAuthorize("hasAuthority('tareas:editar')")
 	public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 		tareaService.eliminar(id);
 		return ResponseEntity.noContent().build();

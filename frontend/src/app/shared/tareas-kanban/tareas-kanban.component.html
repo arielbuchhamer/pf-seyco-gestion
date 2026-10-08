@@ -7,7 +7,7 @@
           <div class="kanban__card-header">
             <p class="kanban__card-title">{{ tarea.nombre }}</p>
             @if (conAcciones()) {
-              <div class="kanban__card-actions" *tieneRol="'ADMINISTRADOR'">
+              <div class="kanban__card-actions" *puede="'tareas:editar'">
                 <button
                   type="button"
                   class="icon-btn icon-btn--edit"

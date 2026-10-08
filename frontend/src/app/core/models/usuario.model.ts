@@ -1,15 +1,6 @@
-// Único lugar donde se declaran los roles del front: sumar uno nuevo acá (y en el enum Rol
-// del back) alcanza para que aparezca en el alta de usuarios y se pueda usar en rolGuard/*tieneRol.
-export const ROLES = ['ADMINISTRADOR', 'USUARIO'] as const;
-export type Rol = (typeof ROLES)[number];
-
-export const ROL_LABEL: Record<Rol, string> = {
-  ADMINISTRADOR: 'Administrador',
-  USUARIO: 'Usuario',
-};
-
-// Refleja la entidad Usuario del backend tal cual se serializa
-// (el campo clave nunca viaja de vuelta, ver @JsonProperty WRITE_ONLY en el backend).
+// Refleja la entidad Usuario del backend tal cual se serializa (tabla `usuarios`; la
+// contraseña nunca viaja de vuelta, ver @JsonProperty WRITE_ONLY en el backend).
+// Los roles no son un campo del usuario: vienen aparte (UsuarioListado / UsuarioSesion).
 // nombre/apellido son obligatorios desde el alta, pero pueden venir null en usuarios
 // creados antes de que existieran (ver nombreCompleto(), que cae al email).
 export interface Usuario {
@@ -17,7 +8,26 @@ export interface Usuario {
   email: string;
   nombre: string | null;
   apellido: string | null;
-  rol: Rol;
+  dni?: number | null;
+  telefono?: string | null;
+  fechaAlta?: string | null;
+  fechaBaja?: string | null;
+}
+
+export interface RolResumen {
+  id: number;
+  nombre: string;
+}
+
+// Fila de GET /api/usuarios: datos + roles (roles_usuarios) + cantidad de sesiones.
+export interface UsuarioListado extends Usuario {
+  roles: RolResumen[];
+  cantidadSesiones: number;
+}
+
+// Usuario logueado (login y /api/auth/me): roles por nombre, en minúsculas.
+export interface UsuarioSesion extends Usuario {
+  roles: string[];
 }
 
 export function nombreCompleto(usuario: Pick<Usuario, 'email' | 'nombre' | 'apellido'>): string {
@@ -25,12 +35,14 @@ export function nombreCompleto(usuario: Pick<Usuario, 'email' | 'nombre' | 'apel
   return nombre || usuario.email;
 }
 
-// Payload para crear/editar. La clave es obligatoria al crear; al editar,
-// dejarla vacía significa "no cambiar la contraseña" (el backend lo interpreta así).
+// Payload para crear/editar. La contraseña es obligatoria al crear; al editar,
+// omitirla significa "no cambiarla" (el backend lo interpreta así).
+// El rol se asigna aparte, con /api/roles/{id}/usuarios (ver RolService).
 export interface UsuarioInput {
   email: string;
   nombre: string;
   apellido: string;
-  clave?: string;
-  rol: Rol;
+  dni: number | null;
+  telefono: string | null;
+  contrasena?: string;
 }

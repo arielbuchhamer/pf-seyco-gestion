@@ -1,12 +1,15 @@
-/* Paleta y variables compartidas por toda la app — mantiene el CSS de cada
+/* Paleta y variables compartidas por toda la app â€” mantiene el CSS de cada
    componente liviano (hay un budget de 4kB/8kB por componente en angular.json). */
 :root {
+  /* Alto fijo de la barra superior: las pantallas de tablero (Usuarios, Roles) ocupan el resto. */
+  --alto-topbar: 4.75rem;
+
   --color-bg: #f4f6fb;
   --color-surface: #ffffff;
   --color-ink: #12131a;
-  /* Azul "tablero eléctrico" (más saturado que un azul de SaaS genérico) + verde de
-     "trabajo terminado" + cobre como acento — ligado al rubro de Seyco (montajes
-     industriales eléctricos), no una paleta decorativa. */
+  /* Azul "tablero elÃ©ctrico" (mÃ¡s saturado que un azul de SaaS genÃ©rico) + verde de
+     "trabajo terminado" + cobre como acento â€” ligado al rubro de Seyco (montajes
+     industriales elÃ©ctricos), no una paleta decorativa. */
   --color-primary: #0f5fa6;
   --color-primary-dark: #0b4880;
   --color-primary-light: #4d9bd6;
@@ -44,10 +47,10 @@ body {
   background: var(--color-bg);
 }
 
-/* Clases compartidas entre páginas de ABM (proyectos, tareas, etc.) — sacadas acá para no
-   duplicar el mismo bloque de tabla/dialog/form en cada component.css y así no pisar el
+/* Clases compartidas entre pÃ¡ginas de ABM (proyectos, tareas, etc.) â€” sacadas acÃ¡ para no
+   duplicar el mismo bloque de tabla/dialog/form en cada component.css y asÃ­ no pisar el
    budget de 4kB/8kB por componente (ver angular.json). usuarios.component.css es anterior
-   a este acuerdo y define su propia copia; las páginas nuevas usan estas. */
+   a este acuerdo y define su propia copia; las pÃ¡ginas nuevas usan estas. */
 .page {
   padding: 2rem;
   max-width: 60rem;
@@ -157,9 +160,9 @@ body {
   background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 }
 
-/* Cobre/ámbar (mismo --color-accent que la card de Rendimiento) en vez de azul: el azul ya
-   significa "en curso" en los badges, así que usarlo también para una acción (editar)
-   podía confundir estado con acción. */
+/* Cobre/Ã¡mbar (mismo --color-accent que la card de Rendimiento) en vez de azul: el azul ya
+   significa "en curso" en los badges, asÃ­ que usarlo tambiÃ©n para una acciÃ³n (editar)
+   podÃ­a confundir estado con acciÃ³n. */
 .icon-btn--edit {
   color: var(--color-accent);
   border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
@@ -213,9 +216,9 @@ body {
   white-space: nowrap;
 }
 
-/* Pendiente/planificado se deja neutro a propósito (todavía no pasó nada). El resto usa un
+/* Pendiente/planificado se deja neutro a propÃ³sito (todavÃ­a no pasÃ³ nada). El resto usa un
    fondo pastel (mezcla con blanco, no con transparente) + texto en el tono oscuro del mismo
-   color — se nota más que un tinte apenas visible, sin ser un bloque sólido tipo botón. */
+   color â€” se nota mÃ¡s que un tinte apenas visible, sin ser un bloque sÃ³lido tipo botÃ³n. */
 .badge--planificado,
 .badge--pendiente {
   background: color-mix(in srgb, var(--color-text-muted) 16%, transparent);
@@ -247,8 +250,8 @@ body {
   justify-content: center;
   gap: 1rem;
   /* margin-top:auto empuja el paginador al fondo cuando el contenedor es flex-column con
-     min-height (ver proyectos.component.css) — así queda a la misma altura sin importar
-     cuántos ítems entren en la página actual. Sin ese contexto flex, se comporta como un
+     min-height (ver proyectos.component.css) â€” asÃ­ queda a la misma altura sin importar
+     cuÃ¡ntos Ã­tems entren en la pÃ¡gina actual. Sin ese contexto flex, se comporta como un
      margin normal (no rompe nada donde .pager se use sin el wrapper). */
   margin-top: auto;
   padding-top: 1.5rem;
@@ -340,8 +343,8 @@ body {
 
 .field-row .field {
   flex: 1;
-  /* Sin esto un ítem flex no se achica por debajo del ancho intrínseco de su input
-     (~20ch): en diálogos angostos (ej. Nombre/Apellido en Usuarios) desborda y aparece
+  /* Sin esto un Ã­tem flex no se achica por debajo del ancho intrÃ­nseco de su input
+     (~20ch): en diÃ¡logos angostos (ej. Nombre/Apellido en Usuarios) desborda y aparece
      un scroll horizontal. */
   min-width: 0;
 }
@@ -420,5 +423,108 @@ body {
   .dialog {
     width: min(26rem, 92vw);
     padding: 1.5rem;
+  }
+}
+
+/* AcciÃ³n destructiva confirmada (ej. "Eliminar" en los diÃ¡logos de confirmaciÃ³n). */
+.btn--danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.btn--danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 85%, black);
+}
+
+/* Ruta de la pantalla (ej. "MENÃš PRINCIPAL / USUARIOS / ROLES"), igual que en el proyecto de referencia. */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.page__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page__actions .icon-btn {
+  margin-left: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* Mismo alto que el botón de recargar (icon-btn) de al lado. */
+.page__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+  padding-block: 0;
+}
+
+.breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* Pantallas de tablero (Usuarios, Roles): ancho completo y alto de la ventana debajo de la barra
+   superior. La tabla tiene alto fijo (no depende de cuÃ¡ntas filas haya): si no entran, scrollea
+   adentro y el paginador queda siempre abajo. En pantallas chicas vuelve al alto natural. */
+.page--tablero {
+  max-width: none;
+  /* Más aire a los costados y abajo (arriba queda el padding normal de .page). */
+  padding: 2rem clamp(1.5rem, 7vw, 7rem) clamp(2rem, 7vh, 5rem);
+  height: calc(100dvh - var(--alto-topbar));
+  min-height: 38rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.page--tablero > .page__header {
+  margin-bottom: 1rem;
+}
+
+.tabla-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.tabla-card .table {
+  box-shadow: none;
+}
+
+.tabla-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tabla-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+}
+
+@media (max-width: 900px) {
+  .page--tablero {
+    height: auto;
+    min-height: 0;
   }
 }

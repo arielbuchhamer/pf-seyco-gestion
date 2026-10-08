@@ -1,16 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Usuario, UsuarioInput } from '../models/usuario.model';
+import { Usuario, UsuarioInput, UsuarioListado } from '../models/usuario.model';
 
-// Endpoints admin-only (ver @PreAuthorize en UsuarioController del back).
+// Módulo `usuarios` en el backend (GET leer, POST escribir, PUT/DELETE editar).
+// El rol de cada usuario se asigna con RolService.asignarUsuario / desasignarUsuario.
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/usuarios';
 
-  listar(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.baseUrl);
+  listar(): Observable<UsuarioListado[]> {
+    return this.http.get<UsuarioListado[]>(this.baseUrl);
   }
 
   crear(usuario: UsuarioInput): Observable<Usuario> {
@@ -21,6 +22,7 @@ export class UsuarioService {
     return this.http.put<Usuario>(`${this.baseUrl}/${id}`, cambios);
   }
 
+  // Baja lógica: el usuario deja de poder iniciar sesión y sus sesiones abiertas se cierran.
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }

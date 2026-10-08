@@ -15,15 +15,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.seyco.gestion.dto.AccesoDtos.UsuarioListado;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.service.UsuarioService;
 
 import jakarta.validation.Valid;
 
-// Patrón para restringir por rol: @PreAuthorize a nivel clase (todo el controller) o en
-// un método puntual. Un usuario sin el rol recibe 403.
+// Patrón para restringir un endpoint: @PreAuthorize("hasAuthority('<modulo>:<accion>')"), con
+// GET -> leer, POST -> escribir y PUT/PATCH/DELETE -> editar. Los permisos de cada rol se
+// configuran en la base (roles_modulos) desde la pantalla Roles. Sin el permiso: 403.
 @RestController
-@PreAuthorize("hasRole('ADMINISTRADOR')")
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
@@ -34,22 +35,27 @@ public class UsuarioController {
 	}
 
 	@GetMapping
-	public List<Usuario> listar() {
+	@PreAuthorize("hasAuthority('usuarios:leer')")
+	public List<UsuarioListado> listar() {
 		return usuarioService.listar();
 	}
 
+	// El rol se asigna después con POST /api/roles/{id}/usuarios (módulo `roles`).
 	@PostMapping
+	@PreAuthorize("hasAuthority('usuarios:escribir')")
 	public ResponseEntity<Usuario> crear(@Valid @RequestBody Usuario usuario) {
 		Usuario creado = usuarioService.crear(usuario);
 		return ResponseEntity.status(HttpStatus.CREATED).body(creado);
 	}
 
 	@PutMapping("/{id}")
+	@PreAuthorize("hasAuthority('usuarios:editar')")
 	public Usuario actualizar(@PathVariable Long id, @RequestBody Usuario cambios) {
 		return usuarioService.actualizar(id, cambios);
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('usuarios:editar')")
 	public ResponseEntity<Void> eliminar(@PathVariable Long id, Authentication authentication) {
 		usuarioService.eliminar(id, authentication.getName());
 		return ResponseEntity.noContent().build();

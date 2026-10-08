@@ -32,7 +32,11 @@ public class ServiceException extends RuntimeException {
 
 	public static ServiceException credencialesInvalidas() {
 		// Mensaje deliberadamente genérico: no debe permitir distinguir si la cuenta existe o no.
-		return new ServiceException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+		return new ServiceException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas.");
+	}
+
+	public static ServiceException servicioNoDisponible(String mensaje) {
+		return new ServiceException(HttpStatus.SERVICE_UNAVAILABLE, mensaje);
 	}
 
 	public HttpStatus getStatus() {

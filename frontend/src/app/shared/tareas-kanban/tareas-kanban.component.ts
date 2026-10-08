@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
+import { PuedeDirective } from '../../core/directives/puede.directive';
 import {
   ESTADOS_TAREA,
   ESTADO_TAREA_LABEL,
@@ -24,7 +24,7 @@ export interface CambioEstadoTarea {
 @Component({
   selector: 'app-tareas-kanban',
   standalone: true,
-  imports: [RouterLink, TieneRolDirective, AvatarComponent],
+  imports: [RouterLink, PuedeDirective, AvatarComponent],
   templateUrl: './tareas-kanban.component.html',
   styleUrl: './tareas-kanban.component.css',
 })
@@ -34,7 +34,7 @@ export class TareasKanbanComponent {
   readonly tareas = input.required<Tarea[]>();
   // En la pantalla "Tareas" (multi-proyecto) cada tarjeta indica y linkea a su proyecto.
   readonly mostrarProyecto = input(false);
-  // Botones de editar/eliminar (además, sólo para ADMINISTRADOR): sólo donde la página maneja esas acciones.
+  // Botones de editar/eliminar (además, sólo con permiso tareas:editar): sólo donde la página maneja esas acciones.
   readonly conAcciones = input(false);
 
   readonly cambiarEstado = output<CambioEstadoTarea>();
@@ -74,10 +74,10 @@ export class TareasKanbanComponent {
     this.paginaPorEstado.update((actual) => ({ ...actual, [estado]: actual[estado] + delta }));
   }
 
-  // Mismo criterio que TareaService.cambiarEstado en el back: el administrador cambia
-  // cualquier tarea, el resto sólo las que tiene asignadas.
+  // Mismo criterio que TareaService.cambiarEstado en el back: cambia el estado de
+  // cualquier tarea quien puede editar el módulo `tareas`; el resto, sólo de las que tiene asignadas.
   puedeCambiarEstado(tarea: Tarea): boolean {
-    return this.auth.tieneRol('ADMINISTRADOR') || tarea.responsable?.id === this.auth.currentUser()?.id;
+    return this.auth.puede('tareas', 'editar') || tarea.responsable?.id === this.auth.currentUser()?.id;
   }
 
   onCambiarEstado(tarea: Tarea, select: HTMLSelectElement): void {

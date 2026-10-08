@@ -2,7 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { TieneRolDirective } from '../../core/directives/tiene-rol.directive';
+import { PuedeDirective } from '../../core/directives/puede.directive';
 import {
   CambioEstadoTarea,
   TareasKanbanComponent,
@@ -26,7 +26,7 @@ import { TareaService } from '../../core/services/tarea.service';
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TieneRolDirective, TareasKanbanComponent],
+  imports: [ReactiveFormsModule, RouterLink, PuedeDirective, TareasKanbanComponent],
   templateUrl: './proyecto-detalle.component.html',
   styleUrl: './proyecto-detalle.component.css',
 })
@@ -69,10 +69,9 @@ export class ProyectoDetalleComponent {
     { defaultValue: [] },
   );
 
-  // Solo se pide si es administrador (único rol que puede listar usuarios, ver
-  // @PreAuthorize en UsuarioController del back).
+  // Solo se pide si puede leer el módulo `usuarios` (ver @PreAuthorize en UsuarioController del back).
   protected readonly usuariosResource = httpResource<Usuario[]>(
-    () => (this.auth.tieneRol('ADMINISTRADOR') ? { url: '/api/usuarios' } : undefined),
+    () => (this.auth.puede('usuarios', 'leer') ? { url: '/api/usuarios' } : undefined),
     { defaultValue: [] },
   );
 
@@ -128,7 +127,7 @@ export class ProyectoDetalleComponent {
     });
   }
 
-  // ── Tareas (crear / editar-reasignar: sólo ADMINISTRADOR, ver @PreAuthorize en TareaController) ──
+  // ── Tareas (crear / editar-reasignar: permisos del módulo `tareas`, ver @PreAuthorize en TareaController) ──
   protected readonly showTareaForm = signal(false);
   protected readonly editingTarea = signal<Tarea | null>(null);
   protected readonly savingTarea = signal(false);

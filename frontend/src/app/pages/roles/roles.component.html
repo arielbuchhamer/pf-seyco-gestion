@@ -1,0 +1,423 @@
+<section class="page page--tablero">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/roles" aria-current="page">Roles</a>
+  </nav>
+
+  <header class="page__header">
+    <h1>Gestión de roles</h1>
+    <div class="page__actions">
+      <button
+        type="button"
+        class="icon-btn"
+        title="Recargar"
+        aria-label="Recargar"
+        (click)="recargarTodo()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M3 3v5h5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="btn btn--primary"
+        *puede="'roles:escribir'"
+        (click)="abrirRol(null)"
+      >
+        Agregar rol
+      </button>
+    </div>
+  </header>
+
+  <div class="roles-grid">
+    <!-- ROLES -->
+    <section class="card tabla-card">
+      <div class="tabla-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Duración token</th>
+              <th class="table__actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading() && roles().length === 0) {
+              <tr>
+                <td colspan="3" class="muted centrado">Cargando roles…</td>
+              </tr>
+            } @else if (errorMessage()) {
+              <tr>
+                <td colspan="3" class="centrado texto-error">{{ errorMessage() }}</td>
+              </tr>
+            } @else {
+              @for (rol of rolesPagina().items; track rol.id) {
+                <tr
+                  class="fila-rol"
+                  [class.fila-rol--activa]="rol.id === rolSeleccionado()?.id"
+                  [attr.aria-selected]="rol.id === rolSeleccionado()?.id"
+                  (click)="seleccionarRol(rol)"
+                >
+                  <td data-label="Rol">
+                    <strong>{{ rol.nombre }}</strong>
+                  </td>
+                  <td data-label="Duración token">{{ rol.tokenDuracion }} min</td>
+                  <td class="table__actions">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Ver detalles"
+                      aria-label="Ver rol"
+                      (click)="$event.stopPropagation(); abrirRol(rol, true)"
+                    >
+                      <ng-container [ngTemplateOutlet]="iconoVer" />
+                    </button>
+                    <ng-container *puede="'roles:editar'">
+                      <button
+                        type="button"
+                        class="icon-btn icon-btn--edit"
+                        title="Editar"
+                        aria-label="Editar rol"
+                        (click)="$event.stopPropagation(); abrirRol(rol)"
+                      >
+                        <ng-container [ngTemplateOutlet]="iconoEditar" />
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-btn icon-btn--danger"
+                        title="Eliminar"
+                        aria-label="Eliminar rol"
+                        (click)="$event.stopPropagation(); abrirEliminar('rol', rol)"
+                      >
+                        <ng-container [ngTemplateOutlet]="iconoEliminar" />
+                      </button>
+                    </ng-container>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="muted centrado">No hay roles registrados.</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginador [pagina]="rolesPagina()" (cambiar)="paginaRoles.set($event)" />
+    </section>
+
+    <!-- MÓDULOS Y PANELES -->
+    <aside class="laterales">
+      <section class="card lateral">
+        <header class="lateral__header">
+          <div>
+            <h2>Módulos</h2>
+            <p class="lateral__sub">
+              @if (rolSeleccionado(); as rol) {
+                Permisos de <strong>{{ rol.nombre }}</strong>
+              } @else {
+                Seleccione un rol
+              }
+            </p>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            title="Agregar"
+            aria-label="Agregar módulo"
+            *puede="'roles:escribir'"
+            (click)="abrirCatalogo('modulos', null)"
+          >
+            <ng-container [ngTemplateOutlet]="iconoAgregar" />
+          </button>
+        </header>
+        <ul class="lateral__lista">
+          @for (modulo of modulosPagina().items; track modulo.id) {
+            <li>
+              <span class="lateral__nombre">
+                {{ modulo.nombre }}
+                @if (rolSeleccionado()) {
+                  <span class="chips">
+                    @for (accion of acciones; track accion) {
+                      <span
+                        class="chip"
+                        [class.chip--on]="permisoDelSeleccionado(modulo.id)[accion]"
+                        [title]="accion"
+                      >
+                        {{ accion }}
+                      </span>
+                    }
+                  </span>
+                }
+              </span>
+              <ng-container
+                [ngTemplateOutlet]="accionesCatalogo"
+                [ngTemplateOutletContext]="{ tipo: 'modulos', item: modulo }"
+              />
+            </li>
+          } @empty {
+            <li class="muted">No hay módulos registrados.</li>
+          }
+        </ul>
+        <app-paginador
+          [pagina]="modulosPagina()"
+          [compacto]="true"
+          (cambiar)="paginaModulos.set($event)"
+        />
+      </section>
+
+      <section class="card lateral">
+        <header class="lateral__header">
+          <div>
+            <h2>Paneles</h2>
+            <p class="lateral__sub">
+              @if (rolSeleccionado(); as rol) {
+                Pantallas que ve <strong>{{ rol.nombre }}</strong>
+              } @else {
+                Seleccione un rol
+              }
+            </p>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            title="Agregar"
+            aria-label="Agregar panel"
+            *puede="'roles:escribir'"
+            (click)="abrirCatalogo('paneles', null)"
+          >
+            <ng-container [ngTemplateOutlet]="iconoAgregar" />
+          </button>
+        </header>
+        <ul class="lateral__lista">
+          @for (panel of panelesPagina().items; track panel.id) {
+            <li>
+              <span class="lateral__nombre">
+                {{ panel.nombre }}
+                @if (rolSeleccionado()) {
+                  <span class="chips">
+                    <span class="chip" [class.chip--on]="seleccionadoVePanel(panel.id)">
+                      {{ seleccionadoVePanel(panel.id) ? 've' : 'no ve' }}
+                    </span>
+                  </span>
+                }
+              </span>
+              <ng-container
+                [ngTemplateOutlet]="accionesCatalogo"
+                [ngTemplateOutletContext]="{ tipo: 'paneles', item: panel }"
+              />
+            </li>
+          } @empty {
+            <li class="muted">No hay paneles registrados.</li>
+          }
+        </ul>
+        <app-paginador
+          [pagina]="panelesPagina()"
+          [compacto]="true"
+          (cambiar)="paginaPaneles.set($event)"
+        />
+      </section>
+    </aside>
+  </div>
+
+  <!-- AGREGAR / EDITAR / VER ROL -->
+  @if (rolDialog(); as dialogo) {
+    <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarRol()"></button>
+    <div class="dialog dialog--ancho" role="dialog" aria-modal="true">
+      <h2>{{ dialogo.soloLectura ? 'Ver rol' : dialogo.rol ? 'Editar rol' : 'Agregar rol' }}</h2>
+
+      <form [formGroup]="rolForm" (ngSubmit)="guardarRol()" novalidate>
+        @if (rolError()) {
+          <p class="error" role="alert">{{ rolError() }}</p>
+        }
+
+        <div class="field-row">
+          <label class="field">
+            <span>Nombre del rol</span>
+            <input type="text" formControlName="nombre" autocomplete="off" />
+            @if (rolForm.controls.nombre.invalid && rolForm.controls.nombre.touched) {
+              <small class="field__error">Debe ingresar el nombre del rol.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Duración del token <small class="field__hint">(minutos)</small></span>
+            <input type="number" min="1" formControlName="tokenDuracion" />
+            @if (rolForm.controls.tokenDuracion.invalid && rolForm.controls.tokenDuracion.touched) {
+              <small class="field__error">Debe ingresar una duración válida.</small>
+            }
+          </label>
+        </div>
+
+        <h3>Permisos por módulo</h3>
+        <table class="permisos">
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              @for (accion of acciones; track accion) {
+                <th>{{ accion }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (modulo of modulos(); track modulo.id) {
+              <tr>
+                <td>{{ modulo.nombre }}</td>
+                @for (accion of acciones; track accion) {
+                  <td>
+                    <input
+                      type="checkbox"
+                      [attr.aria-label]="accion + ' ' + modulo.nombre"
+                      [checked]="tienePermiso(modulo.id, accion)"
+                      [disabled]="dialogo.soloLectura"
+                      (change)="cambiarPermiso(modulo.id, accion, $any($event.target).checked)"
+                    />
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="muted">No hay módulos disponibles.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <h3>Permisos por panel</h3>
+        <table class="permisos">
+          <thead>
+            <tr>
+              <th>Panel</th>
+              <th>ver</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (panel of paneles(); track panel.id) {
+              <tr>
+                <td>{{ panel.nombre }}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    [attr.aria-label]="'ver ' + panel.nombre"
+                    [checked]="panelesMarcados().has(panel.id)"
+                    [disabled]="dialogo.soloLectura"
+                    (change)="cambiarPanel(panel.id, $any($event.target).checked)"
+                  />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="2" class="muted">No hay paneles disponibles.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="dialog__actions">
+          <button type="button" class="btn btn--ghost" (click)="cerrarRol()">
+            {{ dialogo.soloLectura ? 'Cerrar' : 'Cancelar' }}
+          </button>
+          @if (!dialogo.soloLectura) {
+            <button type="submit" class="btn btn--primary" [disabled]="savingRol()">
+              {{ savingRol() ? 'Guardando…' : dialogo.rol ? 'Guardar cambios' : 'Guardar' }}
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- AGREGAR / EDITAR MÓDULO O PANEL -->
+  @if (catalogoDialog(); as dialogo) {
+    <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarCatalogo()"></button>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h2>
+        {{ dialogo.item ? 'Editar' : 'Agregar' }}
+        {{ dialogo.tipo === 'modulos' ? 'módulo' : 'panel' }}
+      </h2>
+      <form [formGroup]="catalogoForm" (ngSubmit)="guardarCatalogo()" novalidate>
+        @if (catalogoError()) {
+          <p class="error" role="alert">{{ catalogoError() }}</p>
+        }
+        <label class="field">
+          <span>Nombre</span>
+          <input type="text" formControlName="nombre" autocomplete="off" />
+          @if (catalogoForm.controls.nombre.invalid && catalogoForm.controls.nombre.touched) {
+            <small class="field__error">El nombre es obligatorio.</small>
+          }
+        </label>
+        <div class="dialog__actions">
+          <button type="button" class="btn btn--ghost" (click)="cerrarCatalogo()">Cancelar</button>
+          <button type="submit" class="btn btn--primary" [disabled]="savingCatalogo()">
+            {{ savingCatalogo() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- ELIMINAR ROL / MÓDULO / PANEL -->
+  @if (eliminando(); as objetivo) {
+    <app-confirmar-dialog
+      [titulo]="'Eliminar ' + etiqueta(objetivo.tipo)"
+      [pregunta]="'¿Desea eliminar el ' + etiqueta(objetivo.tipo)"
+      [nombre]="objetivo.item.nombre"
+      [procesando]="procesandoBorrado()"
+      (confirmar)="confirmarEliminar()"
+      (cancelar)="eliminando.set(null)"
+    />
+  }
+</section>
+
+<ng-template #accionesCatalogo let-tipo="tipo" let-item="item">
+  <span class="lateral__acciones" *puede="'roles:editar'">
+    <button
+      type="button"
+      class="icon-btn icon-btn--edit"
+      title="Editar"
+      aria-label="Editar"
+      (click)="abrirCatalogo(tipo, item)"
+    >
+      <ng-container [ngTemplateOutlet]="iconoEditar" />
+    </button>
+    <button
+      type="button"
+      class="icon-btn icon-btn--danger"
+      title="Eliminar"
+      aria-label="Eliminar"
+      (click)="abrirEliminar(tipo, item)"
+    >
+      <ng-container [ngTemplateOutlet]="iconoEliminar" />
+    </button>
+  </span>
+</ng-template>
+
+<ng-template #iconoVer>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M1.5 12S5.3 4.5 12 4.5 22.5 12 22.5 12 18.7 19.5 12 19.5 1.5 12 1.5 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+</ng-template>
+
+<ng-template #iconoEditar>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path
+      d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</ng-template>
+
+<ng-template #iconoEliminar>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h10l1-13" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</ng-template>
+
+<ng-template #iconoAgregar>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+  </svg>
+</ng-template>

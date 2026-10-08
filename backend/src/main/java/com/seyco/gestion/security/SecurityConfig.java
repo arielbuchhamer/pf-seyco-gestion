@@ -1,10 +1,13 @@
 package com.seyco.gestion.security;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,9 +22,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-// @EnableMethodSecurity: los permisos por rol se declaran en cada controller con
-// @PreAuthorize("hasRole('ADMINISTRADOR')") / hasAnyRole(...) (a nivel clase o método),
-// en vez de ir acumulando paths acá. Acá sólo queda "público vs. autenticado".
+// @EnableMethodSecurity: los permisos se declaran en cada endpoint con
+// @PreAuthorize("hasAuthority('<modulo>:<accion>')"), según roles_modulos en la base
+// (ver SesionAuthenticationFilter). Acá sólo queda "público vs. autenticado".
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -30,24 +33,28 @@ public class SecurityConfig {
 	private String allowedOrigins;
 
 	@Bean
-	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+	SecurityFilterChain filterChain(HttpSecurity http, SesionAuthenticationFilter sesionAuthenticationFilter)
+			throws Exception {
 		http
-				// Sin HttpSession de Spring Security (auth 100% stateless vía JWT propio):
-				// el vector CSRF clásico se mitiga con cookie SameSite=Lax + CORS con allowlist,
-				// no con el token CSRF pensado para autenticación basada en sesión.
+				// El token viaja en el header Authorization (no en una cookie), así que el
+				// navegador no lo manda solo desde otro sitio: no aplica el vector CSRF.
 				.csrf(AbstractHttpConfigurer::disable)
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/recuperar", "/api/auth/restablecer")
+						.permitAll()
 						// Imprescindible: al denegar un 401/403, Spring hace un forward interno a
 						// /error para renderizarlo. Si ese forward vuelve a pasar por la cadena de
 						// seguridad como no-autenticado, pisa el status original con un 401 propio.
 						.requestMatchers("/error").permitAll()
 						.anyRequest().authenticated())
-				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-				.exceptionHandling(ex -> ex.authenticationEntryPoint(
-						(request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)));
+				.addFilterBefore(sesionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.exceptionHandling(ex -> ex
+						.authenticationEntryPoint((request, response, e) -> responderJson(response,
+								HttpServletResponse.SC_UNAUTHORIZED, "Sesión inválida, inactiva o expirada."))
+						.accessDeniedHandler((request, response, e) -> responderJson(response,
+								HttpServletResponse.SC_FORBIDDEN, "No tiene permisos para realizar esta acción.")));
 
 		return http.build();
 	}
@@ -57,12 +64,20 @@ public class SecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 
+	// Mismo formato { "message": ... } que GlobalExceptionHandler. Los mensajes son fijos (sin
+	// comillas ni datos del usuario), por eso alcanza con armar el JSON a mano.
+	private static void responderJson(HttpServletResponse response, int status, String mensaje) throws IOException {
+		response.setStatus(status);
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.getWriter().write("{\"message\":\"" + mensaje + "\"}");
+	}
+
 	private CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
-		config.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);

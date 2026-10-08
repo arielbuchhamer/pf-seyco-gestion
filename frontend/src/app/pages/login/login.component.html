@@ -35,78 +35,160 @@
         Seyco S.A
       </span>
 
-      <form class="panel__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <h1>¡Bienvenido!</h1>
-        <p class="subtitle">Por favor, ingresá tus datos.</p>
+      @switch (seccion()) {
+        @case ('login') {
+          <form class="panel__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <h1>¡Bienvenido!</h1>
+            <p class="subtitle">Por favor, ingresá tus datos.</p>
 
-        @if (errorMessage()) {
-          <p class="error" role="alert">{{ errorMessage() }}</p>
+            <ng-container [ngTemplateOutlet]="mensajes" />
+
+            <label class="field">
+              <span>Email</span>
+              <input
+                type="email"
+                formControlName="email"
+                autocomplete="username"
+                placeholder="tu@email.com"
+                autofocus
+              />
+              @if (form.controls.email.invalid && form.controls.email.touched) {
+                <small class="field__error">Ingresá un email válido.</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>Contraseña</span>
+              <div class="field__password">
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="contrasena"
+                  autocomplete="current-password"
+                  placeholder="••••••••"
+                />
+                <ng-container [ngTemplateOutlet]="ojo" />
+              </div>
+              @if (form.controls.contrasena.invalid && form.controls.contrasena.touched) {
+                <small class="field__error">La contraseña es obligatoria.</small>
+              }
+            </label>
+
+            <div class="panel__row">
+              <button type="button" class="link" (click)="mostrar('recuperar')">¿Olvidaste tu contraseña?</button>
+            </div>
+
+            <button type="submit" class="submit" [disabled]="loading()">
+              {{ loading() ? 'Ingresando…' : 'Iniciar sesión' }}
+            </button>
+          </form>
         }
 
-        <label class="field">
-          <span>Email</span>
-          <input
-            type="email"
-            formControlName="email"
-            autocomplete="username"
-            placeholder="tu@email.com"
-            autofocus
-          />
-          @if (form.controls.email.invalid && form.controls.email.touched) {
-            <small class="field__error">Ingresá un email válido.</small>
-          }
-        </label>
+        @case ('recuperar') {
+          <form class="panel__form" [formGroup]="recuperarForm" (ngSubmit)="enviarRecuperacion()" novalidate>
+            <h1>Recuperá tu contraseña</h1>
+            <p class="subtitle">Te enviaremos un enlace a tu correo para elegir una nueva.</p>
 
-        <label class="field">
-          <span>Contraseña</span>
-          <div class="field__password">
-            <input
-              [type]="showPassword() ? 'text' : 'password'"
-              formControlName="clave"
-              autocomplete="current-password"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              class="field__toggle"
-              (click)="togglePassword()"
-              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            >
-              @if (showPassword()) {
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                  <path
-                    d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M6.2 6.6C3.9 8.2 2.3 10.4 1.5 12c1.6 3.2 5.4 7.5 10.5 7.5 1.9 0 3.6-.5 5-1.3M14.3 4.9c-.7-.2-1.5-.3-2.3-.3-5.1 0-8.9 4.3-10.5 7.5.6 1.1 1.4 2.3 2.5 3.4"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              } @else {
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                  <path
-                    d="M1.5 12S5.3 4.5 12 4.5 22.5 12 22.5 12 18.7 19.5 12 19.5 1.5 12 1.5 12Z"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                  />
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
-                </svg>
+            <ng-container [ngTemplateOutlet]="mensajes" />
+
+            <label class="field">
+              <span>Email</span>
+              <input type="email" formControlName="email" autocomplete="email" placeholder="tu@email.com" />
+              @if (recuperarForm.controls.email.invalid && recuperarForm.controls.email.touched) {
+                <small class="field__error">Ingresá el correo de tu cuenta.</small>
               }
+            </label>
+
+            <button type="submit" class="submit" [disabled]="loading()">
+              {{ loading() ? 'Enviando…' : 'Enviar enlace' }}
             </button>
-          </div>
-          @if (form.controls.clave.invalid && form.controls.clave.touched) {
-            <small class="field__error">La contraseña es obligatoria.</small>
-          }
-        </label>
 
-        <div class="panel__row">
-          <!-- TODO: recuperar contraseña requiere flujo de reset por email — etapa futura -->
-          <span class="link link--muted" aria-disabled="true">¿Olvidaste tu contraseña?</span>
-        </div>
+            <div class="panel__row panel__row--center">
+              <button type="button" class="link" (click)="mostrar('login')">Volver a iniciar sesión</button>
+            </div>
+          </form>
+        }
 
-        <button type="submit" class="submit" [disabled]="loading()">
-          {{ loading() ? 'Ingresando…' : 'Iniciar sesión' }}
-        </button>
-      </form>
+        @case ('restablecer') {
+          <form class="panel__form" [formGroup]="restablecerForm" (ngSubmit)="guardarContrasena()" novalidate>
+            <h1>Elegí una nueva contraseña</h1>
+            <p class="subtitle">Después vas a poder ingresar con ella.</p>
+
+            <ng-container [ngTemplateOutlet]="mensajes" />
+
+            <label class="field">
+              <span>Nueva contraseña</span>
+              <div class="field__password">
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="contrasena"
+                  autocomplete="new-password"
+                  placeholder="••••••••"
+                />
+                <ng-container [ngTemplateOutlet]="ojo" />
+              </div>
+              @if (restablecerForm.controls.contrasena.invalid && restablecerForm.controls.contrasena.touched) {
+                <small class="field__error">Al menos 8 caracteres y un número.</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>Repetir contraseña</span>
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="repetir"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              />
+            </label>
+
+            <button type="submit" class="submit" [disabled]="loading()">
+              {{ loading() ? 'Guardando…' : 'Guardar contraseña' }}
+            </button>
+
+            <div class="panel__row panel__row--center">
+              <button type="button" class="link" (click)="mostrar('login')">Volver a iniciar sesión</button>
+            </div>
+          </form>
+        }
+      }
     </div>
   </section>
 </div>
+
+<ng-template #mensajes>
+  @if (errorMessage()) {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="success" role="status">{{ successMessage() }}</p>
+  }
+</ng-template>
+
+<ng-template #ojo>
+  <button
+    type="button"
+    class="field__toggle"
+    (click)="togglePassword()"
+    [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+  >
+    @if (showPassword()) {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+        <path
+          d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M6.2 6.6C3.9 8.2 2.3 10.4 1.5 12c1.6 3.2 5.4 7.5 10.5 7.5 1.9 0 3.6-.5 5-1.3M14.3 4.9c-.7-.2-1.5-.3-2.3-.3-5.1 0-8.9 4.3-10.5 7.5.6 1.1 1.4 2.3 2.5 3.4"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+        <path
+          d="M1.5 12S5.3 4.5 12 4.5 22.5 12 22.5 12 18.7 19.5 12 19.5 1.5 12 1.5 12Z"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
+      </svg>
+    }
+  </button>
+</ng-template>
