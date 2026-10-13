@@ -1,0 +1,102 @@
+<section class="panel panel--tabla">
+  <div class="panel__cabecera">
+    <div>
+      <h2 class="panel__titulo">{{ titulo() }}</h2>
+      @if (subtitulo()) {
+        <div class="panel__subtitulo">{{ subtitulo() }}</div>
+      }
+    </div>
+    <div class="acciones">
+      @if (conBuscador()) {
+        <label class="buscador">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <span class="sr-only">Buscar ítem o código</span>
+          <input type="search" placeholder="Buscar ítem o código" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+        </label>
+      }
+      <button type="button" class="btn-chico" (click)="expandirTodo()">Expandir todo</button>
+      <button type="button" class="btn-chico" (click)="contraerTodo()">Contraer todo</button>
+      <button type="button" class="btn-chico" [class.btn-chico--activo]="conRubros()" [attr.aria-pressed]="conRubros()" (click)="conRubros.set(!conRubros())">
+        Columnas por rubro
+      </button>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <table class="arbol" [class.arbol--rubros]="conRubros()">
+      <thead>
+        <tr>
+          <th>Ítem</th>
+          <th>Descripción</th>
+          <th class="num">Cant.</th>
+          <th>Un.</th>
+          @if (conRubros()) {
+            <th class="num">Mano de obra</th>
+            <th class="num">Equipos</th>
+            <th class="num">Materiales</th>
+            <th class="num">Terceros</th>
+          }
+          <th class="num">Unitario</th>
+          <th class="num">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (fila of filas(); track fila.nodo.numero) {
+          <tr [class]="'fila fila--' + fila.nodo.tipo.toLowerCase()">
+            <td class="muted">{{ fila.nodo.numero }}</td>
+            <td>
+              <div class="desc" [style.padding-left.px]="fila.nivel * 22 + (fila.tieneHijos ? 0 : 26)">
+                @if (fila.tieneHijos) {
+                  <button type="button" class="caret" [class.caret--abierto]="fila.abierto" [attr.aria-expanded]="fila.abierto" [attr.aria-label]="(fila.abierto ? 'Contraer ' : 'Expandir ') + fila.nodo.numero" (click)="alternar(fila.nodo.numero)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+                  </button>
+                }
+                <div>
+                  <span>{{ fila.nodo.descripcion || '—' }}</span>
+                  @if (conRoles() && fila.nodo.tipo === 'CAPITULO') {
+                    <span class="rol rol--tarea">Tarea</span>
+                  } @else if (conRoles() && fila.nodo.tipo === 'GRUPO') {
+                    <span class="rol">Subtarea</span>
+                  }
+                  @if (fila.nodo.codigo && fila.nodo.tipo === 'ITEM') {
+                    <div class="codigo">{{ fila.nodo.codigo }}</div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="num">{{ numero(fila.nodo.cantidad) }}</td>
+            <td class="muted">{{ fila.nodo.unidad }}</td>
+            @if (conRubros()) {
+              <td class="num">{{ pesos(fila.nodo.manoObra) }}</td>
+              <td class="num">{{ pesos(fila.nodo.equipos) }}</td>
+              <td class="num">{{ pesos(fila.nodo.materiales) }}</td>
+              <td class="num">{{ pesos(fila.nodo.terceros) }}</td>
+            }
+            <td class="num">{{ pesos(fila.nodo.unitario) }}</td>
+            <td class="num total">{{ pesos(fila.nodo.total) }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="conRubros() ? 10 : 6" class="muted vacio">No hay ítems que coincidan con «{{ busqueda() }}».</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td></td>
+          <td>Total general</td>
+          <td></td>
+          <td></td>
+          @if (conRubros()) {
+            <td class="num">{{ pesos(totales().manoObra) }}</td>
+            <td class="num">{{ pesos(totales().equipos) }}</td>
+            <td class="num">{{ pesos(totales().materiales) }}</td>
+            <td class="num">{{ pesos(totales().terceros) }}</td>
+          }
+          <td></td>
+          <td class="num">{{ pesos(totales().total) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>

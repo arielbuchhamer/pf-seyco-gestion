@@ -1,0 +1,136 @@
+.panel--tabla {
+  padding: 0;
+  overflow: hidden;
+}
+
+.panel__cabecera {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.arbol {
+  width: 100%;
+  min-width: 47rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.arbol--rubros {
+  min-width: 74rem;
+}
+
+.arbol th,
+.arbol td {
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.arbol th:first-child,
+.arbol td:first-child {
+  padding-left: 1.4rem;
+  width: 4.5rem;
+}
+
+.arbol th:last-child,
+.arbol td:last-child {
+  padding-right: 1.4rem;
+}
+
+.arbol th {
+  border-top: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+}
+
+.fila--capitulo {
+  background: #eef3fa;
+  font-weight: 700;
+}
+
+.fila--grupo {
+  background: #f8f9fc;
+  font-weight: 600;
+}
+
+.fila--armado {
+  font-weight: 600;
+}
+
+.desc {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 18rem;
+}
+
+.caret {
+  border: 0;
+  background: none;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.caret svg {
+  transition: transform 0.15s;
+}
+
+.caret--abierto svg {
+  transform: rotate(90deg);
+}
+
+.rol {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e6eef8;
+  color: var(--color-primary-dark);
+}
+
+.rol--tarea {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.codigo {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.total {
+  font-weight: 600;
+}
+
+.vacio {
+  padding: 1.5rem 1.4rem;
+}
+
+tfoot td {
+  border-top: 2px solid var(--color-ink);
+  font-weight: 700;
+}

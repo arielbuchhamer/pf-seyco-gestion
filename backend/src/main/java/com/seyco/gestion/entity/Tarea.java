@@ -1,5 +1,7 @@
 package com.seyco.gestion.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,6 +53,20 @@ public class Tarea {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "responsable_id")
 	private Usuario responsable;
+
+	// Subtareas: un grupo del presupuesto (stN,M) es una Tarea cuyo padre es la tarea del
+	// capítulo (stN). Las tareas de primer nivel no tienen padre. En el JSON sólo va el id
+	// (padreId) para no serializar el árbol hacia arriba.
+	@JsonIgnore
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "padre_id")
+	private Tarea padre;
+
+	// Numeración visible ("2", "2.1") y posición entre hermanas, tal como vienen del Excel.
+	@Column(length = 20)
+	private String numero;
+
+	private Integer orden;
 
 	public Long getId() {
 		return id;
@@ -122,5 +138,33 @@ public class Tarea {
 
 	public void setResponsable(Usuario responsable) {
 		this.responsable = responsable;
+	}
+
+	public Tarea getPadre() {
+		return padre;
+	}
+
+	public void setPadre(Tarea padre) {
+		this.padre = padre;
+	}
+
+	public Long getPadreId() {
+		return padre == null ? null : padre.getId();
+	}
+
+	public String getNumero() {
+		return numero;
+	}
+
+	public void setNumero(String numero) {
+		this.numero = numero;
+	}
+
+	public Integer getOrden() {
+		return orden;
+	}
+
+	public void setOrden(Integer orden) {
+		this.orden = orden;
 	}
 }

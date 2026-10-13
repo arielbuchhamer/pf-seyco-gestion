@@ -4,22 +4,29 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.seyco.gestion.entity.EstadoProyecto;
 import com.seyco.gestion.entity.EstadoTarea;
 import com.seyco.gestion.entity.HistorialEstadoTarea;
+import com.seyco.gestion.entity.ItemPresupuesto;
 import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.entity.Tarea;
 import com.seyco.gestion.entity.Usuario;
+import com.seyco.gestion.repository.ArchivoProyectoRepository;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
+import com.seyco.gestion.repository.ItemPresupuestoRepository;
+import com.seyco.gestion.repository.PresupuestoRepository;
 import com.seyco.gestion.repository.ProyectoRepository;
 import com.seyco.gestion.repository.TareaRepository;
 
@@ -29,13 +36,47 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 	private final ProyectoRepository proyectoRepository;
 	private final TareaRepository tareaRepository;
 	private final HistorialEstadoTareaRepository historialEstadoTareaRepository;
+	private final PresupuestoRepository presupuestoRepository;
+	private final ItemPresupuestoRepository itemPresupuestoRepository;
+	private final ArchivoProyectoRepository archivoProyectoRepository;
 
 	public ProyectoService(ProyectoRepository proyectoRepository, TareaRepository tareaRepository,
-			HistorialEstadoTareaRepository historialEstadoTareaRepository) {
+			HistorialEstadoTareaRepository historialEstadoTareaRepository, PresupuestoRepository presupuestoRepository,
+			ItemPresupuestoRepository itemPresupuestoRepository,
+			ArchivoProyectoRepository archivoProyectoRepository) {
 		super("El proyecto no existe.");
 		this.proyectoRepository = proyectoRepository;
 		this.tareaRepository = tareaRepository;
 		this.historialEstadoTareaRepository = historialEstadoTareaRepository;
+		this.presupuestoRepository = presupuestoRepository;
+		this.itemPresupuestoRepository = itemPresupuestoRepository;
+		this.archivoProyectoRepository = archivoProyectoRepository;
+	}
+
+	// Borra el proyecto con todo lo que cuelga de él: presupuesto con sus renglones, Excel
+	// original y tareas con su historial. Sin cascadas en la base (ddl-auto=update), se
+	// borra a mano de las hojas hacia arriba: renglones, subtareas y después tareas.
+	@Override
+	@Transactional
+	public void eliminar(Long id) {
+		Proyecto proyecto = buscarPorId(id);
+
+		presupuestoRepository.findByProyectoId(id).ifPresent(presupuesto -> {
+			List<ItemPresupuesto> items = itemPresupuestoRepository.findByPresupuestoIdOrderByOrdenAsc(presupuesto.getId());
+			itemPresupuestoRepository.deleteAll(items.reversed());
+			presupuestoRepository.delete(presupuesto);
+		});
+		archivoProyectoRepository.findByProyectoId(id).ifPresent(archivoProyectoRepository::delete);
+
+		List<Tarea> tareas = new ArrayList<>(tareaRepository.findByProyectoId(id));
+		tareas.sort(Comparator.comparing((Tarea t) -> t.getPadre() == null));
+		for (Tarea tarea : tareas) {
+			historialEstadoTareaRepository.deleteAll(
+					historialEstadoTareaRepository.findByTareaIdOrderByFechaHoraAsc(tarea.getId()));
+			tareaRepository.delete(tarea);
+		}
+
+		proyectoRepository.delete(proyecto);
 	}
 
 	@Override
@@ -106,6 +147,9 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 
 		existente.setNombre(cambios.getNombre());
 		existente.setDescripcion(cambios.getDescripcion());
+		existente.setCliente(cambios.getCliente());
+		existente.setRefCliente(cambios.getRefCliente());
+		existente.setAtencion(cambios.getAtencion());
 		existente.setFechaInicio(cambios.getFechaInicio());
 		existente.setFechaFin(cambios.getFechaFin());
 		if (cambios.getEstado() != null) {
@@ -118,7 +162,12 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 	// Seguimiento: foto del estado actual de las tareas del proyecto (CUU_18/CUU_24).
 	public Map<String, Object> progreso(Long proyectoId) {
 		Proyecto proyecto = buscarPorId(proyectoId);
-		List<Tarea> tareas = tareaRepository.findByProyectoId(proyectoId);
+		// Sólo cuentan las tareas sin subtareas: el trabajo real está en las subtareas (grupos
+		// del presupuesto importado), y la tarea que las agrupa no se completa por sí sola.
+		List<Tarea> todas = tareaRepository.findByProyectoId(proyectoId);
+		Set<Long> conSubtareas = todas.stream().map(Tarea::getPadreId).filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+		List<Tarea> tareas = todas.stream().filter(t -> !conSubtareas.contains(t.getId())).toList();
 
 		Map<EstadoTarea, Long> tareasPorEstado = tareas.stream()
 				.collect(Collectors.groupingBy(Tarea::getEstado, Collectors.counting()));
@@ -134,7 +183,7 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		resultado.put("porcentajeAvance", porcentajeAvance);
 		// Equipo del proyecto = responsables de sus tareas, sin repetir (avatares del listado,
 		// como en el prototipo). No hay una entidad "miembros del proyecto" aparte.
-		resultado.put("responsables", tareas.stream()
+		resultado.put("responsables", todas.stream()
 				.map(Tarea::getResponsable)
 				.filter(Objects::nonNull)
 				.collect(Collectors.toMap(Usuario::getId, u -> u, (a, b) -> a, LinkedHashMap::new))

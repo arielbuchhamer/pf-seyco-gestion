@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "proyecto")
@@ -36,6 +37,24 @@ public class Proyecto {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private EstadoProyecto estado;
+
+	// Datos del cliente, del encabezado del Excel ("A:"/"Sres:", "V/Ref:", "At:"); editables al importar.
+	@Column(length = 200)
+	private String cliente;
+
+	@Column(name = "ref_cliente", length = 200)
+	private String refCliente;
+
+	@Column(length = 200)
+	private String atencion;
+
+	// Origen del proyecto: el Excel del que se importó (el archivo en sí está en ArchivoProyecto).
+	// Los dos los completa la importación; no se editan.
+	@Column(name = "archivo_nombre", length = 255)
+	private String archivoNombre;
+
+	@Column(name = "fecha_importacion")
+	private LocalDateTime fechaImportacion;
 
 	public Long getId() {
 		return id;
@@ -83,5 +102,45 @@ public class Proyecto {
 
 	public void setEstado(EstadoProyecto estado) {
 		this.estado = estado;
+	}
+
+	public String getCliente() {
+		return cliente;
+	}
+
+	public void setCliente(String cliente) {
+		this.cliente = cliente;
+	}
+
+	public String getRefCliente() {
+		return refCliente;
+	}
+
+	public void setRefCliente(String refCliente) {
+		this.refCliente = refCliente;
+	}
+
+	public String getAtencion() {
+		return atencion;
+	}
+
+	public void setAtencion(String atencion) {
+		this.atencion = atencion;
+	}
+
+	public String getArchivoNombre() {
+		return archivoNombre;
+	}
+
+	public void setArchivoNombre(String archivoNombre) {
+		this.archivoNombre = archivoNombre;
+	}
+
+	public LocalDateTime getFechaImportacion() {
+		return fechaImportacion;
+	}
+
+	public void setFechaImportacion(LocalDateTime fechaImportacion) {
+		this.fechaImportacion = fechaImportacion;
 	}
 }

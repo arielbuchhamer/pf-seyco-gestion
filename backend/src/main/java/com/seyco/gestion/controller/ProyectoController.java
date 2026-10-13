@@ -3,13 +3,11 @@ package com.seyco.gestion.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.seyco.gestion.entity.EstadoProyecto;
 import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.service.ProyectoService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/proyectos")
@@ -45,16 +41,9 @@ public class ProyectoController {
 		return proyectoService.buscarPorId(id);
 	}
 
-	// Alta, modificación y baja de proyectos son del Gerente de Proyecto (Historia #5, CUU_9,
-	// CUU_10): permisos escribir/editar del módulo `proyectos` (en la base, el rol admin).
-	// Ver/seguir proyectos sólo pide leer (también lo tiene el rol visor).
-	@PostMapping
-	@PreAuthorize("hasAuthority('proyectos:escribir')")
-	public ResponseEntity<Proyecto> crear(@Valid @RequestBody Proyecto proyecto) {
-		Proyecto creado = proyectoService.crear(proyecto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(creado);
-	}
-
+	// El alta de proyectos es sólo desde el Excel de presupuesto (ImportacionController).
+	// Modificación y baja son del Gerente de Proyecto (Historia #5, CUU_9, CUU_10): permiso
+	// editar del módulo `proyectos` (en la base, el rol admin). Ver/seguir proyectos sólo pide leer.
 	@PutMapping("/{id}")
 	@PreAuthorize("hasAuthority('proyectos:editar')")
 	public Proyecto actualizar(@PathVariable Long id, @RequestBody Proyecto cambios) {

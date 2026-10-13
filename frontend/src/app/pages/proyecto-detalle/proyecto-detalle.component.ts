@@ -1,250 +1,166 @@
 import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PuedeDirective } from '../../core/directives/puede.directive';
-import {
-  CambioEstadoTarea,
-  TareasKanbanComponent,
-} from '../../shared/tareas-kanban/tareas-kanban.component';
-import { extraerMensajeError } from '../../core/utils/http-error';
-import { AuthService } from '../../core/services/auth.service';
-import { Usuario, nombreCompleto } from '../../core/models/usuario.model';
-import {
-  ESTADO_PROYECTO_LABEL,
-  Progreso,
-  Proyecto,
-  ProyectoInput,
-  Rendimiento,
-} from '../../core/models/proyecto.model';
+import { PresupuestoDetalle } from '../../core/models/presupuesto.model';
+import { ESTADO_PROYECTO_LABEL, Proyecto, ProyectoInput } from '../../core/models/proyecto.model';
+import { Tarea } from '../../core/models/tarea.model';
+import { ImportacionService } from '../../core/services/importacion.service';
 import { ProyectoService } from '../../core/services/proyecto.service';
-import { UsuarioService } from '../../core/services/usuario.service';
 import { estaVencido } from '../../core/utils/fecha';
-import { ESTADOS_TAREA, ESTADO_TAREA_LABEL, Tarea, TareaInput } from '../../core/models/tarea.model';
-import { TareaService } from '../../core/services/tarea.service';
+import { fecha, pesosCorto } from '../../core/utils/formato';
+import { extraerMensajeError } from '../../core/utils/http-error';
+import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
+import { SnackbarService } from '../../shared/snackbar/snackbar.service';
+import { ProyectoPresupuestoComponent } from './proyecto-presupuesto.component';
+import { ProyectoTareasComponent } from './proyecto-tareas.component';
 
+type Solapa = 'tareas' | 'presupuesto';
+
+// Vista del proyecto con solapas Tareas y Presupuesto. Editar y eliminar el proyecto están
+// acá (el listado ya no tiene acciones: es "importar + últimos proyectos").
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PuedeDirective, TareasKanbanComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    PuedeDirective,
+    ConfirmarDialogComponent,
+    ProyectoTareasComponent,
+    ProyectoPresupuestoComponent,
+  ],
   templateUrl: './proyecto-detalle.component.html',
   styleUrl: './proyecto-detalle.component.css',
 })
 export class ProyectoDetalleComponent {
   private readonly proyectoService = inject(ProyectoService);
-  private readonly tareaService = inject(TareaService);
-  private readonly usuarioService = inject(UsuarioService);
+  private readonly importacion = inject(ImportacionService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
-  protected readonly auth = inject(AuthService);
 
-  // Con withComponentInputBinding() (ver app.config.ts) el :id de la ruta llega directo
-  // acá, sin inyectar ActivatedRoute ni suscribirse a paramMap a mano.
   readonly id = input.required<string>();
-  private readonly proyectoId = computed(() => Number(this.id()));
+  protected readonly proyectoId = computed(() => Number(this.id()));
 
-  protected readonly estadoProyectoLabel = ESTADO_PROYECTO_LABEL;
-  protected readonly estadoTareaLabel = ESTADO_TAREA_LABEL;
-  protected readonly estadosTarea = ESTADOS_TAREA;
-  protected readonly nombreCompleto = nombreCompleto;
+  protected readonly estadoLabel = ESTADO_PROYECTO_LABEL;
+  protected readonly fecha = fecha;
+  protected readonly pesosCorto = pesosCorto;
 
-  protected readonly proyectoResource = httpResource<Proyecto>(() => ({
-    url: `/api/proyectos/${this.proyectoId()}`,
-  }));
-
-  protected readonly vencido = computed(() => {
-    const proyecto = this.proyectoResource.value();
-    return proyecto ? estaVencido(proyecto.fechaFin, proyecto.estado) : false;
-  });
-
-  protected readonly progresoResource = httpResource<Progreso>(() => ({
-    url: `/api/proyectos/${this.proyectoId()}/progreso`,
-  }));
-
-  protected readonly rendimientoResource = httpResource<Rendimiento>(() => ({
-    url: `/api/proyectos/${this.proyectoId()}/rendimiento`,
-  }));
+  protected readonly proyectoResource = httpResource<Proyecto>(() => `/api/proyectos/${this.proyectoId()}`);
 
   protected readonly tareasResource = httpResource<Tarea[]>(
     () => ({ url: '/api/tareas', params: { proyectoId: this.proyectoId() } }),
     { defaultValue: [] },
   );
 
-  // Solo se pide si puede leer el módulo `usuarios` (ver @PreAuthorize en UsuarioController del back).
-  protected readonly usuariosResource = httpResource<Usuario[]>(
-    () => (this.auth.puede('usuarios', 'leer') ? { url: '/api/usuarios' } : undefined),
-    { defaultValue: [] },
+  // Los proyectos anteriores a la importación no tienen presupuesto (404): sin solapa Presupuesto.
+  protected readonly presupuestoResource = httpResource<PresupuestoDetalle>(
+    () => `/api/proyectos/${this.proyectoId()}/presupuesto`,
+  );
+  protected readonly presupuesto = computed(() =>
+    this.presupuestoResource.hasValue() ? this.presupuestoResource.value() : null,
   );
 
-  // ── Editar proyecto ──
-  protected readonly showEditForm = signal(false);
-  protected readonly savingProyecto = signal(false);
-  protected readonly proyectoFormError = signal<string | null>(null);
+  protected readonly cantidadTareas = computed(() => this.tareasResource.value().filter((t) => t.padreId == null).length);
 
-  protected readonly proyectoForm = this.fb.nonNullable.group({
+  protected readonly vencido = computed(() => {
+    const p = this.proyectoResource.value();
+    return p ? estaVencido(p.fechaFin, p.estado) : false;
+  });
+
+  protected readonly solapa = signal<Solapa>('tareas');
+  protected readonly abrirEnPresupuesto = signal<string[] | null>(null);
+
+  irAlPresupuesto(camino: string[]): void {
+    this.abrirEnPresupuesto.set(camino);
+    this.solapa.set('presupuesto');
+  }
+
+  verSolapa(solapa: Solapa): void {
+    if (solapa === 'presupuesto') this.abrirEnPresupuesto.set(null);
+    this.solapa.set(solapa);
+  }
+
+  recargar(): void {
+    this.tareasResource.reload();
+    this.proyectoResource.reload();
+  }
+
+  descargarExcel(proyecto: Proyecto): void {
+    this.importacion.descargarExcelOriginal(proyecto.id, proyecto.archivoNombre ?? 'proyecto.xls').subscribe({
+      error: (err) => this.snackbar.mostrar(extraerMensajeError(err, 'No se pudo descargar el Excel.'), 'error'),
+    });
+  }
+
+  // ── Editar / eliminar proyecto ──
+  protected readonly mostrarEditar = signal(false);
+  protected readonly guardando = signal(false);
+  protected readonly errorForm = signal<string | null>(null);
+  protected readonly form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required]],
+    cliente: [''],
+    atencion: [''],
+    refCliente: [''],
     descripcion: [''],
     fechaInicio: [''],
     fechaFin: [''],
   });
 
-  abrirEditarProyecto(): void {
-    const proyecto = this.proyectoResource.value();
-    if (!proyecto) return;
-    this.proyectoFormError.set(null);
-    this.proyectoForm.reset({
-      nombre: proyecto.nombre,
-      descripcion: proyecto.descripcion ?? '',
-      fechaInicio: proyecto.fechaInicio ?? '',
-      fechaFin: proyecto.fechaFin ?? '',
+  abrirEditar(): void {
+    const p = this.proyectoResource.value();
+    if (!p) return;
+    this.form.reset({
+      nombre: p.nombre,
+      cliente: p.cliente ?? '',
+      atencion: p.atencion ?? '',
+      refCliente: p.refCliente ?? '',
+      descripcion: p.descripcion ?? '',
+      fechaInicio: p.fechaInicio ?? '',
+      fechaFin: p.fechaFin ?? '',
     });
-    this.showEditForm.set(true);
+    this.errorForm.set(null);
+    this.mostrarEditar.set(true);
   }
 
-  cerrarEditarProyecto(): void {
-    this.showEditForm.set(false);
-  }
-
-  guardarProyecto(): void {
-    if (this.proyectoForm.invalid) {
-      this.proyectoForm.markAllAsTouched();
+  guardar(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
-
-    const payload: ProyectoInput = this.proyectoForm.getRawValue();
-    this.savingProyecto.set(true);
-    this.proyectoFormError.set(null);
-
+    const payload: ProyectoInput = this.form.getRawValue();
+    this.guardando.set(true);
+    this.errorForm.set(null);
     this.proyectoService.actualizar(this.proyectoId(), payload).subscribe({
       next: () => {
-        this.savingProyecto.set(false);
-        this.showEditForm.set(false);
+        this.guardando.set(false);
+        this.mostrarEditar.set(false);
         this.proyectoResource.reload();
+        this.snackbar.mostrar('Proyecto guardado.');
       },
       error: (err) => {
-        this.savingProyecto.set(false);
-        this.proyectoFormError.set(extraerMensajeError(err, 'No se pudo guardar el proyecto.'));
+        this.guardando.set(false);
+        this.errorForm.set(extraerMensajeError(err, 'No se pudo guardar el proyecto.'));
       },
     });
   }
 
-  // ── Tareas (crear / editar-reasignar: permisos del módulo `tareas`, ver @PreAuthorize en TareaController) ──
-  protected readonly showTareaForm = signal(false);
-  protected readonly editingTarea = signal<Tarea | null>(null);
-  protected readonly savingTarea = signal(false);
-  protected readonly tareaFormError = signal<string | null>(null);
+  protected readonly confirmandoEliminar = signal(false);
+  protected readonly eliminando = signal(false);
 
-  protected readonly tareaForm = this.fb.nonNullable.group({
-    nombre: ['', [Validators.required]],
-    descripcion: [''],
-    fechaInicio: [''],
-    fechaFin: [''],
-    prioridad: ['MEDIA'],
-    responsableId: [''],
-  });
-
-  abrirCrearTarea(): void {
-    this.editingTarea.set(null);
-    this.tareaFormError.set(null);
-    this.tareaForm.reset({
-      nombre: '',
-      descripcion: '',
-      fechaInicio: '',
-      fechaFin: '',
-      prioridad: 'MEDIA',
-      responsableId: '',
-    });
-    this.showTareaForm.set(true);
-  }
-
-  abrirEditarTarea(tarea: Tarea): void {
-    this.editingTarea.set(tarea);
-    this.tareaFormError.set(null);
-    this.tareaForm.reset({
-      nombre: tarea.nombre,
-      descripcion: tarea.descripcion ?? '',
-      fechaInicio: tarea.fechaInicio ?? '',
-      fechaFin: tarea.fechaFin ?? '',
-      prioridad: tarea.prioridad ?? '',
-      responsableId: tarea.responsable ? String(tarea.responsable.id) : '',
-    });
-    this.showTareaForm.set(true);
-  }
-
-  cerrarFormTarea(): void {
-    this.showTareaForm.set(false);
-  }
-
-  guardarTarea(): void {
-    if (this.tareaForm.invalid) {
-      this.tareaForm.markAllAsTouched();
-      return;
-    }
-
-    const { nombre, descripcion, fechaInicio, fechaFin, prioridad, responsableId } =
-      this.tareaForm.getRawValue();
-
-    const payload: TareaInput = {
-      nombre,
-      descripcion: descripcion || undefined,
-      fechaInicio: fechaInicio || undefined,
-      fechaFin: fechaFin || undefined,
-      prioridad: (prioridad || undefined) as TareaInput['prioridad'],
-      proyecto: { id: this.proyectoId() },
-      responsable: responsableId ? { id: Number(responsableId) } : undefined,
-    };
-
-    this.savingTarea.set(true);
-    this.tareaFormError.set(null);
-
-    const editing = this.editingTarea();
-    const request = editing
-      ? this.tareaService.actualizar(editing.id, payload)
-      : this.tareaService.crear(payload);
-
-    request.subscribe({
+  eliminar(): void {
+    this.eliminando.set(true);
+    this.proyectoService.eliminar(this.proyectoId()).subscribe({
       next: () => {
-        this.savingTarea.set(false);
-        this.showTareaForm.set(false);
-        this.recargarSeguimiento();
+        this.snackbar.mostrar('Proyecto eliminado.');
+        this.router.navigate(['/proyectos']);
       },
       error: (err) => {
-        this.savingTarea.set(false);
-        this.tareaFormError.set(extraerMensajeError(err, 'No se pudo guardar la tarea.'));
+        this.eliminando.set(false);
+        this.confirmandoEliminar.set(false);
+        this.snackbar.mostrar(extraerMensajeError(err, 'No se pudo eliminar el proyecto.'), 'error');
       },
     });
-  }
-
-  // Único punto de cambio de estado: dispara el registro de historial en el backend,
-  // que es la base de seguimiento (progreso) y rendimiento (duración real vs. planificada).
-  // Si la llamada falla se revierte el <select> a mano (ver CambioEstadoTarea).
-  cambiarEstadoTarea({ tarea, estado, select }: CambioEstadoTarea): void {
-    this.tareaService.cambiarEstado(tarea.id, estado).subscribe({
-      next: () => this.recargarSeguimiento(),
-      error: (err) => {
-        select.value = tarea.estado;
-        alert(extraerMensajeError(err, 'No se pudo cambiar el estado de la tarea.'));
-      },
-    });
-  }
-
-  eliminarTarea(tarea: Tarea): void {
-    if (!confirm(`¿Eliminar la tarea "${tarea.nombre}"? También se borra su historial de estados.`)) {
-      return;
-    }
-
-    this.tareaService.eliminar(tarea.id).subscribe({
-      next: () => this.recargarSeguimiento(),
-      error: (err) => alert(extraerMensajeError(err, 'No se pudo eliminar la tarea.')),
-    });
-  }
-
-  private recargarSeguimiento(): void {
-    this.tareasResource.reload();
-    this.progresoResource.reload();
-    this.rendimientoResource.reload();
-    // El estado del proyecto puede haber cambiado como efecto automático del cambio de
-    // estado de la tarea (ver ProyectoService.recalcularEstado en el back) — hay que
-    // refrescar el proyecto para que el badge del header lo refleje.
-    this.proyectoResource.reload();
   }
 }
