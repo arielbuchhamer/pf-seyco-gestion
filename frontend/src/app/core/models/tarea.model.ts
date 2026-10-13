@@ -13,6 +13,11 @@ export interface Tarea {
   prioridad: Prioridad | null;
   proyecto: { id: number; nombre: string };
   responsable: Usuario | null;
+  // Subtareas (grupos del presupuesto importado): id de la tarea padre. null en las de primer nivel.
+  padreId: number | null;
+  // Numeración del Excel ("2", "2.1") y posición entre hermanas; null en tareas cargadas a mano.
+  numero: string | null;
+  orden: number | null;
 }
 
 // Al crear/editar, el backend sólo necesita los ids de proyecto/responsable (no hay DTO en el

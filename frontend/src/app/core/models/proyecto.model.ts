@@ -17,10 +17,19 @@ export interface Proyecto {
   fechaInicio: string | null;
   fechaFin: string | null;
   estado: EstadoProyecto;
+  cliente: string | null;
+  refCliente: string | null;
+  atencion: string | null;
+  // Origen: Excel del que se importó el proyecto (null en los cargados antes de la importación).
+  archivoNombre: string | null;
+  fechaImportacion: string | null;
 }
 
 export interface ProyectoInput {
   nombre: string;
+  cliente?: string;
+  refCliente?: string;
+  atencion?: string;
   descripcion?: string;
   fechaInicio?: string;
   fechaFin?: string;

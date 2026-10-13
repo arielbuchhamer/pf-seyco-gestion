@@ -6,6 +6,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.seyco.gestion.dto.Mensaje;
 import com.seyco.gestion.service.ServiceException;
@@ -27,5 +28,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Mensaje> handleDatosInvalidos(Exception ex) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 				.body(new Mensaje("Hay datos inválidos. Revisá el formulario e intentá nuevamente."));
+	}
+
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<Mensaje> handleArchivoMuyGrande(MaxUploadSizeExceededException ex) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(new Mensaje("El archivo es demasiado grande (máximo 20 MB)."));
 	}
 }

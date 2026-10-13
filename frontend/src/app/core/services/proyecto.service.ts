@@ -25,10 +25,6 @@ export class ProyectoService {
     return this.http.get<Proyecto>(`${this.baseUrl}/${id}`);
   }
 
-  crear(proyecto: ProyectoInput): Observable<Proyecto> {
-    return this.http.post<Proyecto>(this.baseUrl, proyecto);
-  }
-
   actualizar(id: number, cambios: ProyectoInput): Observable<Proyecto> {
     return this.http.put<Proyecto>(`${this.baseUrl}/${id}`, cambios);
   }

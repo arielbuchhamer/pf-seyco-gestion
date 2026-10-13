@@ -1,147 +1,123 @@
 <section class="page proyecto-page">
-  <a routerLink="/proyectos" class="back-link">← Proyectos</a>
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/proyectos">Proyectos</a>
+    @if (proyectoResource.value(); as proyecto) {
+      <span aria-hidden="true">/</span>
+      <a [routerLink]="['/proyectos', proyecto.id]" aria-current="page">{{ proyecto.nombre }}</a>
+    }
+  </nav>
 
-  @if (proyectoResource.isLoading()) {
+  @if (proyectoResource.isLoading() && !proyectoResource.hasValue()) {
     <p class="muted">Cargando…</p>
   } @else if (proyectoResource.error()) {
     <p class="error" role="alert">No se pudo cargar el proyecto.</p>
   } @else if (proyectoResource.value(); as proyecto) {
-    <header class="page__header">
+    <header class="cabecera">
       <div>
-        <h1>
-          {{ proyecto.nombre }}
-          <span class="badge" [class]="'badge--' + proyecto.estado.toLowerCase()">
-            {{ estadoProyectoLabel[proyecto.estado] }}
-          </span>
-        </h1>
-        <p class="muted">
-          {{ proyecto.fechaInicio || '—' }} →
-          <span [class.fecha-fin--vencida]="vencido()">
-            {{ proyecto.fechaFin || '—' }}{{ vencido() ? ' (vencido)' : '' }}
-          </span>
-        </p>
-      </div>
-      <button type="button" class="btn btn--ghost" *puede="'proyectos:editar'" (click)="abrirEditarProyecto()">
-        Editar proyecto
-      </button>
-    </header>
-
-    @if (proyecto.descripcion) {
-      <p class="card descripcion">{{ proyecto.descripcion }}</p>
-    }
-
-    <div class="proyecto-layout">
-      <div class="proyecto-layout__side">
-        <div class="card">
-          <h2>Seguimiento</h2>
-          @if (progresoResource.isLoading()) {
-            <p class="muted">Cargando…</p>
-          } @else if (progresoResource.value(); as progreso) {
-            <p class="stat-number">{{ progreso.porcentajeAvance.toFixed(0) }}%</p>
-            <div class="progress-bar">
-              <div class="progress-bar__fill" [style.width.%]="progreso.porcentajeAvance"></div>
-            </div>
-            <p class="muted">{{ progreso.totalTareas }} tareas en total</p>
-            <ul class="estado-list">
-              @for (estado of estadosTarea; track estado) {
-                <li>
-                  <span class="badge" [class]="'badge--' + estado.toLowerCase()">
-                    {{ estadoTareaLabel[estado] }}
-                  </span>
-                  <span>{{ progreso.tareasPorEstado[estado] ?? 0 }}</span>
-                </li>
-              }
-            </ul>
+        <div class="cabecera__titulo">
+          <h1>{{ proyecto.nombre }}</h1>
+          <span class="badge" [class]="'badge badge--' + proyecto.estado.toLowerCase()">{{ estadoLabel[proyecto.estado] }}</span>
+        </div>
+        <div class="meta">
+          @if (proyecto.cliente) {
+            <span class="meta__cliente">{{ proyecto.cliente }}</span>
           }
-        </div>
-
-        <div class="card">
-          <h2>Rendimiento</h2>
-          @if (rendimientoResource.isLoading()) {
-            <p class="muted">Cargando…</p>
-          } @else if (rendimientoResource.value(); as rendimiento) {
-            @if (rendimiento.tareasConsideradas === 0) {
-              <p class="muted">
-                Todavía no hay tareas completadas con historial suficiente para calcular el rendimiento.
-              </p>
-            } @else {
-              <p
-                class="stat-number"
-                [class.stat-number--bad]="rendimiento.desvioPromedioDias > 0"
-                [class.stat-number--good]="rendimiento.desvioPromedioDias < 0"
-              >
-                {{ rendimiento.desvioPromedioDias > 0 ? '+' : '' }}{{ rendimiento.desvioPromedioDias.toFixed(1) }}
-                días
-              </p>
-              <p class="muted">
-                Desvío promedio sobre {{ rendimiento.tareasConsideradas }}
-                {{ rendimiento.tareasConsideradas === 1 ? 'tarea' : 'tareas' }} (real vs. planificado)
-              </p>
-              <table class="table table--compact">
-                <thead>
-                  <tr>
-                    <th>Tarea</th>
-                    <th>Planif.</th>
-                    <th>Real</th>
-                    <th>Desvío</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (item of rendimiento.detalle; track item.tareaId) {
-                    <tr>
-                      <td data-label="Tarea">{{ item.nombre }}</td>
-                      <td data-label="Planificado">{{ item.diasPlanificados }}d</td>
-                      <td data-label="Real">{{ item.diasReales.toFixed(1) }}d</td>
-                      <td
-                        data-label="Desvío"
-                        [class.desvio--malo]="item.desvioDias > 0"
-                        [class.desvio--bueno]="item.desvioDias < 0"
-                      >
-                        {{ item.desvioDias > 0 ? '+' : '' }}{{ item.desvioDias.toFixed(1) }}d
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            }
+          @if (proyecto.atencion) {
+            <span>At.: {{ proyecto.atencion }}</span>
           }
+          @if (proyecto.refCliente) {
+            <span>Ref. cliente: {{ proyecto.refCliente }}</span>
+          }
+          <span [class.vencido]="vencido()">
+            {{ fecha(proyecto.fechaInicio) }} → {{ fecha(proyecto.fechaFin) }}{{ vencido() ? ' (vencido)' : '' }}
+          </span>
         </div>
-      </div>
-
-      <div class="proyecto-layout__main">
-        <div class="page__header tareas-header">
-          <h2>Tareas</h2>
-          <button type="button" class="btn btn--primary" *puede="'tareas:escribir'" (click)="abrirCrearTarea()">
-            Nueva tarea
-          </button>
-        </div>
-
-        @if (tareasResource.isLoading()) {
-          <p class="muted">Cargando…</p>
-        } @else {
-          <app-tareas-kanban
-            [tareas]="tareasResource.value()"
-            [conAcciones]="true"
-            (cambiarEstado)="cambiarEstadoTarea($event)"
-            (editar)="abrirEditarTarea($event)"
-            (eliminar)="eliminarTarea($event)"
-          />
+        @if (proyecto.archivoNombre) {
+          <div class="origen">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+            Importado el {{ fecha(proyecto.fechaImportacion) }} desde
+            <button type="button" class="link" (click)="descargarExcel(proyecto)" title="Descargar el Excel original">{{ proyecto.archivoNombre }}</button>
+          </div>
+        }
+        @if (proyecto.descripcion) {
+          <p class="descripcion">{{ proyecto.descripcion }}</p>
         }
       </div>
+      <div class="cabecera__acciones">
+        @if (proyecto.archivoNombre) {
+          <button type="button" class="accion accion--excel" (click)="descargarExcel(proyecto)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="m7 10 5 5 5-5"></path><path d="M4 20h16"></path></svg>
+            Descargar Excel original
+          </button>
+        }
+        <ng-container *puede="'proyectos:editar'">
+          <button type="button" class="accion accion--eliminar" (click)="confirmandoEliminar.set(true)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+            Eliminar
+          </button>
+          <button type="button" class="accion accion--editar" (click)="abrirEditar()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+            Editar proyecto
+          </button>
+        </ng-container>
+      </div>
+    </header>
+
+    <div class="solapas" role="tablist" aria-label="Secciones del proyecto">
+      <button type="button" role="tab" class="solapa" [class.solapa--activa]="solapa() === 'tareas'" [attr.aria-selected]="solapa() === 'tareas'" (click)="verSolapa('tareas')">
+        Tareas <span class="contador">{{ cantidadTareas() }}</span>
+      </button>
+      @if (presupuesto(); as p) {
+        <button type="button" role="tab" class="solapa" [class.solapa--activa]="solapa() === 'presupuesto'" [attr.aria-selected]="solapa() === 'presupuesto'" (click)="verSolapa('presupuesto')">
+          Presupuesto <span class="contador">{{ pesosCorto(p.totales.total) }}</span>
+        </button>
+      }
     </div>
 
-    @if (showEditForm()) {
-      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarEditarProyecto()"></button>
+    @if (solapa() === 'presupuesto' && presupuesto(); as p) {
+      <app-proyecto-presupuesto role="tabpanel" [presupuesto]="p" [abrir]="abrirEnPresupuesto()" />
+    } @else {
+      <app-proyecto-tareas
+        role="tabpanel"
+        [proyectoId]="proyectoId()"
+        [tareas]="tareasResource.value()"
+        [presupuesto]="presupuesto()"
+        (verPresupuesto)="irAlPresupuesto($event)"
+        (cambio)="recargar()"
+      />
+    }
+
+    @if (mostrarEditar()) {
+      <button type="button" class="backdrop" aria-label="Cerrar" (click)="mostrarEditar.set(false)"></button>
       <div class="dialog" role="dialog" aria-modal="true">
         <h2>Editar proyecto</h2>
-        <form [formGroup]="proyectoForm" (ngSubmit)="guardarProyecto()" novalidate>
-          @if (proyectoFormError()) {
-            <p class="error" role="alert">{{ proyectoFormError() }}</p>
+        <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+          @if (errorForm()) {
+            <p class="error" role="alert">{{ errorForm() }}</p>
           }
           <label class="field">
             <span>Nombre</span>
             <input type="text" formControlName="nombre" autocomplete="off" />
+            @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+              <small class="field__error">El nombre es obligatorio.</small>
+            }
           </label>
+          <label class="field">
+            <span>Cliente</span>
+            <input type="text" formControlName="cliente" autocomplete="off" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Atención</span>
+              <input type="text" formControlName="atencion" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Ref. del cliente</span>
+              <input type="text" formControlName="refCliente" autocomplete="off" />
+            </label>
+          </div>
           <label class="field">
             <span>Descripción</span>
             <textarea formControlName="descripcion" rows="3"></textarea>
@@ -157,66 +133,22 @@
             </label>
           </div>
           <div class="dialog__actions">
-            <button type="button" class="btn btn--ghost" (click)="cerrarEditarProyecto()">Cancelar</button>
-            <button type="submit" class="btn btn--primary" [disabled]="savingProyecto()">
-              {{ savingProyecto() ? 'Guardando…' : 'Guardar' }}
-            </button>
+            <button type="button" class="btn btn--ghost" (click)="mostrarEditar.set(false)">Cancelar</button>
+            <button type="submit" class="btn btn--primary" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
           </div>
         </form>
       </div>
     }
 
-    @if (showTareaForm()) {
-      <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarFormTarea()"></button>
-      <div class="dialog" role="dialog" aria-modal="true">
-        <h2>{{ editingTarea() ? 'Editar tarea' : 'Nueva tarea' }}</h2>
-        <form [formGroup]="tareaForm" (ngSubmit)="guardarTarea()" novalidate>
-          @if (tareaFormError()) {
-            <p class="error" role="alert">{{ tareaFormError() }}</p>
-          }
-          <label class="field">
-            <span>Nombre</span>
-            <input type="text" formControlName="nombre" autocomplete="off" />
-          </label>
-          <label class="field">
-            <span>Descripción</span>
-            <textarea formControlName="descripcion" rows="2"></textarea>
-          </label>
-          <div class="field-row">
-            <label class="field">
-              <span>Fecha inicio</span>
-              <input type="date" formControlName="fechaInicio" />
-            </label>
-            <label class="field">
-              <span>Fecha fin</span>
-              <input type="date" formControlName="fechaFin" />
-            </label>
-          </div>
-          <label class="field">
-            <span>Prioridad</span>
-            <select formControlName="prioridad">
-              <option value="BAJA">Baja</option>
-              <option value="MEDIA">Media</option>
-              <option value="ALTA">Alta</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Responsable</span>
-            <select formControlName="responsableId">
-              <option value="">Sin asignar</option>
-              @for (usuario of usuariosResource.value(); track usuario.id) {
-                <option [value]="usuario.id">{{ nombreCompleto(usuario) }}</option>
-              }
-            </select>
-          </label>
-          <div class="dialog__actions">
-            <button type="button" class="btn btn--ghost" (click)="cerrarFormTarea()">Cancelar</button>
-            <button type="submit" class="btn btn--primary" [disabled]="savingTarea()">
-              {{ savingTarea() ? 'Guardando…' : editingTarea() ? 'Guardar' : 'Crear' }}
-            </button>
-          </div>
-        </form>
-      </div>
+    @if (confirmandoEliminar()) {
+      <app-confirmar-dialog
+        titulo="Eliminar proyecto"
+        pregunta="¿Desea eliminar el proyecto"
+        [nombre]="proyecto.nombre + '? Se borran también sus tareas y su presupuesto'"
+        [procesando]="eliminando()"
+        (confirmar)="eliminar()"
+        (cancelar)="confirmandoEliminar.set(false)"
+      />
     }
   }
 </section>

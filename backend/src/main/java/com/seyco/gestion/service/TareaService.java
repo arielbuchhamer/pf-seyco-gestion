@@ -5,13 +5,16 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.seyco.gestion.entity.EstadoTarea;
 import com.seyco.gestion.entity.HistorialEstadoTarea;
+import com.seyco.gestion.entity.ItemPresupuesto;
 import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.entity.Tarea;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
+import com.seyco.gestion.repository.ItemPresupuestoRepository;
 import com.seyco.gestion.repository.ProyectoRepository;
 import com.seyco.gestion.repository.TareaRepository;
 import com.seyco.gestion.repository.UsuarioRepository;
@@ -25,10 +28,12 @@ public class TareaService extends BaseService<Tarea, Long> {
 	private final HistorialEstadoTareaRepository historialEstadoTareaRepository;
 	private final ProyectoService proyectoService;
 	private final PermisoService permisoService;
+	private final ItemPresupuestoRepository itemPresupuestoRepository;
 
 	public TareaService(TareaRepository tareaRepository, ProyectoRepository proyectoRepository,
 			UsuarioRepository usuarioRepository, HistorialEstadoTareaRepository historialEstadoTareaRepository,
-			ProyectoService proyectoService, PermisoService permisoService) {
+			ProyectoService proyectoService, PermisoService permisoService,
+			ItemPresupuestoRepository itemPresupuestoRepository) {
 		super("La tarea no existe.");
 		this.tareaRepository = tareaRepository;
 		this.proyectoRepository = proyectoRepository;
@@ -36,6 +41,7 @@ public class TareaService extends BaseService<Tarea, Long> {
 		this.historialEstadoTareaRepository = historialEstadoTareaRepository;
 		this.proyectoService = proyectoService;
 		this.permisoService = permisoService;
+		this.itemPresupuestoRepository = itemPresupuestoRepository;
 	}
 
 	@Override
@@ -78,6 +84,16 @@ public class TareaService extends BaseService<Tarea, Long> {
 		registrarHistorial(creada, null, creada.getEstado(), usuarioRepository.findByEmailIgnoreCaseAndFechaBajaIsNull(emailCreador).orElse(null));
 		// CUU_7: apenas el proyecto tiene una tarea, deja de estar PLANIFICADO.
 		proyectoService.recalcularEstado(proyecto.getId());
+		return creada;
+	}
+
+	// Alta de las tareas y subtareas que salen de la importación del Excel (ImportacionService):
+	// el proyecto, el padre y las fechas ya vienen resueltos. Registra el historial igual que
+	// crear(); el estado del proyecto lo recalcula la importación una sola vez al final.
+	public Tarea crearImportada(Tarea nueva, Usuario creador) {
+		nueva.setEstado(EstadoTarea.PENDIENTE);
+		Tarea creada = tareaRepository.save(nueva);
+		registrarHistorial(creada, null, creada.getEstado(), creador);
 		return creada;
 	}
 
@@ -138,17 +154,28 @@ public class TareaService extends BaseService<Tarea, Long> {
 	// HistorialEstadoTarea, y ddl-auto=update no agrega ON DELETE CASCADE a una FK ya
 	// creada. Sin este borrado manual, eliminar cualquier tarea tira un 500 (toda tarea
 	// tiene al menos un registro de historial desde que se crea).
+	// Las subtareas se borran junto con la tarea, y los renglones del presupuesto que
+	// apuntaban a ella quedan sin tarea (el presupuesto no se toca).
 	@Override
+	@Transactional
 	public void eliminar(Long id) {
 		Tarea tarea = buscarPorId(id);
 		Long proyectoId = tarea.getProyecto().getId();
 
-		historialEstadoTareaRepository.deleteAll(
-				historialEstadoTareaRepository.findByTareaIdOrderByFechaHoraAsc(id));
-		tareaRepository.delete(tarea);
+		borrarConSubtareas(tarea);
 
 		// Si era la última tarea pendiente/en progreso, el proyecto puede pasar a FINALIZADO.
 		proyectoService.recalcularEstado(proyectoId);
+	}
+
+	private void borrarConSubtareas(Tarea tarea) {
+		tareaRepository.findByPadre_Id(tarea.getId()).forEach(this::borrarConSubtareas);
+		List<ItemPresupuesto> items = itemPresupuestoRepository.findByTareaId(tarea.getId());
+		items.forEach(item -> item.setTarea(null));
+		itemPresupuestoRepository.saveAll(items);
+		historialEstadoTareaRepository.deleteAll(
+				historialEstadoTareaRepository.findByTareaIdOrderByFechaHoraAsc(tarea.getId()));
+		tareaRepository.delete(tarea);
 	}
 
 	private void registrarHistorial(Tarea tarea, EstadoTarea anterior, EstadoTarea nuevo, Usuario usuario) {

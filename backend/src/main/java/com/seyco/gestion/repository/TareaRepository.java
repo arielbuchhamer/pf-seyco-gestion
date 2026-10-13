@@ -10,6 +10,8 @@ public interface TareaRepository extends JpaRepository<Tarea, Long> {
 
 	List<Tarea> findByProyectoId(Long proyectoId);
 
+	List<Tarea> findByPadre_Id(Long padreId);
+
 	List<Tarea> findByResponsableEmail(String email);
 
 	long countByResponsableId(Long responsableId);

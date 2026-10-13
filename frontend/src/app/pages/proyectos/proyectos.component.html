@@ -1,113 +1,149 @@
 <section class="page proyectos-page">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/proyectos" aria-current="page">Proyectos</a>
+  </nav>
+
   <header class="page__header">
-    <h1>Proyectos</h1>
-    <button type="button" class="btn btn--primary" *puede="'proyectos:escribir'" (click)="abrirCrear()">
-      Nuevo proyecto
-    </button>
+    <h1>Gestión de proyectos</h1>
+    <div class="page__actions">
+      <button type="button" class="btn-plantilla" *puede="'proyectos:escribir'" (click)="descargarPlantilla()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="m6 10 6 6 6-6"></path><path d="M4 20h16"></path></svg>
+        Descargar planilla modelo
+      </button>
+    </div>
   </header>
 
-  <div class="filters">
-    <input
-      type="search"
-      placeholder="Buscar por nombre…"
-      [value]="filtroNombre()"
-      (input)="onNombreChange($any($event.target).value)"
-    />
-    <select [value]="filtroEstado()" (change)="onEstadoChange($event)">
-      <option value="">Todos los estados</option>
-      <option value="PLANIFICADO">Planificado</option>
-      <option value="EN_CURSO">En curso</option>
-      <option value="FINALIZADO">Finalizado</option>
-    </select>
-  </div>
-
-  @if (proyectosResource.error()) {
-    <p class="error" role="alert">No se pudo cargar la lista de proyectos.</p>
+  @if (creado(); as proyecto) {
+    <div class="creado" role="status">
+      <div class="creado__texto">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+        <div>
+          <strong>Proyecto «{{ proyecto.nombre }}» creado.</strong>
+          @if (resumenCreado(); as r) {
+            Se generaron {{ r.tareas }} tareas, {{ r.subtareas }} subtareas y el presupuesto de {{ r.items }} ítems.
+          }
+          El Excel quedó adjunto.
+        </div>
+      </div>
+      <div class="creado__acciones">
+        <button type="button" class="btn btn--ghost" (click)="cancelar()">Importar otro</button>
+        <a class="btn btn--exito" [routerLink]="['/proyectos', proyecto.id]">Abrir el proyecto →</a>
+      </div>
+    </div>
   }
 
-  @if (proyectosResource.isLoading()) {
-    <p class="muted">Cargando…</p>
-  } @else {
-    <div class="proyectos-grid">
-      @for (proyecto of proyectosPaginados().items; track proyecto.id) {
-        <app-proyecto-card
-          [proyecto]="proyecto"
-          (editar)="abrirEditar(proyecto)"
-          (eliminar)="eliminar(proyecto)"
-        />
-      } @empty {
-        <p class="muted">No hay proyectos que coincidan con la búsqueda.</p>
-      }
-    </div>
-
-    @if (proyectosPaginados().totalPaginas > 1) {
-      <div class="pager">
-        <button
-          type="button"
-          class="icon-btn"
-          [disabled]="proyectosPaginados().pagina === 1"
-          (click)="cambiarPagina(-1)"
-          aria-label="Página anterior"
-        >
-          ‹
-        </button>
-        <span class="muted">
-          Página {{ proyectosPaginados().pagina }} de {{ proyectosPaginados().totalPaginas }}
-        </span>
-        <button
-          type="button"
-          class="icon-btn"
-          [disabled]="proyectosPaginados().pagina === proyectosPaginados().totalPaginas"
-          (click)="cambiarPagina(1)"
-          aria-label="Página siguiente"
-        >
-          ›
-        </button>
+  <div class="superior" [class.superior--llena]="!previsualizacion()">
+    @if (puedeImportar()) {
+      <div class="superior__izq">
+        @if (previsualizacion(); as datos) {
+          <section class="panel datos">
+            <div class="panel__cabecera">
+              <h2 class="panel__titulo">Datos del proyecto</h2>
+              <div class="archivo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+                <span>{{ datos.archivoNombre }}</span>
+                @if (!creado()) {
+                  <button type="button" class="link" (click)="cancelar()">Cambiar</button>
+                }
+              </div>
+            </div>
+            <p class="ayuda">Completado desde el Excel. Podés corregir cualquier campo antes de crear el proyecto.</p>
+            <fieldset class="campos" [disabled]="!!creado()">
+              <label class="campo">
+                <span>Nombre del proyecto</span>
+                <input type="text" [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
+              </label>
+              <label class="campo">
+                <span>Cliente</span>
+                <input type="text" [value]="cliente()" (input)="cliente.set($any($event.target).value)" />
+              </label>
+              <label class="campo">
+                <span>Atención</span>
+                <input type="text" [value]="atencion()" (input)="atencion.set($any($event.target).value)" />
+              </label>
+              <label class="campo">
+                <span>Ref. del cliente</span>
+                <input type="text" [value]="refCliente()" (input)="refCliente.set($any($event.target).value)" />
+              </label>
+              <label class="campo">
+                <span>Fecha de inicio</span>
+                <input type="date" [value]="fechaInicio()" (input)="cambiarInicio($any($event.target).value)" />
+              </label>
+              <label class="campo">
+                <span>
+                  Fecha de fin
+                  @if (plazo() != null) {
+                    <small>(+ {{ plazo() }} días de plazo)</small>
+                  }
+                </span>
+                <input type="date" [value]="fechaFin()" (input)="fechaFin.set($any($event.target).value)" />
+              </label>
+              <label class="campo campo--ancho">
+                <span>Descripción</span>
+                <input type="text" [value]="descripcion()" (input)="descripcion.set($any($event.target).value)" />
+              </label>
+            </fieldset>
+          </section>
+        } @else {
+          <app-zona-carga
+            [archivo]="archivo()"
+            [ocupado]="accion()"
+            [error]="errorLectura()"
+            (elegir)="elegir($event)"
+            (quitar)="quitarArchivo()"
+            (revisar)="revisar()"
+            (crear)="crearDirecto()"
+          />
+        }
       </div>
     }
-  }
+    <!-- En la revisión no hacen falta: vuelven con "Cancelar" o "Importar otro". -->
+    @if (!previsualizacion()) {
+      <app-ultimos-proyectos class="superior__der" [nuevoId]="ultimoCreadoId()" />
+    }
+  </div>
 
-  @if (showForm()) {
-    <button type="button" class="backdrop" aria-label="Cerrar" (click)="cerrarForm()"></button>
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h2>{{ editingProyecto() ? 'Editar proyecto' : 'Nuevo proyecto' }}</h2>
-
-      <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
-        @if (formError()) {
-          <p class="error" role="alert">{{ formError() }}</p>
-        }
-
-        <label class="field">
-          <span>Nombre</span>
-          <input type="text" formControlName="nombre" autocomplete="off" />
-          @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
-            <small class="field__error">El nombre es obligatorio.</small>
-          }
-        </label>
-
-        <label class="field">
-          <span>Descripción</span>
-          <textarea formControlName="descripcion" rows="3"></textarea>
-        </label>
-
-        <div class="field-row">
-          <label class="field">
-            <span>Fecha inicio</span>
-            <input type="date" formControlName="fechaInicio" />
-          </label>
-          <label class="field">
-            <span>Fecha fin</span>
-            <input type="date" formControlName="fechaFin" />
-          </label>
-        </div>
-
-        <div class="dialog__actions">
-          <button type="button" class="btn btn--ghost" (click)="cerrarForm()">Cancelar</button>
-          <button type="submit" class="btn btn--primary" [disabled]="saving()">
-            {{ saving() ? 'Guardando…' : 'Guardar' }}
-          </button>
-        </div>
-      </form>
+  @if (previsualizacion(); as datos) {
+    <div class="previsualizacion">
+      <app-resumen-importacion [datos]="datos" [creado]="!!creado()" />
+      <app-distribucion-rubros [totales]="datos.totales" />
+      <app-presupuesto-tabla
+        titulo="Tareas y presupuesto que se van a crear"
+        subtitulo="Capítulo → tarea · grupo → subtarea · armados e ítems → detalle del presupuesto de la subtarea"
+        [items]="datos.items"
+        [totales]="datos.totales"
+        [conRoles]="true"
+      />
     </div>
+
+    @if (!creado()) {
+      <div class="barra-confirmar">
+        <div class="barra-confirmar__contenido">
+          <div class="barra-confirmar__texto">
+            <span class="barra-confirmar__icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 10.5v6M9 13.5h6"></path></svg></span>
+            <div class="muted">
+            @if (errorCrear()) {
+              <span class="error" role="alert">{{ errorCrear() }}</span>
+            } @else if (!datos.puedeImportar) {
+              <span class="error" role="alert">El Excel tiene errores (ver la verificación automática): corregilo y volvé a subirlo.</span>
+            } @else {
+              Se creará <strong>«{{ nombre() }}»</strong> con
+              <strong>{{ datos.cantidadTareas }} tareas, {{ datos.cantidadSubtareas }} subtareas</strong> y un presupuesto de
+              <strong>{{ pesos(datos.totales.total) }}</strong>.
+            }
+            </div>
+          </div>
+          <div class="barra-confirmar__acciones">
+            <button type="button" class="btn btn--ghost" (click)="cancelar()">Cancelar</button>
+            <button type="button" class="btn btn--primary btn-crear" [disabled]="creando() || !datos.puedeImportar" (click)="crear()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 10.5v6M9 13.5h6"></path></svg>
+              {{ creando() ? 'Creando…' : 'Crear proyecto' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   }
 </section>

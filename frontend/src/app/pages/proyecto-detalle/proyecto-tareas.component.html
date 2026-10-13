@@ -1,0 +1,116 @@
+<section class="panel arbol-panel">
+  <div class="panel__cabecera cabecera">
+    <div>
+      <h2 class="panel__titulo">Tareas</h2>
+      <div class="panel__subtitulo">El avance de cada tarea sale de sus subtareas</div>
+    </div>
+    <div class="acciones">
+      <button type="button" class="btn-chico" (click)="expandirTodo()">Expandir todo</button>
+      <button type="button" class="btn-chico" (click)="contraerTodo()">Contraer todo</button>
+      <button type="button" class="btn btn--primary btn-nueva" *puede="'tareas:escribir'" (click)="abrirNuevaTarea()">Nueva tarea</button>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <table class="arbol">
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Tarea / subtarea</th>
+          <th>Fechas</th>
+          <th>Avance</th>
+          <th class="num">Presupuesto</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (fila of filas(); track fila.tarea.id) {
+          <tr [class.fila-tarea]="!fila.subtarea">
+            <td class="muted">{{ fila.tarea.numero }}</td>
+            <td>
+              <div class="nombre" [class.nombre--sub]="fila.subtarea" [class.nombre--sin-caret]="!fila.subtarea && !fila.hijos">
+                @if (fila.hijos) {
+                  <button type="button" class="caret" [class.caret--abierto]="fila.abierta" [attr.aria-expanded]="fila.abierta" [attr.aria-label]="(fila.abierta ? 'Contraer ' : 'Expandir ') + fila.tarea.nombre" (click)="alternar(fila.tarea.id)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+                  </button>
+                }
+                <span>{{ fila.tarea.nombre }}</span>
+              </div>
+            </td>
+            <td class="muted fechas">{{ fechaCorta(fila.tarea.fechaInicio) }} → {{ fechaCorta(fila.tarea.fechaFin) }}</td>
+            <td>
+              @if (fila.hijos) {
+                <div class="avance">
+                  <div class="barra"><div class="barra__relleno barra__relleno--verde" [style.width.%]="(fila.completadas / fila.hijos) * 100"></div></div>
+                  <span>{{ fila.completadas }}/{{ fila.hijos }}</span>
+                </div>
+              }
+            </td>
+            <td class="num">
+              @if (fila.monto != null) {
+                <button type="button" class="monto" (click)="irAlPresupuesto(fila.tarea.id)" [attr.aria-label]="'Ver presupuesto de ' + fila.tarea.nombre">{{ pesos(fila.monto) }}</button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="muted vacio">El proyecto todavía no tiene tareas.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (mostrarForm()) {
+  <button type="button" class="backdrop" aria-label="Cerrar" (click)="mostrarForm.set(false)"></button>
+  <div class="dialog" role="dialog" aria-modal="true">
+    <h2>Nueva tarea</h2>
+    <form [formGroup]="form" (ngSubmit)="guardarTarea()" novalidate>
+      @if (errorForm()) {
+        <p class="error" role="alert">{{ errorForm() }}</p>
+      }
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" formControlName="nombre" autocomplete="off" />
+        @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+          <small class="field__error">El nombre es obligatorio.</small>
+        }
+      </label>
+      <label class="field">
+        <span>Descripción</span>
+        <textarea formControlName="descripcion" rows="2"></textarea>
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Fecha inicio</span>
+          <input type="date" formControlName="fechaInicio" />
+        </label>
+        <label class="field">
+          <span>Fecha fin</span>
+          <input type="date" formControlName="fechaFin" />
+        </label>
+      </div>
+      <label class="field">
+        <span>Prioridad</span>
+        <select formControlName="prioridad">
+          <option value="BAJA">Baja</option>
+          <option value="MEDIA">Media</option>
+          <option value="ALTA">Alta</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Responsable</span>
+        <select formControlName="responsableId">
+          <option value="">Sin asignar</option>
+          @for (usuario of usuariosResource.value(); track usuario.id) {
+            <option [value]="usuario.id">{{ nombreCompleto(usuario) }}</option>
+          }
+        </select>
+      </label>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--ghost" (click)="mostrarForm.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn--primary" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Crear' }}</button>
+      </div>
+    </form>
+  </div>
+}

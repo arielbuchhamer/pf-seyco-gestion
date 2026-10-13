@@ -528,3 +528,107 @@ body {
     min-height: 0;
   }
 }
+
+/* ── Proyectos importados desde Excel (pantallas Proyectos y Vista del proyecto) ──
+   Panel blanco con borde (sin la sombra de .card), montos alineados y botones chicos de
+   barra de herramientas, compartidos por la previsualización y la solapa Presupuesto. */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.4rem;
+}
+
+.panel__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.panel__titulo {
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  color: var(--color-ink);
+}
+
+.panel__cabecera .panel__titulo {
+  margin: 0;
+}
+
+.panel__subtitulo {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.btn-chico {
+  font: inherit;
+  font-size: 0.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  min-height: 2.25rem;
+  cursor: pointer;
+}
+
+.btn-chico:hover {
+  border-color: var(--color-primary-light);
+}
+
+.btn-chico--activo {
+  border-color: var(--color-primary);
+  background: #eef3fa;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 0.75rem;
+  min-height: 2.4rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.buscador input {
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 0.8rem;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.btn--exito {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.btn--exito:hover {
+  background: var(--color-success-dark);
+}
