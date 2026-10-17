@@ -38,6 +38,17 @@ public class Tarea {
 	@Column(name = "fecha_fin")
 	private LocalDate fechaFin;
 
+	// Seguimiento de fechas (solapa Tareas del proyecto). fechaInicio/fechaFin son el plan: se
+	// editan mientras el proyecto está en planificación y quedan congeladas como línea base al
+	// fijarla (Proyecto.lineaBaseFecha). Las reales se cargan recién después; fechaFinReal es
+	// "fin estimado / real": mientras la tarea sigue abierta es la estimación de cuándo termina.
+	// En una tarea con subtareas las cuatro fechas son el consolidado de sus subtareas.
+	@Column(name = "fecha_inicio_real")
+	private LocalDate fechaInicioReal;
+
+	@Column(name = "fecha_fin_real")
+	private LocalDate fechaFinReal;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private EstadoTarea estado;
@@ -106,6 +117,22 @@ public class Tarea {
 
 	public void setFechaFin(LocalDate fechaFin) {
 		this.fechaFin = fechaFin;
+	}
+
+	public LocalDate getFechaInicioReal() {
+		return fechaInicioReal;
+	}
+
+	public void setFechaInicioReal(LocalDate fechaInicioReal) {
+		this.fechaInicioReal = fechaInicioReal;
+	}
+
+	public LocalDate getFechaFinReal() {
+		return fechaFinReal;
+	}
+
+	public void setFechaFinReal(LocalDate fechaFinReal) {
+		this.fechaFinReal = fechaFinReal;
 	}
 
 	public EstadoTarea getEstado() {

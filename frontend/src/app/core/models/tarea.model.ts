@@ -9,6 +9,9 @@ export interface Tarea {
   descripcion: string | null;
   fechaInicio: string | null;
   fechaFin: string | null;
+  // Seguimiento: inicio real y "fin estimado / real" (se cargan después de fijar la línea base).
+  fechaInicioReal: string | null;
+  fechaFinReal: string | null;
   estado: EstadoTarea;
   prioridad: Prioridad | null;
   proyecto: { id: number; nombre: string };
@@ -30,6 +33,15 @@ export interface TareaInput {
   prioridad?: Prioridad;
   proyecto: { id: number };
   responsable?: { id: number };
+}
+
+// PUT /api/tareas/fechas — fechas de una tarea en la carga de fechas de la solapa Tareas.
+export interface FechasTarea {
+  id: number;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  fechaInicioReal: string | null;
+  fechaFinReal: string | null;
 }
 
 export const ESTADOS_TAREA: EstadoTarea[] = ['PENDIENTE', 'EN_PROGRESO', 'COMPLETADA'];

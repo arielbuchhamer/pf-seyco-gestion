@@ -23,6 +23,8 @@ export interface Proyecto {
   // Origen: Excel del que se importó el proyecto (null en los cargados antes de la importación).
   archivoNombre: string | null;
   fechaImportacion: string | null;
+  // Cuándo se fijó la línea base; null = en planificación (se editan las fechas plan).
+  lineaBaseFecha: string | null;
 }
 
 export interface ProyectoInput {

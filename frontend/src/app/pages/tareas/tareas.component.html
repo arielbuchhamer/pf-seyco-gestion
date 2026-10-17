@@ -1,39 +1,187 @@
 <section class="page tareas-page">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/tareas" [attr.aria-current]="proyectoResource.value() ? null : 'page'">Tareas</a>
+    @if (proyectoResource.value(); as proyecto) {
+      <span aria-hidden="true">/</span>
+      <a [routerLink]="['/tareas']" [queryParams]="{ proyecto: proyecto.id }" aria-current="page">{{ proyecto.nombre }}</a>
+    }
+  </nav>
+
   <header class="page__header">
-    <h1>{{ veTodas() ? 'Tareas' : 'Mis tareas' }}</h1>
+    <h1>Gestión de tareas</h1>
   </header>
 
   <div class="filters">
-    <input
-      type="search"
-      placeholder="Buscar por tarea o proyecto…"
-      [value]="busqueda()"
-      (input)="busqueda.set($any($event.target).value)"
-    />
-    @if (veTodas()) {
-      <select [value]="filtroResponsable()" (change)="filtroResponsable.set($any($event.target).value)">
-        <option value="">Todos los responsables</option>
-        <option value="sin-asignar">Sin asignar</option>
-        @for (usuario of usuariosResource.value(); track usuario.id) {
-          <option [value]="usuario.id">{{ nombreCompleto(usuario) }}</option>
-        }
-      </select>
+    <select
+      class="selector"
+      aria-label="Proyecto"
+      [value]="proyectoId() ?? ''"
+      [disabled]="borradores().size > 0"
+      [title]="borradores().size ? 'Guardá o descartá los cambios antes de cambiar de proyecto' : ''"
+      (change)="elegirProyecto($any($event.target).value)"
+    >
+      @for (p of proyectos(); track p.id) {
+        <option [value]="p.id">{{ p.nombre }}</option>
+      }
+    </select>
+    @if (proyectoResource.value(); as proyecto) {
+      <a class="btn-chico ver-proyecto" [routerLink]="['/proyectos', proyecto.id]">Ver proyecto</a>
+      <app-tareas-situacion class="situacion-proyecto" [porSituacion]="porSituacion()" />
     }
   </div>
 
-  @if (tareasResource.error()) {
+  @if (proyectosResource.error() || tareasResource.error()) {
     <p class="error" role="alert">No se pudieron cargar las tareas.</p>
-  }
+  } @else if (!proyectosResource.isLoading() && !proyectos().length) {
+    <p class="muted">Todavía no hay proyectos.</p>
+  } @else if (proyectoResource.value(); as proyecto) {
+    <section class="panel arbol-panel">
+      <div class="panel__cabecera cabecera">
+        <div>
+          <h2 class="panel__titulo">Tareas y fechas</h2>
+          <div class="panel__subtitulo">Las fechas se cargan en las subtareas; cada tarea muestra el consolidado</div>
+        </div>
+        <div class="acciones">
+          <button type="button" class="btn-chico" (click)="expandirTodo()">Expandir todo</button>
+          <button type="button" class="btn-chico" (click)="contraerTodo()">Contraer todo</button>
+        </div>
+      </div>
 
-  @if (tareasResource.isLoading()) {
-    <p class="muted">Cargando…</p>
-  } @else if ((tareasResource.value() ?? []).length === 0 && !veTodas()) {
-    <p class="muted">No tenés tareas asignadas.</p>
+      <div class="etapa" [class.etapa--seguimiento]="lineaBase()">
+        @if (lineaBase(); as base) {
+          <div>
+            <strong>Seguimiento</strong> · Línea base fijada el {{ fecha(base) }}.
+            @if (puedeEditar()) {
+              Cargá el inicio real y el fin estimado/real de cada subtarea; el desvío se mide contra la línea base.
+            }
+          </div>
+        } @else {
+          <div>
+            <strong>Planificación</strong> · Todavía no hay línea base.
+            @if (puedeEditar()) {
+              Cargá el inicio y fin plan de cada subtarea y fijá la línea base para empezar el seguimiento.
+            }
+            @if (sinFechasPlan()) {
+              <span class="etapa__falta">Faltan fechas plan en {{ sinFechasPlan() }} {{ sinFechasPlan() === 1 ? 'tarea' : 'tareas' }}.</span>
+            }
+          </div>
+          <button
+            type="button"
+            class="btn-chico btn-base"
+            *puede="'proyectos:editar'"
+            [disabled]="borradores().size > 0 || sinFechasPlan() > 0 || !tareasResource.value().length"
+            [title]="borradores().size ? 'Guardá o descartá los cambios antes de fijar la línea base' : ''"
+            (click)="confirmandoLineaBase.set(true)"
+          >
+            Fijar línea base
+          </button>
+        }
+      </div>
+
+      <div class="scroll">
+        <table class="arbol">
+          <thead>
+            <tr class="grupos">
+              <th colspan="2"></th>
+              <th colspan="2" class="grupo grupo--plan">Plan · línea base</th>
+              <th colspan="2" class="grupo grupo--real">Real</th>
+              <th colspan="2" class="grupo grupo--control">Control</th>
+            </tr>
+            <tr>
+              <th>N°</th>
+              <th>Tarea / subtarea</th>
+              <th class="col-plan">Inicio</th>
+              <th class="col-plan">Fin</th>
+              <th class="col-real">Inicio</th>
+              <th class="col-real">Fin estimado / real</th>
+              <th class="centro">Desvío</th>
+              <th class="centro">Situación</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fila of filas(); track fila.tarea.id) {
+              <tr [class.fila-tarea]="!fila.subtarea" [class.fila-editada]="fila.editada">
+                <td><span class="numero" [class.numero--sub]="fila.subtarea">{{ fila.tarea.numero }}</span></td>
+                <td>
+                  <div class="nombre" [class.nombre--sub]="fila.subtarea" [class.nombre--sin-caret]="!fila.subtarea && !fila.hijos">
+                    @if (fila.hijos) {
+                      <button type="button" class="caret" [class.caret--abierto]="fila.abierta" [attr.aria-expanded]="fila.abierta" [attr.aria-label]="(fila.abierta ? 'Contraer ' : 'Expandir ') + fila.tarea.nombre" (click)="alternar(fila.tarea.id)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+                      </button>
+                    }
+                    <span>{{ fila.tarea.nombre }}</span>
+                  </div>
+                </td>
+                @if (puedeEditar() && !fila.hijos && !lineaBase()) {
+                  <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaInicio ?? ''" [min]="proyecto.fechaInicio ?? ''" [max]="proyecto.fechaFin ?? ''" [attr.aria-label]="'Inicio plan de ' + fila.tarea.nombre" (change)="editarFecha(fila.tarea, 'fechaInicio', $any($event.target).value)" /></td>
+                  <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaFin ?? ''" [min]="fila.fechas.fechaInicio ?? proyecto.fechaInicio ?? ''" [max]="proyecto.fechaFin ?? ''" [attr.aria-label]="'Fin plan de ' + fila.tarea.nombre" (change)="editarFecha(fila.tarea, 'fechaFin', $any($event.target).value)" /></td>
+                } @else {
+                  <td class="fecha">{{ fechaCorta(fila.fechas.fechaInicio) }}</td>
+                  <td class="fecha">{{ fechaCorta(fila.fechas.fechaFin) }}</td>
+                }
+                @if (puedeEditar() && !fila.hijos && lineaBase()) {
+                  <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaInicioReal ?? ''" [max]="hoy" [attr.aria-label]="'Inicio real de ' + fila.tarea.nombre" [class.fecha-input--real]="true" (change)="editarFecha(fila.tarea, 'fechaInicioReal', $any($event.target).value)" /></td>
+                  <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaFinReal ?? ''" [min]="fila.fechas.fechaInicioReal ?? ''" [attr.aria-label]="'Fin estimado o real de ' + fila.tarea.nombre" [class.fecha-input--real]="true" (change)="editarFecha(fila.tarea, 'fechaFinReal', $any($event.target).value)" /></td>
+                } @else {
+                  <td class="fecha muted">{{ fechaCorta(fila.fechas.fechaInicioReal) }}</td>
+                  <td class="fecha muted">{{ fechaCorta(fila.fechas.fechaFinReal) }}</td>
+                }
+                <td class="centro">
+                  @if (fila.desvio == null) {
+                    <span class="muted">—</span>
+                  } @else {
+                    <span class="desvio" [class.desvio--atraso]="fila.desvio > 0" [class.desvio--adelanto]="fila.desvio < 0">{{ (fila.desvio > 0 ? '+' : '') + fila.desvio }} d</span>
+                  }
+                </td>
+                <td class="centro">
+                  @if (fila.situacion; as s) {
+                    <span class="situacion" [class]="'situacion situacion--' + s">{{ situacionLabel[s] }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="muted vacio">{{ tareasResource.isLoading() ? 'Cargando…' : 'El proyecto todavía no tiene tareas.' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (lineaBase()) {
+        <p class="nota">Desvío = fin estimado/real − fin de la línea base. Hasta {{ DIAS_EN_RIESGO }} días de atraso la subtarea queda «en riesgo»; más, «desviada».</p>
+      }
+
+      @if (borradores().size) {
+        <div class="barra-cambios" role="status">
+          <span>{{ borradores().size }} {{ borradores().size === 1 ? 'subtarea modificada' : 'subtareas modificadas' }} sin guardar</span>
+          <div class="acciones">
+            <button type="button" class="btn btn--ghost btn-accion" [disabled]="guardandoFechas()" (click)="descartarFechas()">Descartar</button>
+            <button type="button" class="btn btn--primary btn-accion" [disabled]="guardandoFechas()" (click)="guardarFechas()">{{ guardandoFechas() ? 'Guardando…' : 'Guardar cambios' }}</button>
+          </div>
+        </div>
+      }
+    </section>
+
+    @if (confirmandoLineaBase()) {
+      <button type="button" class="backdrop" aria-label="Cerrar" (click)="confirmandoLineaBase.set(false)"></button>
+      <div class="dialog" role="alertdialog" aria-modal="true">
+        <h2>Fijar línea base</h2>
+        <p class="mensaje">
+          Las fechas plan de las tareas y las del proyecto quedan congeladas y pasan a ser la referencia para medir el desvío.
+          Después ya no se pueden cambiar. ¿Fijar la línea base de <strong>{{ proyecto.nombre }}</strong>?
+        </p>
+        <div class="dialog__actions">
+          <button type="button" class="btn btn--ghost" (click)="confirmandoLineaBase.set(false)">Cancelar</button>
+          <button type="button" class="btn btn--primary" [disabled]="fijandoLineaBase()" (click)="fijarLineaBase()">{{ fijandoLineaBase() ? 'Fijando…' : 'Fijar línea base' }}</button>
+        </div>
+      </div>
+    }
   } @else {
-    <app-tareas-kanban
-      [tareas]="tareasFiltradas()"
-      [mostrarProyecto]="true"
-      (cambiarEstado)="cambiarEstadoTarea($event)"
-    />
+    <p class="muted">Cargando…</p>
   }
 </section>

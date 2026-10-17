@@ -145,6 +145,12 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 					throw ServiceException.conflicto("Ya existe un proyecto con ese nombre.");
 				});
 
+		if (existente.getLineaBaseFecha() != null
+				&& (!Objects.equals(existente.getFechaInicio(), cambios.getFechaInicio())
+						|| !Objects.equals(existente.getFechaFin(), cambios.getFechaFin()))) {
+			throw ServiceException.conflicto("La línea base del proyecto está fijada: sus fechas no se pueden cambiar.");
+		}
+
 		existente.setNombre(cambios.getNombre());
 		existente.setDescripcion(cambios.getDescripcion());
 		existente.setCliente(cambios.getCliente());
@@ -157,6 +163,33 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		}
 
 		return proyectoRepository.save(existente);
+	}
+
+	// Cierra la planificación: congela las fechas plan de las tareas (y las del proyecto) como
+	// línea base, contra la que se mide el desvío de las fechas reales. Pide que toda tarea sin
+	// subtareas tenga inicio y fin plan (las que tienen subtareas toman las de ellas).
+	public Proyecto fijarLineaBase(Long proyectoId) {
+		Proyecto proyecto = buscarPorId(proyectoId);
+		if (proyecto.getLineaBaseFecha() != null) {
+			throw ServiceException.conflicto("La línea base del proyecto ya está fijada.");
+		}
+		List<Tarea> tareas = tareaRepository.findByProyectoId(proyectoId);
+		if (tareas.isEmpty()) {
+			throw ServiceException.datosInvalidos("El proyecto no tiene tareas para planificar.");
+		}
+		Set<Long> conSubtareas = tareas.stream().map(Tarea::getPadreId).filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+		long sinFechas = tareas.stream()
+				.filter(t -> !conSubtareas.contains(t.getId()))
+				.filter(t -> t.getFechaInicio() == null || t.getFechaFin() == null)
+				.count();
+		if (sinFechas > 0) {
+			throw ServiceException.datosInvalidos(sinFechas == 1
+					? "Falta cargar el inicio y fin plan de 1 tarea."
+					: "Falta cargar el inicio y fin plan de " + sinFechas + " tareas.");
+		}
+		proyecto.setLineaBaseFecha(LocalDateTime.now());
+		return proyectoRepository.save(proyecto);
 	}
 
 	// Seguimiento: foto del estado actual de las tareas del proyecto (CUU_18/CUU_24).

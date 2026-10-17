@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { EstadoTarea, Tarea, TareaInput } from '../models/tarea.model';
+import { EstadoTarea, FechasTarea, Tarea, TareaInput } from '../models/tarea.model';
 
 @Injectable({ providedIn: 'root' })
 export class TareaService {
@@ -24,6 +24,11 @@ export class TareaService {
 
   actualizar(id: number, cambios: TareaInput): Observable<Tarea> {
     return this.http.put<Tarea>(`${this.baseUrl}/${id}`, cambios);
+  }
+
+  // Carga de fechas (plan o reales, según la línea base) de varias tareas del proyecto a la vez.
+  guardarFechas(proyectoId: number, fechas: FechasTarea[]): Observable<Tarea[]> {
+    return this.http.put<Tarea[]>(`${this.baseUrl}/fechas`, fechas, { params: { proyectoId: String(proyectoId) } });
   }
 
   // Único punto donde cambia el estado de una tarea: dispara el registro automático

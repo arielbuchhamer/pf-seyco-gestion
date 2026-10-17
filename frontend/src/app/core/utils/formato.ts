@@ -47,6 +47,11 @@ export function sumarDias(iso: string, dias: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Días de "desde" a "hasta" (negativo si "hasta" es anterior), entre fechas ISO.
+export function diasEntre(desde: string, hasta: string): number {
+  return Math.round((Date.parse(`${hasta.slice(0, 10)}T00:00:00Z`) - Date.parse(`${desde.slice(0, 10)}T00:00:00Z`)) / 86_400_000);
+}
+
 // Iniciales de un proyecto para el cuadrado de color del listado ("Ampliación Subestación" → "AS").
 export function iniciales(nombre: string): string {
   const palabras = nombre.split(/\s+/).filter((p) => p.length > 2);
