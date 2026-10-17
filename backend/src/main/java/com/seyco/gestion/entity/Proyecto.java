@@ -56,6 +56,12 @@ public class Proyecto {
 	@Column(name = "fecha_importacion")
 	private LocalDateTime fechaImportacion;
 
+	// Cuándo se fijó la línea base (ProyectoService.fijarLineaBase). Null = el proyecto está en
+	// planificación: las fechas plan de las tareas (y las del proyecto) todavía se editan y no
+	// se cargan fechas reales. Una vez fijada, el plan queda congelado y el desvío se mide contra él.
+	@Column(name = "linea_base_fecha")
+	private LocalDateTime lineaBaseFecha;
+
 	public Long getId() {
 		return id;
 	}
@@ -142,5 +148,13 @@ public class Proyecto {
 
 	public void setFechaImportacion(LocalDateTime fechaImportacion) {
 		this.fechaImportacion = fechaImportacion;
+	}
+
+	public LocalDateTime getLineaBaseFecha() {
+		return lineaBaseFecha;
+	}
+
+	public void setLineaBaseFecha(LocalDateTime lineaBaseFecha) {
+		this.lineaBaseFecha = lineaBaseFecha;
 	}
 }

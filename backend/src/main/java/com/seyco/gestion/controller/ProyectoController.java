@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +49,13 @@ public class ProyectoController {
 	@PreAuthorize("hasAuthority('proyectos:editar')")
 	public Proyecto actualizar(@PathVariable Long id, @RequestBody Proyecto cambios) {
 		return proyectoService.actualizar(id, cambios);
+	}
+
+	// Cierre de la planificación: congela las fechas plan como línea base (ver ProyectoService).
+	@PostMapping("/{id}/linea-base")
+	@PreAuthorize("hasAuthority('proyectos:editar')")
+	public Proyecto fijarLineaBase(@PathVariable Long id) {
+		return proyectoService.fijarLineaBase(id);
 	}
 
 	@GetMapping("/{id}/progreso")

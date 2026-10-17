@@ -1,0 +1,73 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: min(22rem, 100%);
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.titulo {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.color--en-fecha {
+  --c: var(--color-success);
+}
+
+.color--en-riesgo {
+  --c: var(--color-accent);
+}
+
+.color--desviado {
+  --c: var(--color-danger);
+}
+
+.color--sin-datos {
+  --c: var(--color-text-muted);
+}
+
+.segmentos {
+  display: flex;
+  gap: 2px;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.segmento,
+.punto {
+  background: var(--c);
+}
+
+.punto {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.8rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.leyenda__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.aviso {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}

@@ -69,6 +69,14 @@ public class TareaController {
 		return tareaService.actualizar(id, cambios);
 	}
 
+	// Carga de fechas (plan o reales, según la línea base) de varias tareas del proyecto a la
+	// vez, desde la solapa Tareas. Sólo id y fechas de cada tarea: el resto se ignora.
+	@PutMapping("/fechas")
+	@PreAuthorize("hasAuthority('tareas:editar')")
+	public List<Tarea> guardarFechas(@RequestParam Long proyectoId, @RequestBody List<Tarea> cambios) {
+		return tareaService.guardarFechas(proyectoId, cambios);
+	}
+
 	// Cambio de estado separado del resto de la edición: es la acción que se dispara todo
 	// el tiempo desde el tablero de tareas, y la que genera el historial de seguimiento/rendimiento.
 	// Sin @PreAuthorize: el permiso depende de si es responsable de la tarea (ver TareaService).

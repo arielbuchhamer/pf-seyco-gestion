@@ -1,7 +1,15 @@
 package com.seyco.gestion.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -106,6 +114,12 @@ public class TareaService extends BaseService<Tarea, Long> {
 			throw ServiceException.datosInvalidos("El nombre es obligatorio.");
 		}
 
+		if (existente.getProyecto().getLineaBaseFecha() != null
+				&& (!Objects.equals(existente.getFechaInicio(), cambios.getFechaInicio())
+						|| !Objects.equals(existente.getFechaFin(), cambios.getFechaFin()))) {
+			throw ServiceException.conflicto("La línea base del proyecto está fijada: las fechas plan no se pueden cambiar.");
+		}
+
 		existente.setNombre(cambios.getNombre());
 		existente.setDescripcion(cambios.getDescripcion());
 		existente.setFechaInicio(cambios.getFechaInicio());
@@ -150,6 +164,103 @@ public class TareaService extends BaseService<Tarea, Long> {
 		return guardada;
 	}
 
+	// Carga de fechas de la solapa Tareas: se guardan todas las filas editadas juntas ("Guardar
+	// cambios"). Cada elemento trae el id y las cuatro fechas (plan y reales). Antes de fijar la
+	// línea base sólo se edita el plan; después, sólo las reales. Las fechas se cargan en las
+	// tareas sin subtareas; las de una tarea con subtareas se recalculan a partir de ellas.
+	@Transactional
+	public List<Tarea> guardarFechas(Long proyectoId, List<Tarea> cambios) {
+		Proyecto proyecto = proyectoService.buscarPorId(proyectoId);
+		boolean lineaBaseFijada = proyecto.getLineaBaseFecha() != null;
+		List<Tarea> tareas = tareaRepository.findByProyectoId(proyectoId);
+		Map<Long, Tarea> porId = tareas.stream().collect(Collectors.toMap(Tarea::getId, Function.identity()));
+		Set<Long> conSubtareas = tareas.stream().map(Tarea::getPadreId).filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+		Set<Tarea> padresTocados = new HashSet<>();
+
+		for (Tarea cambio : cambios) {
+			Tarea tarea = cambio.getId() == null ? null : porId.get(cambio.getId());
+			if (tarea == null) {
+				throw ServiceException.datosInvalidos("La tarea no pertenece al proyecto.");
+			}
+			if (conSubtareas.contains(tarea.getId())) {
+				throw ServiceException.datosInvalidos("Las fechas de «" + tarea.getNombre()
+						+ "» salen de sus subtareas: cargalas en cada subtarea.");
+			}
+
+			if (lineaBaseFijada) {
+				if (!Objects.equals(tarea.getFechaInicio(), cambio.getFechaInicio())
+						|| !Objects.equals(tarea.getFechaFin(), cambio.getFechaFin())) {
+					throw ServiceException.conflicto("La línea base del proyecto está fijada: las fechas plan no se pueden cambiar.");
+				}
+				validarFechasReales(tarea.getNombre(), cambio.getFechaInicioReal(), cambio.getFechaFinReal());
+				tarea.setFechaInicioReal(cambio.getFechaInicioReal());
+				tarea.setFechaFinReal(cambio.getFechaFinReal());
+			} else {
+				if (cambio.getFechaInicioReal() != null || cambio.getFechaFinReal() != null) {
+					throw ServiceException.datosInvalidos("Las fechas reales se cargan después de fijar la línea base.");
+				}
+				validarFechasPlan(proyecto, tarea.getNombre(), cambio.getFechaInicio(), cambio.getFechaFin());
+				tarea.setFechaInicio(cambio.getFechaInicio());
+				tarea.setFechaFin(cambio.getFechaFin());
+			}
+			if (tarea.getPadre() != null) {
+				padresTocados.add(tarea.getPadre());
+			}
+		}
+
+		tareaRepository.saveAll(porId.values());
+		padresTocados.forEach(this::consolidarFechas);
+		return tareaRepository.findByProyectoId(proyectoId);
+	}
+
+	private void validarFechasPlan(Proyecto proyecto, String tarea, LocalDate inicio, LocalDate fin) {
+		if (inicio != null && fin != null && fin.isBefore(inicio)) {
+			throw ServiceException.datosInvalidos("«" + tarea + "»: el fin plan no puede ser anterior al inicio.");
+		}
+		LocalDate desde = proyecto.getFechaInicio();
+		LocalDate hasta = proyecto.getFechaFin();
+		if ((desde != null && ((inicio != null && inicio.isBefore(desde)) || (fin != null && fin.isBefore(desde))))
+				|| (hasta != null && ((inicio != null && inicio.isAfter(hasta)) || (fin != null && fin.isAfter(hasta))))) {
+			throw ServiceException.datosInvalidos("«" + tarea + "»: las fechas plan tienen que estar dentro del plazo del proyecto.");
+		}
+	}
+
+	// El fin real puede ser futuro (es la estimación mientras la tarea sigue abierta); el inicio
+	// real no: si no empezó, todavía no tiene inicio real.
+	private void validarFechasReales(String tarea, LocalDate inicio, LocalDate fin) {
+		if (inicio != null && inicio.isAfter(LocalDate.now())) {
+			throw ServiceException.datosInvalidos("«" + tarea + "»: el inicio real no puede ser una fecha futura.");
+		}
+		if (inicio != null && fin != null && fin.isBefore(inicio)) {
+			throw ServiceException.datosInvalidos("«" + tarea + "»: el fin estimado/real no puede ser anterior al inicio real.");
+		}
+	}
+
+	// Fechas de una tarea con subtareas = consolidado de las subtareas: plan y inicio real de
+	// punta a punta (la primera que empieza y la última que termina). El fin estimado/real es
+	// el de la última en terminar, tomando el plan de las que todavía no tienen estimación; si
+	// ninguna subtarea tiene fin estimado/real, la tarea tampoco.
+	private void consolidarFechas(Tarea padre) {
+		List<Tarea> subtareas = tareaRepository.findByPadre_Id(padre.getId());
+		padre.setFechaInicio(minimo(subtareas, Tarea::getFechaInicio));
+		padre.setFechaFin(maximo(subtareas, Tarea::getFechaFin));
+		padre.setFechaInicioReal(minimo(subtareas, Tarea::getFechaInicioReal));
+		boolean hayFinReal = subtareas.stream().anyMatch(s -> s.getFechaFinReal() != null);
+		padre.setFechaFinReal(hayFinReal
+				? maximo(subtareas, s -> s.getFechaFinReal() != null ? s.getFechaFinReal() : s.getFechaFin())
+				: null);
+		tareaRepository.save(padre);
+	}
+
+	private static LocalDate minimo(List<Tarea> tareas, Function<Tarea, LocalDate> fecha) {
+		return tareas.stream().map(fecha).filter(Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
+	}
+
+	private static LocalDate maximo(List<Tarea> tareas, Function<Tarea, LocalDate> fecha) {
+		return tareas.stream().map(fecha).filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
+	}
+
 	// El historial no cae en cascada solo: no hay @OneToMany desde Tarea hacia
 	// HistorialEstadoTarea, y ddl-auto=update no agrega ON DELETE CASCADE a una FK ya
 	// creada. Sin este borrado manual, eliminar cualquier tarea tira un 500 (toda tarea
@@ -161,8 +272,13 @@ public class TareaService extends BaseService<Tarea, Long> {
 	public void eliminar(Long id) {
 		Tarea tarea = buscarPorId(id);
 		Long proyectoId = tarea.getProyecto().getId();
+		Tarea padre = tarea.getPadre();
 
 		borrarConSubtareas(tarea);
+		// Si era una subtarea, las fechas de la tarea que la agrupa dejan de contarla.
+		if (padre != null) {
+			consolidarFechas(padre);
+		}
 
 		// Si era la última tarea pendiente/en progreso, el proyecto puede pasar a FINALIZADO.
 		proyectoService.recalcularEstado(proyectoId);

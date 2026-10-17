@@ -33,6 +33,11 @@ export class ProyectoService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
+  // Cierra la planificación: congela las fechas plan de las tareas como línea base.
+  fijarLineaBase(id: number): Observable<Proyecto> {
+    return this.http.post<Proyecto>(`${this.baseUrl}/${id}/linea-base`, null);
+  }
+
   // Seguimiento: conteo de tareas por estado + % de avance.
   progreso(id: number): Observable<Progreso> {
     return this.http.get<Progreso>(`${this.baseUrl}/${id}/progreso`);
