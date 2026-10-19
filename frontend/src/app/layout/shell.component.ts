@@ -61,6 +61,10 @@ export class ShellComponent {
     this.menuOpen.set(false);
   }
 
+  irAPerfil(): void {
+    this.router.navigate(['/perfil']);
+  }
+
   logout(): void {
     this.auth.logout().subscribe(() => this.router.navigate(['/login']));
   }

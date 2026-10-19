@@ -1,0 +1,137 @@
+<section class="page">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/perfil" aria-current="page">Mi perfil</a>
+  </nav>
+
+  <header class="page__header">
+    <h1>Mi perfil</h1>
+    @if (perfil() && !editando()) {
+      <div class="page__actions">
+        <button type="button" class="btn btn--primary" (click)="editar()">Editar</button>
+      </div>
+    }
+  </header>
+
+  <div class="card">
+    @if (loading()) {
+      <p class="muted centrado">Cargando perfil…</p>
+    } @else if (errorMessage()) {
+      <div class="centrado">
+        <p class="texto-error">{{ errorMessage() }}</p>
+        <button type="button" class="btn btn--ghost" (click)="cargar()">Reintentar</button>
+      </div>
+    } @else if (perfil(); as perfil) {
+      <div class="perfil-cabecera">
+        <app-avatar [usuario]="perfil" tamano="md" />
+        <div>
+          <strong>{{ nombre(perfil) }}</strong>
+          <span class="muted">{{ perfil.email }}</span>
+        </div>
+      </div>
+
+      @if (editando()) {
+        <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+          @if (formError()) {
+            <p class="error" role="alert">{{ formError() }}</p>
+          }
+
+          <div class="campos">
+            <div class="field campo--ancho">
+              <span>Email</span>
+              <p class="dato">{{ perfil.email }}</p>
+              <small class="field__hint"
+                >El email identifica tu sesión y no se puede cambiar.</small
+              >
+            </div>
+
+            <label class="field">
+              <span>Nombre</span>
+              <input type="text" formControlName="nombre" autocomplete="given-name" />
+              @if (form.controls.nombre.touched && form.controls.nombre.errors; as errores) {
+                <small class="field__error">{{
+                  errores['maxlength']
+                    ? 'Se aceptan hasta 50 caracteres.'
+                    : 'El nombre es obligatorio.'
+                }}</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>Apellido</span>
+              <input type="text" formControlName="apellido" autocomplete="family-name" />
+              @if (form.controls.apellido.touched && form.controls.apellido.errors; as errores) {
+                <small class="field__error">{{
+                  errores['maxlength']
+                    ? 'Se aceptan hasta 50 caracteres.'
+                    : 'El apellido es obligatorio.'
+                }}</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>DNI</span>
+              <input type="text" inputmode="numeric" formControlName="dni" autocomplete="off" />
+              @if (form.controls.dni.touched && form.controls.dni.errors; as errores) {
+                <small class="field__error">{{
+                  errores['soloNumeros'] ? 'Sólo se aceptan números.' : 'DNI inválido.'
+                }}</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>Teléfono</span>
+              <input type="text" formControlName="telefono" autocomplete="tel" />
+              @if (form.controls.telefono.touched && form.controls.telefono.errors; as errores) {
+                <small class="field__error">{{
+                  errores['soloNumeros']
+                    ? 'Sólo se aceptan números.'
+                    : 'El teléfono puede tener hasta 50 caracteres.'
+                }}</small>
+              }
+            </label>
+          </div>
+
+          <div class="dialog__actions">
+            <button type="button" class="btn btn--ghost" [disabled]="saving()" (click)="cancelar()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn--primary" [disabled]="saving()">
+              {{ saving() ? 'Guardando…' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <dl class="campos">
+          <div class="field campo--ancho">
+            <dt>Email</dt>
+            <dd class="dato">{{ perfil.email }}</dd>
+          </div>
+          <div class="field">
+            <dt>Nombre</dt>
+            <dd class="dato">{{ perfil.nombre || '-' }}</dd>
+          </div>
+          <div class="field">
+            <dt>Apellido</dt>
+            <dd class="dato">{{ perfil.apellido || '-' }}</dd>
+          </div>
+          <div class="field">
+            <dt>DNI</dt>
+            <dd class="dato">{{ perfil.dni ?? '-' }}</dd>
+          </div>
+          <div class="field">
+            <dt>Teléfono</dt>
+            <dd class="dato">{{ perfil.telefono || '-' }}</dd>
+          </div>
+          <div class="field">
+            <dt>Registro</dt>
+            <dd class="dato">
+              {{ perfil.fechaAlta ? (perfil.fechaAlta | date: 'dd/MM/yyyy') : '-' }}
+            </dd>
+          </div>
+        </dl>
+      }
+    }
+  </div>
+</section>

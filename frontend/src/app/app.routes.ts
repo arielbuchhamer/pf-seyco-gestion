@@ -21,6 +21,12 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        // Sin panelGuard: cualquier rol con sesión entra a su propio perfil.
+        path: 'perfil',
+        loadComponent: () =>
+          import('./pages/perfil/perfil.component').then((m) => m.PerfilComponent),
+      },
+      {
         // Patrón para proteger una view: panelGuard(panel) acá, y el mismo panel en su entrada
         // de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú. Qué roles
         // ven cada panel se configura en la base (roles_paneles) desde la pantalla Roles.
