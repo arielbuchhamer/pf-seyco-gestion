@@ -46,3 +46,12 @@ export interface UsuarioInput {
   telefono: string | null;
   contrasena?: string;
 }
+
+// Payload de PUT /api/perfil. El DNI va como texto (null si está vacío): el backend lo valida
+// y lo convierte a número.
+export interface PerfilInput {
+  nombre: string;
+  apellido: string;
+  dni: string | null;
+  telefono: string | null;
+}

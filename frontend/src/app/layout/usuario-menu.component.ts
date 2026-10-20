@@ -29,13 +29,12 @@ import { AvatarComponent } from '../shared/avatar/avatar.component';
           <strong>{{ nombre() }}</strong>
           <span>{{ usuario().email }}</span>
         </div>
-        <button type="button" class="opcion" role="menuitem" disabled title="Próximamente">
+        <button type="button" class="opcion" role="menuitem" (click)="elegir(perfil)">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6" />
             <path d="M4.5 19.5c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
           Mi perfil
-          <span class="opcion__pronto">Próximamente</span>
         </button>
         <button type="button" class="opcion" role="menuitem" (click)="elegir(faqs)">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -140,11 +139,6 @@ import { AvatarComponent } from '../shared/avatar/avatar.component';
       cursor: default;
       opacity: 0.6;
     }
-    .opcion__pronto {
-      margin-left: auto;
-      font-size: 0.7rem;
-      color: var(--color-text-muted);
-    }
     .opcion--salir,
     .opcion--salir svg {
       color: var(--color-danger);
@@ -174,6 +168,7 @@ export class UsuarioMenuComponent {
   private readonly elemento = inject(ElementRef<HTMLElement>);
 
   readonly usuario = input.required<UsuarioSesion>();
+  readonly perfil = output<void>();
   readonly faqs = output<void>();
   readonly cerrarSesion = output<void>();
 

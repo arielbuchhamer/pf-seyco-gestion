@@ -13,7 +13,7 @@
       <img src="assets/img/Logo_seyco.png" alt="Seyco S.A" class="topbar__logo" />
     </a>
     @if (auth.currentUser(); as usuario) {
-      <app-usuario-menu [usuario]="usuario" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
+      <app-usuario-menu [usuario]="usuario" (perfil)="irAPerfil()" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
     }
   </header>
 

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.seyco.gestion.dto.AccesoDtos.RolResumen;
 import com.seyco.gestion.dto.AccesoDtos.UsuarioListado;
+import com.seyco.gestion.dto.PerfilDtos.ActualizarPerfilRequest;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.RolUsuarioRepository;
 import com.seyco.gestion.repository.SesionRepository;
@@ -27,6 +28,9 @@ public class UsuarioService {
 	// 8+ caracteres y 1 número. Máximo 72: BCrypt ignora lo que pase de 72 bytes.
 	private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*\\d).{8,72}$");
 	private static final int LARGO_MAXIMO = 50;
+	// Sólo para Mi perfil (la pantalla de Usuarios mantiene las reglas de validarDatos).
+	private static final Pattern SOLO_NUMEROS = Pattern.compile("\\d+");
+	private static final Pattern DNI_PERFIL_PATTERN = Pattern.compile("[1-9]\\d{6,7}");
 
 	private final UsuarioRepository usuarioRepository;
 	private final RolUsuarioRepository rolUsuarioRepository;
@@ -133,6 +137,61 @@ public class UsuarioService {
 		Instant ahora = Instant.now();
 		existente.setFechaBaja(ahora);
 		sesionRepository.cerrarTodas(id, ahora);
+	}
+
+	@Transactional(readOnly = true)
+	public Usuario obtenerActivo(Long id) {
+		return buscarActivo(id);
+	}
+
+	// Mi perfil: el email no se cambia (identifica la sesión), así que se valida con el actual.
+	// Se valida sobre una copia para no tocar al usuario si algún dato es inválido.
+	@Transactional
+	public Usuario actualizarPerfil(Long id, ActualizarPerfilRequest pedido) {
+		Usuario existente = buscarActivo(id);
+
+		Usuario cambios = new Usuario();
+		cambios.setEmail(existente.getEmail());
+		cambios.setNombre(pedido.nombre());
+		cambios.setApellido(pedido.apellido());
+		cambios.setTelefono(pedido.telefono());
+		validarDatos(cambios);
+		cambios.setDni(convertirDniPerfil(pedido.dni()));
+		validarTelefonoPerfil(cambios.getTelefono());
+
+		existente.setNombre(cambios.getNombre());
+		existente.setApellido(cambios.getApellido());
+		existente.setDni(cambios.getDni());
+		existente.setTelefono(cambios.getTelefono());
+		existente.setFechaActualizacion(Instant.now());
+		return usuarioRepository.save(existente);
+	}
+
+	private static Integer convertirDniPerfil(String dni) {
+		if (dni == null || dni.isBlank()) {
+			return null;
+		}
+		String valor = dni.trim();
+		if (!SOLO_NUMEROS.matcher(valor).matches()) {
+			throw ServiceException.datosInvalidos("Sólo se aceptan números.");
+		}
+		if (!DNI_PERFIL_PATTERN.matcher(valor).matches()) {
+			throw ServiceException.datosInvalidos("DNI inválido.");
+		}
+		return Integer.valueOf(valor);
+	}
+
+	// Recibe el teléfono ya normalizado por validarDatos (sin espacios en los extremos, vacío = null).
+	private static void validarTelefonoPerfil(String telefono) {
+		if (telefono == null) {
+			return;
+		}
+		if (!SOLO_NUMEROS.matcher(telefono).matches()) {
+			throw ServiceException.datosInvalidos("Sólo se aceptan números.");
+		}
+		if (telefono.length() > LARGO_MAXIMO) {
+			throw ServiceException.datosInvalidos("El teléfono puede tener hasta 50 caracteres.");
+		}
 	}
 
 	private Usuario buscarActivo(Long id) {
