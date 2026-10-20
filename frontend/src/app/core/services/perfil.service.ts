@@ -4,8 +4,6 @@ import { Observable, tap } from 'rxjs';
 import { PerfilInput, Usuario } from '../models/usuario.model';
 import { AuthService } from './auth.service';
 
-// /api/perfil: siempre trabaja con el usuario de la sesión (no lleva id). Sin permisos de
-// módulo: cualquier rol puede ver y editar su propio perfil.
 @Injectable({ providedIn: 'root' })
 export class PerfilService {
   private readonly http = inject(HttpClient);

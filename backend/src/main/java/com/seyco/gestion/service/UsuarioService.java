@@ -146,8 +146,6 @@ public class UsuarioService {
 
 	// Mi perfil: el email no se cambia (identifica la sesión), así que se valida con el actual.
 	// Se valida sobre una copia para no tocar al usuario si algún dato es inválido.
-	// Además de validarDatos, el perfil exige DNI de 7 u 8 dígitos y teléfono sólo con números
-	// (hasta 50).
 	@Transactional
 	public Usuario actualizarPerfil(Long id, ActualizarPerfilRequest pedido) {
 		Usuario existente = buscarActivo(id);
@@ -169,8 +167,6 @@ public class UsuarioService {
 		return usuarioRepository.save(existente);
 	}
 
-	// Vacío = sin DNI. Si trae algo que no es número, ese mensaje gana aunque también falten
-	// o sobren dígitos.
 	private static Integer convertirDniPerfil(String dni) {
 		if (dni == null || dni.isBlank()) {
 			return null;
@@ -186,7 +182,6 @@ public class UsuarioService {
 	}
 
 	// Recibe el teléfono ya normalizado por validarDatos (sin espacios en los extremos, vacío = null).
-	// Si trae algo que no es número, ese mensaje gana aunque también sobren caracteres.
 	private static void validarTelefonoPerfil(String telefono) {
 		if (telefono == null) {
 			return;

@@ -16,7 +16,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
 const SOLO_NUMEROS = /^\d+$/;
 
-// Opcional. Si trae algo que no es número, ese error gana aunque también falten o sobren dígitos.
+// Si trae algo que no es número, ese error gana aunque también falten o sobren dígitos.
 function dniValidator(control: AbstractControl<string>): ValidationErrors | null {
   const valor = control.value.trim();
   if (!valor) return null;
@@ -30,7 +30,6 @@ function soloNumerosValidator(control: AbstractControl<string>): ValidationError
   return valor && !SOLO_NUMEROS.test(valor) ? { soloNumeros: true } : null;
 }
 
-// Mi perfil: el usuario logueado ve sus datos y edita nombre, apellido, DNI y teléfono.
 // Validaciones alineadas con UsuarioService.actualizarPerfil del backend.
 @Component({
   selector: 'app-perfil',
@@ -96,8 +95,7 @@ export class PerfilComponent {
     this.editando.set(true);
   }
 
-  // Los cambios sólo viven en el formulario: al cancelar se descartan y se vuelve a mostrar
-  // lo último guardado (editar() vuelve a cargar el formulario desde el perfil).
+  // No hace falta resetear el formulario: editar() lo vuelve a cargar desde el perfil.
   cancelar(): void {
     this.editando.set(false);
     this.formError.set(null);
