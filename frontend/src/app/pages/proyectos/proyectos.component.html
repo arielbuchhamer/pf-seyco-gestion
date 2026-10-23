@@ -1,19 +1,50 @@
-<section class="page proyectos-page">
+<section class="page proyectos-page" [class.proyectos-page--revision]="!!previsualizacion()">
   <nav class="breadcrumb" aria-label="Ruta">
     <a routerLink="/dashboard">Menú principal</a>
     <span aria-hidden="true">/</span>
     <a routerLink="/proyectos" aria-current="page">Proyectos</a>
   </nav>
 
-  <header class="page__header">
-    <h1>Gestión de proyectos</h1>
-    <div class="page__actions">
-      <button type="button" class="btn-plantilla" *puede="'proyectos:escribir'" (click)="descargarPlantilla()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="m6 10 6 6 6-6"></path><path d="M4 20h16"></path></svg>
-        Descargar planilla modelo
+  @if (previsualizacion()) {
+    <app-cabecera titulo="Revisar antes de crear" subtitulo="Chequeá los datos que se leyeron del Excel, corregí lo que haga falta y confirmá abajo.">
+      <button type="button" class="boton-cabecera" (click)="cancelar()">← Volver a proyectos</button>
+    </app-cabecera>
+  } @else {
+    <app-cabecera titulo="Proyectos" subtitulo="Importá un presupuesto en Excel o abrí un proyecto para seguirlo.">
+      <app-filtro-fechas [(desde)]="desde" [(hasta)]="hasta" />
+      <app-panel-filtros [activos]="cantidadFiltros()" (limpiar)="limpiarFiltros()">
+        <label class="filtro-campo">
+          Buscar
+          <input type="search" placeholder="Nombre del proyecto o cliente" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+        </label>
+        <div class="filtro-grupo">
+          <span class="filtro-grupo__titulo">Estado</span>
+          <div class="filtro-checks">
+            @for (e of todosEstados; track e) {
+              <label class="filtro-check"><input type="checkbox" [checked]="estados().includes(e)" (change)="estados.set(alternar(estados(), e))" />{{ estadoLabel[e] }}</label>
+            }
+          </div>
+        </div>
+        <div class="filtro-grupo">
+          <span class="filtro-grupo__titulo">Cliente</span>
+          <div class="filtro-checks">
+            @for (t of tiposCliente; track t) {
+              <label class="filtro-check"><input type="checkbox" [checked]="clientes().includes(t)" (change)="clientes.set(alternar(clientes(), t))" />{{ tipoClienteLabel[t] }}</label>
+            }
+          </div>
+        </div>
+      </app-panel-filtros>
+      <select class="boton-cabecera" aria-label="Ordenar por" [value]="orden().campo" (change)="ordenarPor($any($event.target).value)">
+        @for (o of opcionesOrden; track o.campo) {
+          <option [value]="o.campo">Ordenar: {{ o.texto }}</option>
+        }
+      </select>
+      <button type="button" class="boton-cabecera" *puede="'proyectos:escribir'" (click)="descargarPlantilla()" title="Excel de ejemplo con el formato que se importa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="m6 10 6 6 6-6"></path><path d="M4 20h16"></path></svg>
+        Planilla modelo
       </button>
-    </div>
-  </header>
+    </app-cabecera>
+  }
 
   @if (creado(); as proyecto) {
     <div class="creado" role="status">
@@ -28,82 +59,100 @@
         </div>
       </div>
       <div class="creado__acciones">
-        <button type="button" class="btn btn--ghost" (click)="cancelar()">Importar otro</button>
+        <button type="button" class="btn btn--ghost" (click)="cancelar()">Volver a proyectos</button>
         <a class="btn btn--exito" [routerLink]="['/proyectos', proyecto.id]">Abrir el proyecto →</a>
       </div>
     </div>
   }
 
-  <div class="superior" [class.superior--llena]="!previsualizacion()">
-    @if (puedeImportar()) {
-      <div class="superior__izq">
-        @if (previsualizacion(); as datos) {
-          <section class="panel datos">
-            <div class="panel__cabecera">
-              <h2 class="panel__titulo">Datos del proyecto</h2>
-              <div class="archivo">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
-                <span>{{ datos.archivoNombre }}</span>
-                @if (!creado()) {
-                  <button type="button" class="link" (click)="cancelar()">Cambiar</button>
-                }
-              </div>
-            </div>
-            <p class="ayuda">Completado desde el Excel. Podés corregir cualquier campo antes de crear el proyecto.</p>
-            <fieldset class="campos" [disabled]="!!creado()">
-              <label class="campo">
-                <span>Nombre del proyecto</span>
-                <input type="text" [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
-              </label>
-              <label class="campo">
-                <span>Cliente</span>
-                <input type="text" [value]="cliente()" (input)="cliente.set($any($event.target).value)" />
-              </label>
-              <label class="campo">
-                <span>Atención</span>
-                <input type="text" [value]="atencion()" (input)="atencion.set($any($event.target).value)" />
-              </label>
-              <label class="campo">
-                <span>Ref. del cliente</span>
-                <input type="text" [value]="refCliente()" (input)="refCliente.set($any($event.target).value)" />
-              </label>
-              <label class="campo">
-                <span>Fecha de inicio</span>
-                <input type="date" [value]="fechaInicio()" (input)="cambiarInicio($any($event.target).value)" />
-              </label>
-              <label class="campo">
-                <span>
-                  Fecha de fin
-                  @if (plazo() != null) {
-                    <small>(+ {{ plazo() }} días de plazo)</small>
-                  }
-                </span>
-                <input type="date" [value]="fechaFin()" (input)="fechaFin.set($any($event.target).value)" />
-              </label>
-              <label class="campo campo--ancho">
-                <span>Descripción</span>
-                <input type="text" [value]="descripcion()" (input)="descripcion.set($any($event.target).value)" />
-              </label>
-            </fieldset>
-          </section>
-        } @else {
-          <app-zona-carga
-            [archivo]="archivo()"
-            [ocupado]="accion()"
-            [error]="errorLectura()"
-            (elegir)="elegir($event)"
-            (quitar)="quitarArchivo()"
-            (revisar)="revisar()"
-            (crear)="crearDirecto()"
-          />
-        }
+  @if (previsualizacion(); as datos) {
+    <section class="panel datos">
+      <div class="panel__cabecera">
+        <h2 class="panel__titulo">Datos del proyecto</h2>
+        <div class="archivo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+          <span>{{ datos.archivoNombre }}</span>
+        </div>
       </div>
-    }
-    <!-- En la revisión no hacen falta: vuelven con "Cancelar" o "Importar otro". -->
-    @if (!previsualizacion()) {
-      <app-ultimos-proyectos class="superior__der" [nuevoId]="ultimoCreadoId()" />
-    }
-  </div>
+      <p class="ayuda">Completado desde el Excel. Podés corregir cualquier campo antes de crear el proyecto.</p>
+      <fieldset class="campos" [disabled]="!!creado()">
+        <label class="campo">
+          <span>Nombre del proyecto</span>
+          <input type="text" [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>Cliente</span>
+          <input type="text" [value]="cliente()" (input)="cliente.set($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>Atención</span>
+          <input type="text" [value]="atencion()" (input)="atencion.set($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>Ref. del cliente</span>
+          <input type="text" [value]="refCliente()" (input)="refCliente.set($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>Fecha de inicio</span>
+          <input type="date" [value]="fechaInicio()" (input)="cambiarInicio($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>
+            Fecha de fin
+            @if (plazo() != null) {
+              <small>(+ {{ plazo() }} días de plazo)</small>
+            }
+          </span>
+          <input type="date" [value]="fechaFin()" (input)="fechaFin.set($any($event.target).value)" />
+        </label>
+        <label class="campo">
+          <span>Tipo de cliente</span>
+          <select [value]="tipoCliente()" (change)="tipoCliente.set($any($event.target).value)">
+            <option value="">Sin clasificar</option>
+            @for (t of tiposCliente; track t) {
+              <option [value]="t">{{ tipoClienteLabel[t] }}</option>
+            }
+          </select>
+        </label>
+        <label class="campo">
+          <span>Tipo de obra</span>
+          <select [value]="tipoObra()" (change)="tipoObra.set($any($event.target).value)">
+            <option value="">Sin clasificar</option>
+            @for (t of tiposObra; track t) {
+              <option [value]="t">{{ tipoObraLabel[t] }}</option>
+            }
+          </select>
+        </label>
+        <label class="campo campo--ancho">
+          <span>Descripción</span>
+          <input type="text" [value]="descripcion()" (input)="descripcion.set($any($event.target).value)" />
+        </label>
+      </fieldset>
+    </section>
+  } @else {
+    <div class="principal" [class.principal--solo]="!puedeImportar()">
+      @if (puedeImportar()) {
+        <app-zona-carga
+          [archivo]="archivo()"
+          [lectura]="lectura()"
+          [leyendo]="leyendo()"
+          [error]="errorLectura()"
+          (elegir)="elegir($event)"
+          (quitar)="quitarArchivo()"
+          (revisar)="revisar()"
+        />
+      }
+      <app-listado-proyectos
+        [desde]="desde()"
+        [hasta]="hasta()"
+        [busqueda]="busqueda()"
+        [estados]="estados()"
+        [clientes]="clientes()"
+        [(orden)]="orden"
+        [nuevoId]="ultimoCreadoId()"
+      />
+    </div>
+  }
 
   @if (previsualizacion(); as datos) {
     <div class="previsualizacion">

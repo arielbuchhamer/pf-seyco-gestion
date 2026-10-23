@@ -1,6 +1,8 @@
 // Importación de proyectos desde el Excel de presupuesto y presupuesto del proyecto
 // (ver ImportacionDtos en el backend).
 
+import { TipoCliente, TipoObra } from './proyecto.model';
+
 export type TipoItemPresupuesto = 'CAPITULO' | 'GRUPO' | 'ARMADO' | 'ITEM';
 export type EstadoPresupuesto = 'ABIERTO' | 'CERRADO';
 export type NivelVerificacion = 'OK' | 'ADVERTENCIA' | 'ERROR';
@@ -70,6 +72,8 @@ export interface DatosImportacion {
   descripcion: string;
   fechaInicio: string;
   fechaFin: string | null;
+  tipoCliente?: TipoCliente | null;
+  tipoObra?: TipoObra | null;
 }
 
 // GET /api/proyectos/{id}/presupuesto

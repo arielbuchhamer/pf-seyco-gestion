@@ -11,7 +11,11 @@ import { RolService } from '../../core/services/rol.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
+import { alternar, enRango } from '../../core/utils/seguimiento';
+import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
+import { FiltroFechasComponent } from '../../shared/filtros/filtro-fechas.component';
+import { PanelFiltrosComponent } from '../../shared/filtros/panel-filtros.component';
 import { PaginadorComponent, paginar } from '../../shared/paginador/paginador.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
@@ -23,7 +27,7 @@ const USUARIOS_POR_PAGINA = 10;
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, AvatarComponent, PuedeDirective, PaginadorComponent, ConfirmarDialogComponent],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, AvatarComponent, PuedeDirective, PaginadorComponent, ConfirmarDialogComponent, CabeceraComponent, FiltroFechasComponent, PanelFiltrosComponent],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css',
 })
@@ -40,7 +44,43 @@ export class UsuariosComponent {
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly paginaActual = signal(1);
-  protected readonly pagina = computed(() => paginar(this.usuarios(), this.paginaActual(), USUARIOS_POR_PAGINA));
+  protected readonly pagina = computed(() => paginar(this.filtrados(), this.paginaActual(), USUARIOS_POR_PAGINA));
+
+  // ── Filtros de la cabecera (fecha de alta, búsqueda, rol y activos/dados de baja) ──
+  protected readonly desde = signal('');
+  protected readonly hasta = signal('');
+  protected readonly busqueda = signal('');
+  protected readonly rolesFiltro = signal<number[]>([]);
+  protected readonly estadosFiltro = signal<('activo' | 'baja')[]>([]);
+  protected readonly alternar = alternar;
+  protected readonly cantidadFiltros = computed(
+    () => (this.busqueda().trim() ? 1 : 0) + this.rolesFiltro().length + this.estadosFiltro().length,
+  );
+
+  protected readonly filtrados = computed(() => {
+    const q = this.busqueda().trim().toLowerCase();
+    return this.usuarios().filter(
+      (u) =>
+        (!q || `${u.nombre ?? ''} ${u.apellido ?? ''} ${u.email}`.toLowerCase().includes(q)) &&
+        (!this.rolesFiltro().length || u.roles.some((r) => this.rolesFiltro().includes(r.id))) &&
+        (!this.estadosFiltro().length || this.estadosFiltro().includes(u.fechaBaja ? 'baja' : 'activo')) &&
+        enRango(u.fechaAlta, this.desde(), this.hasta()),
+    );
+  });
+
+  // Cambiar un filtro vuelve a la primera página.
+  filtrar(aplicar: () => void): void {
+    aplicar();
+    this.paginaActual.set(1);
+  }
+
+  limpiarFiltros(): void {
+    this.filtrar(() => {
+      this.busqueda.set('');
+      this.rolesFiltro.set([]);
+      this.estadosFiltro.set([]);
+    });
+  }
 
   // ── Alta / edición ──
   protected readonly showForm = signal(false);

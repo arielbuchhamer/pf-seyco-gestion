@@ -49,6 +49,11 @@ public class Tarea {
 	@Column(name = "fecha_fin_real")
 	private LocalDate fechaFinReal;
 
+	// % de avance físico (0-100), cargado junto con las fechas reales. Con el monto presupuestado
+	// de cada tarea da el avance real ponderado del proyecto (ver IndicadoresService). En una
+	// tarea con subtareas es el promedio de ellas.
+	private Integer avance;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private EstadoTarea estado;
@@ -133,6 +138,14 @@ public class Tarea {
 
 	public void setFechaFinReal(LocalDate fechaFinReal) {
 		this.fechaFinReal = fechaFinReal;
+	}
+
+	public Integer getAvance() {
+		return avance;
+	}
+
+	public void setAvance(Integer avance) {
+		this.avance = avance;
 	}
 
 	public EstadoTarea getEstado() {

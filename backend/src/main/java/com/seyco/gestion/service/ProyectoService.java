@@ -24,6 +24,8 @@ import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.entity.Tarea;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.ArchivoProyectoRepository;
+import com.seyco.gestion.repository.CertificacionRepository;
+import com.seyco.gestion.repository.CostoRealRepository;
 import com.seyco.gestion.repository.HistorialEstadoTareaRepository;
 import com.seyco.gestion.repository.ItemPresupuestoRepository;
 import com.seyco.gestion.repository.PresupuestoRepository;
@@ -39,11 +41,14 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 	private final PresupuestoRepository presupuestoRepository;
 	private final ItemPresupuestoRepository itemPresupuestoRepository;
 	private final ArchivoProyectoRepository archivoProyectoRepository;
+	private final CostoRealRepository costoRealRepository;
+	private final CertificacionRepository certificacionRepository;
 
 	public ProyectoService(ProyectoRepository proyectoRepository, TareaRepository tareaRepository,
 			HistorialEstadoTareaRepository historialEstadoTareaRepository, PresupuestoRepository presupuestoRepository,
 			ItemPresupuestoRepository itemPresupuestoRepository,
-			ArchivoProyectoRepository archivoProyectoRepository) {
+			ArchivoProyectoRepository archivoProyectoRepository, CostoRealRepository costoRealRepository,
+			CertificacionRepository certificacionRepository) {
 		super("El proyecto no existe.");
 		this.proyectoRepository = proyectoRepository;
 		this.tareaRepository = tareaRepository;
@@ -51,10 +56,12 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		this.presupuestoRepository = presupuestoRepository;
 		this.itemPresupuestoRepository = itemPresupuestoRepository;
 		this.archivoProyectoRepository = archivoProyectoRepository;
+		this.costoRealRepository = costoRealRepository;
+		this.certificacionRepository = certificacionRepository;
 	}
 
 	// Borra el proyecto con todo lo que cuelga de él: presupuesto con sus renglones, Excel
-	// original y tareas con su historial. Sin cascadas en la base (ddl-auto=update), se
+	// original, costos reales, certificaciones y tareas con su historial. Sin cascadas en la base (ddl-auto=update), se
 	// borra a mano de las hojas hacia arriba: renglones, subtareas y después tareas.
 	@Override
 	@Transactional
@@ -67,6 +74,8 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 			presupuestoRepository.delete(presupuesto);
 		});
 		archivoProyectoRepository.findByProyectoId(id).ifPresent(archivoProyectoRepository::delete);
+		costoRealRepository.deleteAll(costoRealRepository.findByProyectoIdOrderByFechaDescIdDesc(id));
+		certificacionRepository.deleteAll(certificacionRepository.findByProyectoIdOrderByNumeroAsc(id));
 
 		List<Tarea> tareas = new ArrayList<>(tareaRepository.findByProyectoId(id));
 		tareas.sort(Comparator.comparing((Tarea t) -> t.getPadre() == null));
@@ -156,6 +165,8 @@ public class ProyectoService extends BaseService<Proyecto, Long> {
 		existente.setCliente(cambios.getCliente());
 		existente.setRefCliente(cambios.getRefCliente());
 		existente.setAtencion(cambios.getAtencion());
+		existente.setTipoCliente(cambios.getTipoCliente());
+		existente.setTipoObra(cambios.getTipoObra());
 		existente.setFechaInicio(cambios.getFechaInicio());
 		existente.setFechaFin(cambios.getFechaFin());
 		if (cambios.getEstado() != null) {

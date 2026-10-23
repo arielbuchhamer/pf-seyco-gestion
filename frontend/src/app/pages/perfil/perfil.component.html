@@ -5,14 +5,11 @@
     <a routerLink="/perfil" aria-current="page">Mi perfil</a>
   </nav>
 
-  <header class="page__header">
-    <h1>Mi perfil</h1>
+  <app-cabecera titulo="Mi perfil" subtitulo="Tus datos personales y de acceso.">
     @if (perfil() && !editando()) {
-      <div class="page__actions">
-        <button type="button" class="btn btn--primary" (click)="editar()">Editar</button>
-      </div>
+      <button type="button" class="btn btn--primary" (click)="editar()">Editar</button>
     }
-  </header>
+  </app-cabecera>
 
   <div class="card">
     @if (loading()) {

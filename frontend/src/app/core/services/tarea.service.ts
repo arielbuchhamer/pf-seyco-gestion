@@ -18,8 +18,10 @@ export class TareaService {
     return this.http.get<Tarea[]>(`${this.baseUrl}/mias`);
   }
 
-  crear(tarea: TareaInput): Observable<Tarea> {
-    return this.http.post<Tarea>(this.baseUrl, tarea);
+  // padreId: crea una subtarea de esa tarea (si no, es una tarea principal).
+  crear(tarea: TareaInput, padreId?: number | null): Observable<Tarea> {
+    const params: Record<string, string> = padreId ? { padreId: String(padreId) } : {};
+    return this.http.post<Tarea>(this.baseUrl, tarea, { params });
   }
 
   actualizar(id: number, cambios: TareaInput): Observable<Tarea> {

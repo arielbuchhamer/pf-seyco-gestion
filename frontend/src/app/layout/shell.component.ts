@@ -12,15 +12,15 @@ interface MenuItem {
   panel: string;
   // Título del grupo en el menú (opcional). Los ítems de un mismo grupo van seguidos.
   seccion?: string;
-  icon: 'usuarios' | 'roles' | 'proyectos' | 'tareas';
+  icon: 'usuarios' | 'roles' | 'proyectos' | 'tareas' | 'portafolio';
 }
 
 // Patrón a repetir: cada opción nueva del menú declara qué panel la habilita (y un ícono, ver
 // el @switch en shell.component.html). Debe ser el mismo panel que el panelGuard de su ruta.
 // Qué roles ven cada panel se configura en la base (roles_paneles) desde la pantalla Roles.
-// La sección "Gestión global" todavía no tiene paneles: se muestra fija en shell.component.html
-// como "Próximamente" hasta que se agreguen.
+// "Gestión global" (Portafolio) usa el panel de proyectos: no tiene uno propio en la base.
 const MENU_ITEMS: MenuItem[] = [
+  { label: 'Portafolio', path: '/portafolio', panel: PANELES.proyectos, seccion: 'Gestión global', icon: 'portafolio' },
   { label: 'Proyectos', path: '/proyectos', panel: PANELES.proyectos, seccion: 'Gestión de proyecto', icon: 'proyectos' },
   { label: 'Tareas', path: '/tareas', panel: PANELES.tareas, seccion: 'Gestión de proyecto', icon: 'tareas' },
   // Igual que el sidebar del proyecto de referencia: Roles y Usuarios agrupados (en la base, sólo admin).

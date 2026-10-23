@@ -17,6 +17,7 @@ import {
 import { AuthService } from '../../core/services/auth.service';
 import { RolService } from '../../core/services/rol.service';
 import { extraerMensajeError } from '../../core/utils/http-error';
+import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
 import { PaginadorComponent, paginar } from '../../shared/paginador/paginador.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
@@ -35,7 +36,7 @@ const CATALOGO_POR_PAGINA = 3;
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, PuedeDirective, PaginadorComponent, ConfirmarDialogComponent],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, PuedeDirective, PaginadorComponent, ConfirmarDialogComponent, CabeceraComponent],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.css',
 })

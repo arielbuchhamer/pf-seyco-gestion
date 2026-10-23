@@ -1,31 +1,48 @@
-/* Mismo aire que las pantallas de tablero (Roles, Usuarios): todo el ancho, con margen lateral
-   proporcional, y sin archivo cargado la fila de arriba ocupa el alto de la ventana. */
+/* Pantalla de tablero: ancho completo y alto de la ventana. La importación va angosta a la
+   izquierda y el listado ocupa el resto (scrollea adentro). En la revisión, alto natural. */
 .page.proyectos-page {
   max-width: none;
-  padding: 2rem clamp(1.5rem, 7vw, 7rem) 0;
-  min-height: calc(100dvh - var(--alto-topbar));
+  padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 1.5rem;
+  height: calc(100dvh - var(--alto-topbar));
+  min-height: 34rem;
   display: flex;
   flex-direction: column;
 }
 
-.page.proyectos-page > .page__header {
-  margin-bottom: 1rem;
+.page.proyectos-page--revision {
+  height: auto;
+  padding-bottom: 0;
 }
 
-.btn-plantilla {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid #b7e0c7;
-  background: #e6f4ec;
-  color: var(--color-success-dark);
-  border-radius: var(--radius-sm);
-  padding: 0 1rem;
-  height: 2.5rem;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
+.principal {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 21rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.principal > app-listado-proyectos {
+  height: 100%;
+}
+
+.principal--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 60rem) {
+  .page.proyectos-page {
+    height: auto;
+  }
+
+  .principal {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .principal > app-listado-proyectos {
+    height: 32rem;
+  }
 }
 
 .creado {
@@ -57,53 +74,6 @@
 
 .creado .btn {
   text-decoration: none;
-}
-
-.superior {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
-}
-
-.superior--llena {
-  flex: 1;
-  min-height: 34rem;
-  margin-bottom: clamp(2rem, 7vh, 5rem);
-}
-
-.superior__izq {
-  min-width: 0;
-  display: flex;
-}
-
-.superior__izq:only-child {
-  grid-column: 1 / -1;
-}
-
-/* La lista de proyectos no estira la fila: toma el alto que marca la columna izquierda (o la
-   ventana) y scrollea adentro. Sin permiso para importar queda sola, a todo el ancho. */
-.superior__der {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  contain: size;
-}
-
-.superior__der:only-child {
-  grid-column: 1 / -1;
-  contain: none;
-}
-
-@media (max-width: 60rem) {
-  .superior {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .superior__der {
-    contain: none;
-    max-height: 32rem;
-  }
 }
 
 .datos {
@@ -169,7 +139,9 @@
   grid-column: 1 / -1;
 }
 
-.campo input {
+.campo input,
+.campo select {
+  background: var(--color-surface);
   border: 1px solid #cfd6e2;
   border-radius: var(--radius-sm);
   padding: 0.6rem 0.75rem;
@@ -180,6 +152,7 @@
 }
 
 .previsualizacion {
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -190,8 +163,8 @@
 .barra-confirmar {
   position: sticky;
   bottom: 0;
-  margin: 0 calc(-1 * clamp(1.5rem, 7vw, 7rem));
-  padding: 1.1rem clamp(1.5rem, 7vw, 7rem);
+  margin: 0 calc(-1 * clamp(1rem, 3.5vw, 3rem));
+  padding: 1.1rem clamp(1rem, 3.5vw, 3rem);
   background: #f5f9fe;
   border-top: 3px solid var(--color-primary);
   box-shadow: 0 -16px 36px -14px rgba(15, 95, 166, 0.45);

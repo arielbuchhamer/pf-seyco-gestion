@@ -12,6 +12,7 @@ import { PerfilInput, Usuario, nombreCompleto } from '../../core/models/usuario.
 import { PerfilService } from '../../core/services/perfil.service';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
+import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
 const SOLO_NUMEROS = /^\d+$/;
@@ -34,7 +35,7 @@ function soloNumerosValidator(control: AbstractControl<string>): ValidationError
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, AvatarComponent],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, AvatarComponent, CabeceraComponent],
   templateUrl: './perfil.component.html',
   styleUrl: './perfil.component.css',
 })

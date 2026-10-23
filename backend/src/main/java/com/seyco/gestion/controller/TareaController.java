@@ -58,8 +58,10 @@ public class TareaController {
 	// Proyecto (Historias #6 y #7): permisos escribir/editar del módulo `tareas`.
 	@PostMapping
 	@PreAuthorize("hasAuthority('tareas:escribir')")
-	public ResponseEntity<Tarea> crear(@Valid @RequestBody Tarea tarea, Authentication authentication) {
-		Tarea creada = tareaService.crear(tarea, authentication.getName());
+	// ?padreId= para agregar una subtarea a una tarea existente (además de las que trae el Excel).
+	public ResponseEntity<Tarea> crear(@Valid @RequestBody Tarea tarea, @RequestParam(required = false) Long padreId,
+			Authentication authentication) {
+		Tarea creada = tareaService.crear(tarea, authentication.getName(), padreId);
 		return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 	}
 

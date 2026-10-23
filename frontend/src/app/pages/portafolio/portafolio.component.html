@@ -1,0 +1,151 @@
+<section class="page portafolio-page">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/portafolio" aria-current="page">Portafolio</a>
+  </nav>
+
+  <app-cabecera titulo="Portafolio de proyectos" [subtitulo]="unico() ? 'Hay un proyecto en el filtro: se muestra su detalle.' : 'Cómo vienen todas las obras: avance, gastos y cobros.'">
+    <app-filtro-fechas [(desde)]="desde" [(hasta)]="hasta" />
+    <app-panel-filtros [activos]="cantidadFiltros()" (limpiar)="limpiarFiltros()">
+      <div class="filtro-grupo">
+        <span class="filtro-grupo__titulo">Cliente</span>
+        <div class="filtro-checks">
+          @for (t of tiposCliente; track t) {
+            <label class="filtro-check"><input type="checkbox" [checked]="clientes().includes(t)" (change)="clientes.set(alternar(clientes(), t))" />{{ tipoClienteLabel[t] }}</label>
+          }
+        </div>
+      </div>
+      <div class="filtro-grupo">
+        <span class="filtro-grupo__titulo">Tipo de obra</span>
+        <div class="filtro-checks">
+          @for (t of tiposObra; track t) {
+            <label class="filtro-check"><input type="checkbox" [checked]="obras().includes(t)" (change)="obras.set(alternar(obras(), t))" />{{ tipoObraLabel[t] }}</label>
+          }
+        </div>
+      </div>
+      <div class="filtro-grupo">
+        <span class="filtro-grupo__titulo">Estado</span>
+        <div class="filtro-checks">
+          @for (e of todosEstados; track e) {
+            <label class="filtro-check"><input type="checkbox" [checked]="estados().includes(e)" (change)="estados.set(alternar(estados(), e))" />{{ estadoLabel[e] }}</label>
+          }
+        </div>
+      </div>
+      <div class="filtro-grupo">
+        <span class="filtro-grupo__titulo">Monto de la obra (millones de $)</span>
+        <div class="filtro-fila">
+          <label class="filtro-campo">Desde<input type="number" min="0" [value]="montoMin()" (change)="montoMin.set($any($event.target).value)" /></label>
+          <label class="filtro-campo">Hasta<input type="number" min="0" [value]="montoMax()" (change)="montoMax.set($any($event.target).value)" /></label>
+        </div>
+      </div>
+    </app-panel-filtros>
+  </app-cabecera>
+
+  @if (recurso.error()) {
+    <p class="error" role="alert">No se pudo cargar el portafolio. Si el backend se actualizó, reinicialo.</p>
+  } @else if (recurso.value(); as port) {
+    @if (!port.proyectos.length) {
+      <div class="vacio panel">
+        <strong>{{ hayFiltros() ? 'Ningún proyecto coincide con los filtros.' : 'Todavía no hay proyectos.' }}</strong>
+        @if (hayFiltros()) {
+          <button type="button" class="btn btn--ghost" (click)="limpiarTodo()">Quitar filtros</button>
+        } @else {
+          <a class="btn btn--primary" routerLink="/proyectos">Importar un proyecto</a>
+        }
+      </div>
+    } @else if (unico(); as p) {
+      <div class="unico">
+        <div>
+          <span class="badge" [class]="'badge badge--' + p.estado.toLowerCase()">{{ estadoLabel[p.estado] }}</span>
+          <strong class="nombre-unico">{{ p.nombre }}</strong>
+          <span class="muted">{{ p.cliente ?? '' }}</span>
+        </div>
+        <a class="btn-chico abrir" [routerLink]="['/proyectos', p.id]">Abrir proyecto →</a>
+      </div>
+      @if (indicadoresUnico.value(); as i) {
+        <app-tablero-proyecto [indicadores]="i" />
+      } @else if (indicadoresUnico.error()) {
+        <p class="error" role="alert">No se pudieron calcular los indicadores del proyecto.</p>
+      } @else {
+        <p class="muted">Calculando…</p>
+      }
+    } @else {
+      <div class="tablero">
+        <div class="tablero__kpis tablero__kpis--4">
+          <app-kpi etiqueta="Obras" icono="cartera" [valor]="'' + port.totales.proyectos"
+            [tono]="atrasadas() ? 'riesgo' : 'ok'"
+            [nota]="port.totales.enCurso + ' en curso · ' + (atrasadas() ? atrasadas() + ' atrasadas' : 'ninguna atrasada')" />
+          <app-kpi etiqueta="Presupuesto total" icono="costo" [valor]="pesosCorto(port.totales.presupuesto)" nota="Suma de los presupuestos de las obras" />
+          <app-kpi etiqueta="Gastado" icono="billetera" [valor]="pesosCorto(port.totales.costoReal)" [progreso]="porcentajeGastado()"
+            [tono]="port.totales.costoReal > port.totales.presupuesto ? 'critico' : 'neutro'"
+            [nota]="redondo(porcentajeGastado()) + ' % del presupuesto total'" />
+          <app-kpi etiqueta="Falta cobrar" icono="factura" [valor]="pesosCorto(port.totales.saldoPorCobrar)" [progreso]="porcentajeCobrado()"
+            [tono]="port.totales.pendienteCobro > 0 ? 'riesgo' : 'neutro'"
+            [nota]="'Cobrado ' + pesosCorto(port.totales.cobrado) + (port.totales.pendienteCobro > 0 ? ' · facturado sin cobrar ' + pesosCorto(port.totales.pendienteCobro) : '')" />
+        </div>
+
+        <div class="tablero__fila tablero__fila--2">
+          <section class="panel tablero__panel">
+            <div class="tablero__cabecera">
+              <h3>Obras</h3>
+              <span class="muted chico">Tocá una obra para ver su detalle</span>
+            </div>
+            <div class="tabla-scroll">
+              <table class="tabla-obras">
+                <thead>
+                  <tr>
+                    <th>Obra</th>
+                    <th>Avance</th>
+                    <th>¿Va a tiempo?</th>
+                    <th>Gastado</th>
+                    <th class="num">Falta cobrar</th>
+                    <th>Cómo viene</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of port.proyectos; track p.id) {
+                    <tr>
+                      <td>
+                        <a class="obra-link" [routerLink]="['/proyectos', p.id]">{{ p.nombre }}</a>
+                        <div class="muted chico">{{ p.cliente ?? 'Sin cliente' }}{{ p.tipoObra ? ' · ' + tipoObraLabel[p.tipoObra] : '' }}</div>
+                      </td>
+                      <td>
+                        <div class="mini">
+                          <div class="mini__barra"><div class="mini__real" [style.width.%]="p.avanceReal"></div></div>
+                          <span class="chico">{{ redondo(p.avanceReal) }} %</span>
+                        </div>
+                      </td>
+                      <td><span class="badge" [class]="'badge ' + plazo(p).clase">{{ plazo(p).texto }}</span></td>
+                      <td class="chico sin-corte">
+                        <strong [class.texto-critico]="p.costoReal > p.presupuesto">{{ pesosCorto(p.costoReal) }}</strong>
+                        <span class="muted"> de {{ pesosCorto(p.presupuesto) }}</span>
+                      </td>
+                      <td class="num">{{ pesosCorto(p.certificacion.saldoPorCobrar) }}</td>
+                      <td><span class="badge" [class]="'badge badge--' + salud(p)" [title]="titulos(p)">{{ saludLabel[salud(p)] }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <app-avisos [alertas]="avisos()" vacio="Todas las obras vienen bien: sin atrasos, sobrecostos ni cobros pendientes." />
+        </div>
+
+        <div class="tablero__fila tablero__fila--mitades">
+          <section class="panel tablero__panel">
+            <div class="tablero__cabecera"><div><h3>Avance: planificado vs. real</h3><span class="muted chico">Cuánto debería ir cada obra a hoy y cuánto va</span></div></div>
+            <app-columnas titulo="Avance planificado vs. real por obra" [series]="seriesAvance" [grupos]="gruposAvance()" [formato]="porcentaje" [maximo]="100" />
+          </section>
+          <section class="panel tablero__panel">
+            <div class="tablero__cabecera"><div><h3>Presupuesto vs. gastado</h3><span class="muted chico">Lo presupuestado de cada obra y lo que ya se gastó</span></div></div>
+            <app-columnas titulo="Presupuesto vs. gastado por obra" [series]="seriesCosto" [grupos]="gruposCosto()" [formato]="pesosCorto" />
+          </section>
+        </div>
+      </div>
+    }
+  } @else {
+    <p class="muted">Cargando portafolio…</p>
+  }
+</section>
