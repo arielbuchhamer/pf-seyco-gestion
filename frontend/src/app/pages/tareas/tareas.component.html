@@ -1,4 +1,5 @@
-<section class="page tareas-page">
+<section [class.page]="!embebido()" [class.tareas-page]="!embebido()">
+  @if (!embebido()) {
   <nav class="breadcrumb" aria-label="Ruta">
     <a routerLink="/dashboard">Menú principal</a>
     <span aria-hidden="true">/</span>
@@ -9,13 +10,9 @@
     }
   </nav>
 
-  <header class="page__header">
-    <h1>Gestión de tareas</h1>
-  </header>
-
-  <div class="filters">
+  <app-cabecera titulo="Tareas" subtitulo="Fechas y avance de las tareas de cada proyecto.">
     <select
-      class="selector"
+      class="boton-cabecera selector"
       aria-label="Proyecto"
       [value]="proyectoId() ?? ''"
       [disabled]="borradores().size > 0"
@@ -27,14 +24,14 @@
       }
     </select>
     @if (proyectoResource.value(); as proyecto) {
-      <a class="btn-chico ver-proyecto" [routerLink]="['/proyectos', proyecto.id]">Ver proyecto</a>
-      <app-tareas-situacion class="situacion-proyecto" [porSituacion]="porSituacion()" />
+      <a class="boton-cabecera" [routerLink]="['/proyectos', proyecto.id]">Ver proyecto →</a>
     }
-  </div>
+  </app-cabecera>
+  }
 
   @if (proyectosResource.error() || tareasResource.error()) {
     <p class="error" role="alert">No se pudieron cargar las tareas.</p>
-  } @else if (!proyectosResource.isLoading() && !proyectos().length) {
+  } @else if (!embebido() && !proyectosResource.isLoading() && !proyectos().length) {
     <p class="muted">Todavía no hay proyectos.</p>
   } @else if (proyectoResource.value(); as proyecto) {
     <section class="panel arbol-panel">
@@ -44,6 +41,7 @@
           <div class="panel__subtitulo">Las fechas se cargan en las subtareas; cada tarea muestra el consolidado</div>
         </div>
         <div class="acciones">
+          <app-tareas-situacion [porSituacion]="porSituacion()" />
           <button type="button" class="btn-chico" (click)="expandirTodo()">Expandir todo</button>
           <button type="button" class="btn-chico" (click)="contraerTodo()">Contraer todo</button>
         </div>
@@ -54,7 +52,7 @@
           <div>
             <strong>Seguimiento</strong> · Línea base fijada el {{ fecha(base) }}.
             @if (puedeEditar()) {
-              Cargá el inicio real y el fin estimado/real de cada subtarea; el desvío se mide contra la línea base.
+              Cargá el inicio real, el fin estimado/real y el % de avance de cada subtarea; el desvío se mide contra la línea base.
             }
           </div>
         } @else {
@@ -86,7 +84,7 @@
             <tr class="grupos">
               <th colspan="2"></th>
               <th colspan="2" class="grupo grupo--plan">Plan · línea base</th>
-              <th colspan="2" class="grupo grupo--real">Real</th>
+              <th colspan="3" class="grupo grupo--real">Real</th>
               <th colspan="2" class="grupo grupo--control">Control</th>
             </tr>
             <tr>
@@ -96,6 +94,7 @@
               <th class="col-plan">Fin</th>
               <th class="col-real">Inicio</th>
               <th class="col-real">Fin estimado / real</th>
+              <th class="col-real centro">% avance</th>
               <th class="centro">Desvío</th>
               <th class="centro">Situación</th>
             </tr>
@@ -124,9 +123,11 @@
                 @if (puedeEditar() && !fila.hijos && lineaBase()) {
                   <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaInicioReal ?? ''" [max]="hoy" [attr.aria-label]="'Inicio real de ' + fila.tarea.nombre" [class.fecha-input--real]="true" (change)="editarFecha(fila.tarea, 'fechaInicioReal', $any($event.target).value)" /></td>
                   <td><input type="date" class="fecha-input" [value]="fila.fechas.fechaFinReal ?? ''" [min]="fila.fechas.fechaInicioReal ?? ''" [attr.aria-label]="'Fin estimado o real de ' + fila.tarea.nombre" [class.fecha-input--real]="true" (change)="editarFecha(fila.tarea, 'fechaFinReal', $any($event.target).value)" /></td>
+                  <td class="centro"><input type="number" min="0" max="100" step="5" class="fecha-input avance-input" [value]="fila.fechas.avance ?? ''" [attr.aria-label]="'% de avance de ' + fila.tarea.nombre" (change)="editarAvance(fila.tarea, $any($event.target).value)" /></td>
                 } @else {
                   <td class="fecha muted">{{ fechaCorta(fila.fechas.fechaInicioReal) }}</td>
                   <td class="fecha muted">{{ fechaCorta(fila.fechas.fechaFinReal) }}</td>
+                  <td class="centro muted">{{ fila.fechas.avance != null ? fila.fechas.avance + ' %' : '—' }}</td>
                 }
                 <td class="centro">
                   @if (fila.desvio == null) {
@@ -145,7 +146,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="8" class="muted vacio">{{ tareasResource.isLoading() ? 'Cargando…' : 'El proyecto todavía no tiene tareas.' }}</td>
+                <td colspan="9" class="muted vacio">{{ tareasResource.isLoading() ? 'Cargando…' : 'El proyecto todavía no tiene tareas.' }}</td>
               </tr>
             }
           </tbody>

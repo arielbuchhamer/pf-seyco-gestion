@@ -119,6 +119,8 @@ public class ImportacionService {
 		proyecto.setRefCliente(vacioANull(datos.refCliente()));
 		proyecto.setAtencion(vacioANull(datos.atencion()));
 		proyecto.setDescripcion(vacioANull(datos.descripcion()));
+		proyecto.setTipoCliente(datos.tipoCliente());
+		proyecto.setTipoObra(datos.tipoObra());
 		proyecto.setFechaInicio(datos.fechaInicio());
 		proyecto.setFechaFin(fechaFin);
 		proyecto.setArchivoNombre(archivo.getOriginalFilename());

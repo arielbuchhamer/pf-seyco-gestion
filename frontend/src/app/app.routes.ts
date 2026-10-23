@@ -44,6 +44,19 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'proyectos/:id/reporte',
+        canActivate: [panelGuard(PANELES.proyectos)],
+        loadComponent: () =>
+          import('./pages/reporte/reporte-obra.component').then((m) => m.ReporteObraComponent),
+      },
+      {
+        // Gestión global: usa el panel de proyectos (quien ve proyectos ve el portafolio).
+        path: 'portafolio',
+        canActivate: [panelGuard(PANELES.proyectos)],
+        loadComponent: () =>
+          import('./pages/portafolio/portafolio.component').then((m) => m.PortafolioComponent),
+      },
+      {
         path: 'tareas',
         canActivate: [panelGuard(PANELES.tareas)],
         loadComponent: () => import('./pages/tareas/tareas.component').then((m) => m.TareasComponent),

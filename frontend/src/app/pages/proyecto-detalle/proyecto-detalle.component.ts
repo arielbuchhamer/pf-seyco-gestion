@@ -4,7 +4,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { PuedeDirective } from '../../core/directives/puede.directive';
 import { PresupuestoDetalle } from '../../core/models/presupuesto.model';
-import { ESTADO_PROYECTO_LABEL, Proyecto, ProyectoInput } from '../../core/models/proyecto.model';
+import {
+  ESTADO_PROYECTO_LABEL,
+  Proyecto,
+  ProyectoInput,
+  TIPOS_CLIENTE,
+  TIPOS_OBRA,
+  TIPO_CLIENTE_LABEL,
+  TIPO_OBRA_LABEL,
+  TipoCliente,
+  TipoObra,
+} from '../../core/models/proyecto.model';
 import { Tarea } from '../../core/models/tarea.model';
 import { ImportacionService } from '../../core/services/importacion.service';
 import { ProyectoService } from '../../core/services/proyecto.service';
@@ -13,12 +23,19 @@ import { fecha, pesosCorto } from '../../core/utils/formato';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
+import { ProyectoCertificacionesComponent } from './proyecto-certificaciones.component';
+import { ProyectoCostosComponent } from './proyecto-costos.component';
+import { ProyectoGanttComponent } from './proyecto-gantt.component';
+import { ProyectoIndicadoresComponent } from './proyecto-indicadores.component';
 import { ProyectoPresupuestoComponent } from './proyecto-presupuesto.component';
+import { TareasComponent } from '../tareas/tareas.component';
 import { ProyectoTareasComponent } from './proyecto-tareas.component';
 
-type Solapa = 'tareas' | 'presupuesto';
+type Solapa = 'tareas' | 'fechas' | 'gantt' | 'indicadores' | 'costos' | 'certificaciones' | 'presupuesto';
 
-// Vista del proyecto con solapas Tareas y Presupuesto. Editar y eliminar el proyecto están
+// Vista del proyecto con solapas Tareas, Carga de fechas, Gantt, Indicadores, Costos reales, Certificaciones y
+// Presupuesto (el ciclo del prototipo: importar → fechas → Gantt → KPIs). La carga de fechas
+// es la grilla de la pantalla Tareas en modo embebido. Editar y eliminar el proyecto están
 // acá (el listado ya no tiene acciones: es "importar + últimos proyectos").
 @Component({
   selector: 'app-proyecto-detalle',
@@ -30,6 +47,11 @@ type Solapa = 'tareas' | 'presupuesto';
     ConfirmarDialogComponent,
     ProyectoTareasComponent,
     ProyectoPresupuestoComponent,
+    ProyectoGanttComponent,
+    TareasComponent,
+    ProyectoIndicadoresComponent,
+    ProyectoCostosComponent,
+    ProyectoCertificacionesComponent,
   ],
   templateUrl: './proyecto-detalle.component.html',
   styleUrl: './proyecto-detalle.component.css',
@@ -47,6 +69,10 @@ export class ProyectoDetalleComponent {
   protected readonly estadoLabel = ESTADO_PROYECTO_LABEL;
   protected readonly fecha = fecha;
   protected readonly pesosCorto = pesosCorto;
+  protected readonly tiposCliente = TIPOS_CLIENTE;
+  protected readonly tiposObra = TIPOS_OBRA;
+  protected readonly tipoClienteLabel = TIPO_CLIENTE_LABEL;
+  protected readonly tipoObraLabel = TIPO_OBRA_LABEL;
 
   protected readonly proyectoResource = httpResource<Proyecto>(() => `/api/proyectos/${this.proyectoId()}`);
 
@@ -71,6 +97,19 @@ export class ProyectoDetalleComponent {
   });
 
   protected readonly solapa = signal<Solapa>('tareas');
+  // Orden del ciclo del proyecto; Presupuesto sólo si el proyecto se importó con uno.
+  protected readonly solapasVisibles = computed<{ id: Solapa; label: string; contador?: string }[]>(() => {
+    const p = this.presupuesto();
+    return [
+      { id: 'tareas', label: 'Tareas', contador: String(this.cantidadTareas()) },
+      { id: 'fechas', label: 'Carga de fechas' },
+      { id: 'gantt', label: 'Gantt' },
+      { id: 'indicadores', label: 'Indicadores' },
+      { id: 'costos', label: 'Costos reales' },
+      { id: 'certificaciones', label: 'Certificaciones' },
+      ...(p ? [{ id: 'presupuesto' as Solapa, label: 'Presupuesto', contador: pesosCorto(p.totales.total) }] : []),
+    ];
+  });
   protected readonly abrirEnPresupuesto = signal<string[] | null>(null);
 
   irAlPresupuesto(camino: string[]): void {
@@ -106,6 +145,8 @@ export class ProyectoDetalleComponent {
     descripcion: [''],
     fechaInicio: [''],
     fechaFin: [''],
+    tipoCliente: [''],
+    tipoObra: [''],
   });
 
   abrirEditar(): void {
@@ -119,6 +160,8 @@ export class ProyectoDetalleComponent {
       descripcion: p.descripcion ?? '',
       fechaInicio: p.fechaInicio ?? '',
       fechaFin: p.fechaFin ?? '',
+      tipoCliente: p.tipoCliente ?? '',
+      tipoObra: p.tipoObra ?? '',
     });
     this.errorForm.set(null);
     this.mostrarEditar.set(true);
@@ -129,7 +172,12 @@ export class ProyectoDetalleComponent {
       this.form.markAllAsTouched();
       return;
     }
-    const payload: ProyectoInput = this.form.getRawValue();
+    const { tipoCliente, tipoObra, ...resto } = this.form.getRawValue();
+    const payload: ProyectoInput = {
+      ...resto,
+      tipoCliente: (tipoCliente || null) as TipoCliente | null,
+      tipoObra: (tipoObra || null) as TipoObra | null,
+    };
     this.guardando.set(true);
     this.errorForm.set(null);
     this.proyectoService.actualizar(this.proyectoId(), payload).subscribe({

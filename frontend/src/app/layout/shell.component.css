@@ -139,10 +139,3 @@
   background: color-mix(in srgb, var(--color-primary) 10%, white);
   color: var(--color-primary-dark);
 }
-
-.menu__pronto {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-  font-style: italic;
-  color: var(--color-text-muted);
-}

@@ -10,6 +10,28 @@ export const ESTADO_PROYECTO_LABEL: Record<EstadoProyecto, string> = {
   FINALIZADO: 'Finalizado',
 };
 
+// Clasificación de la obra para filtrar el portafolio (para quién es y qué clase de obra).
+export type TipoCliente = 'EPE' | 'VIALIDAD' | 'PRIVADO' | 'INDUSTRIA';
+export type TipoObra = 'ZANJEO' | 'ILUMINACION' | 'REDES_ENERGIA' | 'INDUSTRIAL' | 'OTRA';
+
+export const TIPO_CLIENTE_LABEL: Record<TipoCliente, string> = {
+  EPE: 'EPE',
+  VIALIDAD: 'Vialidad',
+  PRIVADO: 'Privado',
+  INDUSTRIA: 'Industria',
+};
+
+export const TIPO_OBRA_LABEL: Record<TipoObra, string> = {
+  ZANJEO: 'Zanjeo',
+  ILUMINACION: 'Iluminación',
+  REDES_ENERGIA: 'Redes de energía',
+  INDUSTRIAL: 'Obra industrial',
+  OTRA: 'Otra',
+};
+
+export const TIPOS_CLIENTE = Object.keys(TIPO_CLIENTE_LABEL) as TipoCliente[];
+export const TIPOS_OBRA = Object.keys(TIPO_OBRA_LABEL) as TipoObra[];
+
 export interface Proyecto {
   id: number;
   nombre: string;
@@ -20,6 +42,8 @@ export interface Proyecto {
   cliente: string | null;
   refCliente: string | null;
   atencion: string | null;
+  tipoCliente: TipoCliente | null;
+  tipoObra: TipoObra | null;
   // Origen: Excel del que se importó el proyecto (null en los cargados antes de la importación).
   archivoNombre: string | null;
   fechaImportacion: string | null;
@@ -36,6 +60,8 @@ export interface ProyectoInput {
   fechaInicio?: string;
   fechaFin?: string;
   estado?: EstadoProyecto;
+  tipoCliente?: TipoCliente | null;
+  tipoObra?: TipoObra | null;
 }
 
 // GET /api/proyectos/{id}/progreso — seguimiento: foto del estado actual de las tareas.

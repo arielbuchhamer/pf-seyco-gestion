@@ -46,6 +46,9 @@
               }
             </td>
             <td class="num">
+              @if (!fila.subtarea) {
+                <button type="button" class="agregar-sub" *puede="'tareas:escribir'" (click)="abrirNuevaTarea(fila.tarea.id)" [attr.aria-label]="'Agregar subtarea a ' + fila.tarea.nombre" title="Agregar subtarea">+ subtarea</button>
+              }
               @if (fila.monto != null) {
                 <button type="button" class="monto" (click)="irAlPresupuesto(fila.tarea.id)" [attr.aria-label]="'Ver presupuesto de ' + fila.tarea.nombre">{{ pesos(fila.monto) }}</button>
               }
@@ -64,11 +67,20 @@
 @if (mostrarForm()) {
   <button type="button" class="backdrop" aria-label="Cerrar" (click)="mostrarForm.set(false)"></button>
   <div class="dialog" role="dialog" aria-modal="true">
-    <h2>Nueva tarea</h2>
+    <h2>{{ form.controls.padreId.value ? 'Nueva subtarea' : 'Nueva tarea' }}</h2>
     <form [formGroup]="form" (ngSubmit)="guardarTarea()" novalidate>
       @if (errorForm()) {
         <p class="error" role="alert">{{ errorForm() }}</p>
       }
+      <label class="field">
+        <span>¿Dónde va?</span>
+        <select formControlName="padreId">
+          <option value="">Es una tarea principal</option>
+          @for (t of principales(); track t.id) {
+            <option [value]="t.id">Subtarea de {{ t.numero ? t.numero + ' · ' : '' }}{{ t.nombre }}</option>
+          }
+        </select>
+      </label>
       <label class="field">
         <span>Nombre</span>
         <input type="text" formControlName="nombre" autocomplete="off" />

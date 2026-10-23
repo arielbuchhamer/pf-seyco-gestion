@@ -48,6 +48,16 @@ public class Proyecto {
 	@Column(length = 200)
 	private String atencion;
 
+	// Clasificación para filtrar el portafolio (EPE, Vialidad, privados, industrias y, dentro de
+	// eso, zanjeo, iluminación, redes, obra industrial). Opcionales: se cargan al importar o editar.
+	@Enumerated(EnumType.STRING)
+	@Column(name = "tipo_cliente", length = 20)
+	private TipoCliente tipoCliente;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "tipo_obra", length = 20)
+	private TipoObra tipoObra;
+
 	// Origen del proyecto: el Excel del que se importó (el archivo en sí está en ArchivoProyecto).
 	// Los dos los completa la importación; no se editan.
 	@Column(name = "archivo_nombre", length = 255)
@@ -132,6 +142,22 @@ public class Proyecto {
 
 	public void setAtencion(String atencion) {
 		this.atencion = atencion;
+	}
+
+	public TipoCliente getTipoCliente() {
+		return tipoCliente;
+	}
+
+	public void setTipoCliente(TipoCliente tipoCliente) {
+		this.tipoCliente = tipoCliente;
+	}
+
+	public TipoObra getTipoObra() {
+		return tipoObra;
+	}
+
+	public void setTipoObra(TipoObra tipoObra) {
+		this.tipoObra = tipoObra;
 	}
 
 	public String getArchivoNombre() {

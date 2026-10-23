@@ -77,9 +77,9 @@ export class DistribucionRubrosComponent {
     const total = t.total || 1;
     return [
       { etiqueta: 'Mano de obra', valor: t.manoObra, color: '#0f5fa6' },
-      { etiqueta: 'Materiales', valor: t.materiales, color: '#7fb5e0' },
+      { etiqueta: 'Materiales', valor: t.materiales, color: '#2a9d8f' },
       { etiqueta: 'Equipos y grúas', valor: t.equipos, color: '#c8790f' },
-      { etiqueta: 'Provisión de terceros', valor: t.terceros, color: '#5b6474' },
+      { etiqueta: 'Provisión de terceros', valor: t.terceros, color: '#8a5cc2' },
     ].map((r) => {
       const porcentaje = (r.valor / total) * 100;
       return { ...r, porcentaje, monto: pesos(r.valor), porcentajeTexto: `${numero(Math.round(porcentaje * 10) / 10)} %` };

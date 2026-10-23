@@ -68,13 +68,32 @@ public class TareaService extends BaseService<Tarea, Long> {
 
 	// El body sólo trae los ids de proyecto/responsable (no hay DTO): acá se resuelven
 	// contra la base para no persistir una referencia a una entidad no gestionada por JPA.
-	public Tarea crear(Tarea nueva, String emailCreador) {
+	// padreId: si viene, la tarea es una subtarea de esa (sólo dos niveles, como las del Excel).
+	// El número ("2.5", o "4" si es principal) y el orden se calculan: va al final de sus hermanas.
+	@Transactional
+	public Tarea crear(Tarea nueva, String emailCreador, Long padreId) {
 		if (nueva.getProyecto() == null || nueva.getProyecto().getId() == null) {
 			throw ServiceException.datosInvalidos("La tarea debe pertenecer a un proyecto.");
 		}
 		Proyecto proyecto = proyectoRepository.findById(nueva.getProyecto().getId())
 				.orElseThrow(() -> ServiceException.noEncontrado("El proyecto no existe."));
 		nueva.setProyecto(proyecto);
+
+		Tarea padre = null;
+		if (padreId != null) {
+			padre = tareaRepository.findById(padreId)
+					.filter(t -> t.getProyecto().getId().equals(proyecto.getId()))
+					.orElseThrow(() -> ServiceException.noEncontrado("La tarea principal no existe en este proyecto."));
+			if (padre.getPadre() != null) {
+				throw ServiceException.datosInvalidos("Una subtarea no puede tener subtareas.");
+			}
+		}
+		List<Tarea> hermanas = padre == null
+				? tareaRepository.findByProyectoId(proyecto.getId()).stream().filter(t -> t.getPadre() == null).toList()
+				: tareaRepository.findByPadre_Id(padre.getId());
+		nueva.setPadre(padre);
+		nueva.setOrden(hermanas.stream().map(Tarea::getOrden).filter(Objects::nonNull).max(Integer::compare).orElse(-1) + 1);
+		nueva.setNumero(siguienteNumero(padre, hermanas));
 
 		if (nueva.getResponsable() != null && nueva.getResponsable().getId() != null) {
 			Usuario responsable = usuarioRepository.findByIdAndFechaBajaIsNull(nueva.getResponsable().getId())
@@ -90,9 +109,27 @@ public class TareaService extends BaseService<Tarea, Long> {
 
 		Tarea creada = tareaRepository.save(nueva);
 		registrarHistorial(creada, null, creada.getEstado(), usuarioRepository.findByEmailIgnoreCaseAndFechaBajaIsNull(emailCreador).orElse(null));
+		// La tarea principal pasa a mostrar el consolidado de sus subtareas.
+		if (padre != null) {
+			consolidarFechas(padre);
+		}
 		// CUU_7: apenas el proyecto tiene una tarea, deja de estar PLANIFICADO.
 		proyectoService.recalcularEstado(proyecto.getId());
 		return creada;
+	}
+
+	// Siguiente número entre hermanas: el último número entero + 1 ("4", o "2.5" con el prefijo del padre).
+	private static String siguienteNumero(Tarea padre, List<Tarea> hermanas) {
+		int ultimo = hermanas.stream()
+				.map(Tarea::getNumero)
+				.filter(Objects::nonNull)
+				.map(n -> n.substring(n.lastIndexOf('.') + 1))
+				.filter(n -> n.matches("\\d+"))
+				.mapToInt(Integer::parseInt)
+				.max()
+				.orElse(0);
+		String propio = String.valueOf(Math.max(ultimo, hermanas.size()) + 1);
+		return padre == null ? propio : (padre.getNumero() == null ? "" : padre.getNumero() + ".") + propio;
 	}
 
 	// Alta de las tareas y subtareas que salen de la importación del Excel (ImportacionService):
@@ -165,8 +202,8 @@ public class TareaService extends BaseService<Tarea, Long> {
 	}
 
 	// Carga de fechas de la solapa Tareas: se guardan todas las filas editadas juntas ("Guardar
-	// cambios"). Cada elemento trae el id y las cuatro fechas (plan y reales). Antes de fijar la
-	// línea base sólo se edita el plan; después, sólo las reales. Las fechas se cargan en las
+	// cambios"). Cada elemento trae el id, las cuatro fechas (plan y reales) y el % de avance. Antes
+	// de fijar la línea base sólo se edita el plan; después, sólo las reales y el avance. Las fechas se cargan en las
 	// tareas sin subtareas; las de una tarea con subtareas se recalculan a partir de ellas.
 	@Transactional
 	public List<Tarea> guardarFechas(Long proyectoId, List<Tarea> cambios) {
@@ -194,10 +231,14 @@ public class TareaService extends BaseService<Tarea, Long> {
 					throw ServiceException.conflicto("La línea base del proyecto está fijada: las fechas plan no se pueden cambiar.");
 				}
 				validarFechasReales(tarea.getNombre(), cambio.getFechaInicioReal(), cambio.getFechaFinReal());
+				if (cambio.getAvance() != null && (cambio.getAvance() < 0 || cambio.getAvance() > 100)) {
+					throw ServiceException.datosInvalidos("«" + tarea.getNombre() + "»: el avance va de 0 a 100 %.");
+				}
 				tarea.setFechaInicioReal(cambio.getFechaInicioReal());
 				tarea.setFechaFinReal(cambio.getFechaFinReal());
+				tarea.setAvance(cambio.getAvance());
 			} else {
-				if (cambio.getFechaInicioReal() != null || cambio.getFechaFinReal() != null) {
+				if (cambio.getFechaInicioReal() != null || cambio.getFechaFinReal() != null || cambio.getAvance() != null) {
 					throw ServiceException.datosInvalidos("Las fechas reales se cargan después de fijar la línea base.");
 				}
 				validarFechasPlan(proyecto, tarea.getNombre(), cambio.getFechaInicio(), cambio.getFechaFin());
@@ -249,6 +290,10 @@ public class TareaService extends BaseService<Tarea, Long> {
 		boolean hayFinReal = subtareas.stream().anyMatch(s -> s.getFechaFinReal() != null);
 		padre.setFechaFinReal(hayFinReal
 				? maximo(subtareas, s -> s.getFechaFinReal() != null ? s.getFechaFinReal() : s.getFechaFin())
+				: null);
+		boolean hayAvance = subtareas.stream().anyMatch(s -> s.getAvance() != null);
+		padre.setAvance(hayAvance
+				? (int) Math.round(subtareas.stream().mapToInt(s -> s.getAvance() == null ? 0 : s.getAvance()).average().orElse(0))
 				: null);
 		tareaRepository.save(padre);
 	}

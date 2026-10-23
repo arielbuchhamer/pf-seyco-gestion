@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.seyco.gestion.entity.EstadoPresupuesto;
+import com.seyco.gestion.entity.TipoCliente;
 import com.seyco.gestion.entity.TipoItemPresupuesto;
+import com.seyco.gestion.entity.TipoObra;
 
 // Importación de proyectos desde el Excel de presupuesto de Seyco y consulta del presupuesto.
 public final class ImportacionDtos {
@@ -47,7 +49,7 @@ public final class ImportacionDtos {
 	// POST /api/proyectos/importacion (parte "datos" del multipart, junto con el "archivo").
 	// Los valores del formulario "Datos del proyecto": precargados desde el Excel y editables.
 	public record DatosImportacion(String nombre, String cliente, String refCliente, String atencion,
-			String descripcion, LocalDate fechaInicio, LocalDate fechaFin) {
+			String descripcion, LocalDate fechaInicio, LocalDate fechaFin, TipoCliente tipoCliente, TipoObra tipoObra) {
 	}
 
 	// GET /api/proyectos/{id}/presupuesto

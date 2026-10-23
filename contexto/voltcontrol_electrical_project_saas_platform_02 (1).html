@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100 font-sans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltControl PM - Enterprise Electrical Engineering SaaS</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js for High-Tech Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              900: '#134e4a',
+            },
+            slate: {
+              850: '#111827',
+              900: '#0f172a',
+              950: '#020617',
+            },
+            electric: {
+              amber: '#f59e0b',
+              blue: '#3b82f6',
+              cyan: '#06b6d4',
+              red: '#f43f5e',
+              green: '#10b981',
+              purple: '#a855f7'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card-hover {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+      box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .gantt-grid {
+      background-size: 80px 100%;
+      background-image: linear-gradient(to right, rgba(51, 65, 85, 0.2) 1px, transparent 1px);
+    }
+
+    .active-nav-tab {
+      background: rgba(6, 182, 212, 0.12) !important;
+      color: #22d3ee !important;
+      border-color: #22d3ee !important;
+    }
+
+    .active-sidebar-item {
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.02) 100%);
+      color: #38bdf8;
+      border-left: 3px solid #38bdf8;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-30">
+    <div class="flex items-center space-x-4">
+      
+      <!-- Sidebar Toggle Button -->
+      <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 transition-all">
+        <i class="fa-solid fa-bars text-sm"></i>
+      </button>
+
+      <!-- Logo -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('v5')">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-amber-400 p-[1px] flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-amber-400 text-base"></i>
+          </div>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
+            VoltControl <span class="text-[10px] uppercase tracking-wider font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Pro</span>
+          </h1>
+          <p class="text-[10px] text-slate-400 hidden sm:block">Enterprise Electrical Engineering PM</p>
+        </div>
+      </div>
+
+      <div class="h-6 w-[1px] bg-slate-800 hidden md:block"></div>
+
+      <!-- Top Navigation Tabs -->
+      <nav class="hidden lg:flex items-center space-x-1 text-xs font-semibold">
+        <button id="top-nav-v5" onclick="switchView('v5')" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-cyan-400"></i>
+          <span>0. Portafolio</span>
+        </button>
+        <button id="top-nav-v1" onclick="switchView('v1')" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all flex items-center gap-2">
+          <i class="fa-solid fa-file-excel text-emerald-400"></i>
+          <span>1. Importador</span>
+        </button>
+        <button id="top-nav-v2" onclick="switchView('v2')" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i>
+          <span>2. Carga Fechas</span>
+        </button>
+        <button id="top-nav-v3" onclick="switchView('v3')" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all flex items-center gap-2">
+          <i class="fa-solid fa-chart-gantt text-cyan-400"></i>
+          <span>3. Gantt</span>
+        </button>
+        <button id="top-nav-v4" onclick="switchView('v4')" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-purple-400"></i>
+          <span>4. KPIs & Recursos</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Active Project Context & User Control -->
+    <div class="flex items-center space-x-3">
+      <div class="hidden sm:flex items-center bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800 gap-2.5">
+        <i class="fa-solid fa-industry text-slate-500 text-xs"></i>
+        <div class="text-xs">
+          <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-mono">Proyecto Activo</span>
+          <select id="projectSelector" onchange="changeProject(this.value)" class="bg-transparent font-semibold text-slate-200 focus:outline-none cursor-pointer text-xs">
+            <option value="p1" class="bg-slate-900 text-slate-200">Subestación LAT 132kV "Los Álamos"</option>
+            <option value="p2" class="bg-slate-900 text-slate-200">Parque Fotovoltaico Sol de Mayo 50MW</option>
+            <option value="p3" class="bg-slate-900 text-slate-200">Alimentador MT 33kV Planta Industrial</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="triggerSyncNotification()" class="p-2 rounded-xl bg-slate-800/80 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 transition-colors border border-slate-700/60 relative">
+        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+        <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+      </button>
+
+      <div class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] flex items-center justify-center font-bold text-xs text-white shadow-md">
+          <span class="bg-slate-950 w-full h-full rounded-[11px] flex items-center justify-center">MB</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Body Layout: Collapsible Sidebar + Dynamic View Container -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <aside id="mainSidebar" class="w-64 bg-slate-900/95 border-r border-slate-800 flex flex-col shrink-0 transition-all duration-300 z-20">
+      
+      <!-- Quick Navigation Header -->
+      <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Módulos del Sistema</span>
+        <span class="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-mono border border-cyan-500/20">v2.4</span>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto font-medium text-xs">
+        
+        <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 pt-2 pb-1">Gestión Global</div>
+        
+        <button id="side-nav-v5" onclick="switchView('v5')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 transition-all text-left group">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div class="flex-1">
+            <span class="font-semibold block">Portafolio & Multi-Proyecto</span>
+            <span class="text-[10px] text-slate-500 block">Comparativa global & KPIs</span>
+          </div>
+        </button>
+
+        <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 pt-4 pb-1">Ciclo de Proyecto</div>
+
+        <button id="side-nav-v1" onclick="switchView('v1')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 transition-all text-left group">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
+            <i class="fa-solid fa-file-excel"></i>
+          </div>
+          <div class="flex-1">
+            <span class="font-semibold block">1. Importador Excel</span>
+            <span class="text-[10px] text-slate-500 block">Carga WBS & presupuesto</span>
+          </div>
+        </button>
+
+        <button id="side-nav-v2" onclick="switchView('v2')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 transition-all text-left group">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div class="flex-1">
+            <span class="font-semibold block">2. Carga de Fechas</span>
+            <span class="text-[10px] text-slate-500 block">Registro de avance real</span>
+          </div>
+        </button>
+
+        <button id="side-nav-v3" onclick="switchView('v3')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 transition-all text-left group">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+            <i class="fa-solid fa-chart-gantt"></i>
+          </div>
+          <div class="flex-1">
+            <span class="font-semibold block">3. Gantt & Desvíos</span>
+            <span class="text-[10px] text-slate-500 block">Línea base vs actual</span>
+          </div>
+        </button>
+
+        <button id="side-nav-v4" onclick="switchView('v4')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 transition-all text-left group">
+          <div class="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-slate-950 transition-colors">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div class="flex-1">
+            <span class="font-semibold block">4. KPIs & Recursos</span>
+            <span class="text-[10px] text-slate-500 block">Curva S, H/H & Costos</span>
+          </div>
+        </button>
+
+      </nav>
+
+      <!-- Sidebar Footer - Portfolio Health Card -->
+      <div class="p-3 m-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Salud Portafolio</span>
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        </div>
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">Proyectos Activos:</span>
+            <span class="font-bold text-white font-mono">3 Obras</span>
+          </div>
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">SPI Promedio:</span>
+            <span class="font-bold text-amber-400 font-mono">0.94 (Aceptable)</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Content Region -->
+    <main class="flex-1 overflow-hidden relative bg-slate-950">
+
+      <section id="view-v5" class="view-panel h-full overflow-y-auto p-6 space-y-6 hidden">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Header -->
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-cyan-400"></i> Portafolio de Proyectos & Comparativa Global
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Visión consolidada de todas las obras eléctricas en ejecución, desvíos cruzados y consumo de recursos.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="switchView('v1')" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-plus"></i> Nuevo Proyecto
+              </button>
+            </div>
+          </div>
+
+          <!-- Top Portfolio KPIs Bar -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="glass-card p-4 rounded-2xl glass-card-hover relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-400">Presupuesto Portafolio</p>
+                  <h3 class="text-2xl font-bold font-mono text-cyan-400 mt-1">$1.12M USD</h3>
+                </div>
+                <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
+                  <i class="fa-solid fa-wallet"></i>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-2 font-medium">3 Proyectos en Ejecución</p>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl glass-card-hover relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-400">Ejecutado Acumulado</p>
+                  <h3 class="text-2xl font-bold font-mono text-emerald-400 mt-1">$532k USD</h3>
+                </div>
+                <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <i class="fa-solid fa-receipt"></i>
+                </div>
+              </div>
+              <p class="text-[10px] text-emerald-400/90 mt-2 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-check"></i> 47.5% del presupuesto total
+              </p>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl glass-card-hover relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-400">SPI Promedio Global</p>
+                  <h3 class="text-2xl font-bold font-mono text-amber-400 mt-1">0.94</h3>
+                </div>
+                <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
+                  <i class="fa-solid fa-gauge-high"></i>
+                </div>
+              </div>
+              <p class="text-[10px] text-amber-400/90 mt-2 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-triangle-exclamation"></i> 1 Obra con desvío crítico
+              </p>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl glass-card-hover relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-400">Mano de Obra Activa</p>
+                  <h3 class="text-2xl font-bold font-mono text-purple-400 mt-1">1,870 H/H</h3>
+                </div>
+                <div class="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-2 font-medium">Cuadrillas en campo</p>
+            </div>
+
+          </div>
+
+          <!-- Multi-Project Table Overview -->
+          <div class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-table-list text-cyan-400"></i> Tabla Comparativa de Proyectos
+              </span>
+              <span class="text-slate-400 text-[11px]">Sincronizado hace 5 minutos</span>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-800 rounded-xl">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-900/90 text-[10px] text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+                  <tr>
+                    <th class="p-3">Proyecto</th>
+                    <th class="p-3">Cliente</th>
+                    <th class="p-3 text-right">Presupuesto</th>
+                    <th class="p-3 text-right">Ejecutado</th>
+                    <th class="p-3 text-center">Avance Plan</th>
+                    <th class="p-3 text-center">Avance Real</th>
+                    <th class="p-3 text-center">SPI / CPI</th>
+                    <th class="p-3 text-center">Desvío</th>
+                    <th class="p-3 text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="portfolioTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Cross-Project Comparison Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Chart 1: Progress comparison -->
+            <div class="glass-card p-5 rounded-2xl space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Avance Planificado vs. Real por Proyecto</h3>
+                <i class="fa-solid fa-chart-column text-cyan-400 text-sm"></i>
+              </div>
+              <div class="relative h-60">
+                <canvas id="portfolioAvanceChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Budget vs Spent comparison -->
+            <div class="glass-card p-5 rounded-2xl space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Presupuesto vs. Costo Real Incurrito</h3>
+                <i class="fa-solid fa-chart-bar text-emerald-400 text-sm"></i>
+              </div>
+              <div class="relative h-60">
+                <canvas id="portfolioBudgetChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <section id="view-v1" class="view-panel h-full overflow-y-auto p-6 space-y-6 hidden">
+        <div class="max-w-6xl mx-auto space-y-6">
+          
+          <!-- View Title -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-file-excel text-emerald-400"></i> Importación & Alta Automática de Proyectos
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Cargue la planilla Excel con la WBS, cómputo de materiales, horas hombre y presupuesto baseline.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="downloadSampleExcel()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-slate-300 rounded-xl border border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-download text-emerald-400"></i> Descargar Plantilla .XLSX
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- File Dropzone -->
+            <div class="lg:col-span-1 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
+              <div>
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">1. Subir Estructura (.xlsx / .csv)</h3>
+                
+                <!-- Drag Area -->
+                <div id="dropzone" onclick="simulateFileUpload()" class="border-2 border-dashed border-slate-700/80 hover:border-emerald-500/50 bg-slate-950/40 hover:bg-emerald-500/5 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center group">
+                  <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <p class="text-xs font-semibold text-slate-200">Haga clic o arrastre el archivo aquí</p>
+                  <p class="text-[11px] text-slate-500 mt-1">Admite WBS_Subestaciones_v3.xlsx (Max 15MB)</p>
+                </div>
+
+                <!-- Upload progress bar -->
+                <div id="uploadProgress" class="mt-4 hidden space-y-2">
+                  <div class="flex justify-between text-xs font-medium">
+                    <span id="fileNameDisplay" class="text-emerald-400 truncate">Presupuesto_LAT_LosAlamos.xlsx</span>
+                    <span id="progressPercent" class="text-slate-400">100%</span>
+                  </div>
+                  <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 100%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Project Metadata Fields -->
+              <div class="space-y-3 pt-3 border-t border-slate-800/80 text-xs">
+                <div>
+                  <label class="block text-slate-400 mb-1">Nombre del Proyecto</label>
+                  <input type="text" id="importProjectName" value="Subestación LAT 132kV 'Los Álamos'" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-slate-400 mb-1">Cliente</label>
+                    <input type="text" value="Transnoa S.A." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+                  </div>
+                  <div>
+                    <label class="block text-slate-400 mb-1">Monto Presupuestado</label>
+                    <input type="text" value="$385,000 USD" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Import CTA -->
+              <button onclick="confirmProjectCreation()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 text-xs flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid fa-database"></i> Crear Proyecto & Poblar Base de Datos
+              </button>
+            </div>
+
+            <!-- Preview Table extracted from Excel -->
+            <div class="lg:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">2. Vista Previa de Datos Extraídos</h3>
+                    <p class="text-[11px] text-slate-400">Verifique las tareas, costos y recursos reconocidos automáticamente por el motor.</p>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20 font-bold">
+                    <i class="fa-solid fa-check text-xs mr-1"></i> 8 Tareas Detectadas
+                  </span>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-800/80 rounded-xl">
+                  <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/90 text-[10px] text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+                      <tr>
+                        <th class="p-3">WBS</th>
+                        <th class="p-3">Tarea Eléctrica</th>
+                        <th class="p-3">Fase</th>
+                        <th class="p-3 text-right">Mano de Obra (H/H)</th>
+                        <th class="p-3 text-right">Costo Estimado</th>
+                      </tr>
+                    </thead>
+                    <tbody id="excelPreviewTable" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                      <!-- Populated dynamically via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-circle-info text-cyan-400"></i>
+                  <span>El sistema asignará automáticamente la Línea Base (Baseline) inicial con estas fechas.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section id="view-v2" class="view-panel h-full overflow-y-auto p-6 space-y-6 hidden">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Header & Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-amber-400"></i> Registro y Carga Operativa de Fechas
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Siga el avance real de campo. Al ajustar la <strong>Fecha Fin Estimada / Real</strong>, el sistema calcula desvíos automáticamente.</p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <button onclick="saveOperationalDates()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios & Sincronizar Gantt
+              </button>
+            </div>
+          </div>
+
+          <!-- Operational Grid Card -->
+          <div class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-amber-400"></i> Tareas del Proyecto
+              </span>
+              <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1.5 text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> En Fecha</span>
+                <span class="flex items-center gap-1.5 text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> En Riesgo</span>
+                <span class="flex items-center gap-1.5 text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Desviado</span>
+              </div>
+            </div>
+
+            <!-- Data Grid -->
+            <div class="overflow-x-auto border border-slate-800 rounded-xl">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-900/90 text-[10px] text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+                  <tr>
+                    <th class="p-3">WBS</th>
+                    <th class="p-3">Descripción de Tarea</th>
+                    <th class="p-3">Inicio Plan</th>
+                    <th class="p-3">Fin Plan (Baseline)</th>
+                    <th class="p-3">Inicio Real</th>
+                    <th class="p-3">Fin Estimado / Real</th>
+                    <th class="p-3 text-center">% Avance</th>
+                    <th class="p-3 text-center">Desvío</th>
+                    <th class="p-3 text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="operationalTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                  <!-- Dynamic editable rows rendered via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-4">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-amber-400"></i>
+                <span>Los desvíos mayores a <strong>+3 días</strong> activan alertas críticas automáticamente en el Dashboard Gantt.</span>
+              </div>
+              <div class="font-mono text-slate-300">
+                Desvío Neto Acumulado: <strong id="totalDriftDisplay" class="text-rose-400">+5 Días</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="view-v3" class="view-panel h-full flex flex-col overflow-hidden">
+        
+        <!-- Top KPIs Summary Bar -->
+        <div class="p-6 border-b border-slate-800/80 bg-slate-900/40 grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+          
+          <!-- SPI -->
+          <div class="p-4 rounded-2xl glass-card glass-card-hover relative">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-[11px] font-semibold text-slate-400">SPI (Índice Cronograma)</p>
+                <h3 id="kpi-spi" class="text-2xl font-bold font-mono text-amber-400 mt-1">0.92</h3>
+              </div>
+              <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
+                <i class="fa-solid fa-gauge-high"></i>
+              </div>
+            </div>
+            <p class="text-[10px] text-amber-400/90 mt-2 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-arrow-down-long"></i> 8% de retraso acumulado
+            </p>
+          </div>
+
+          <!-- CPI -->
+          <div class="p-4 rounded-2xl glass-card glass-card-hover relative">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-[11px] font-semibold text-slate-400">CPI (Índice de Costos)</p>
+                <h3 id="kpi-cpi" class="text-2xl font-bold font-mono text-emerald-400 mt-1">1.04</h3>
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+            </div>
+            <p class="text-[10px] text-emerald-400/90 mt-2 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-arrow-up-long"></i> 4% bajo el presupuesto
+            </p>
+          </div>
+
+          <!-- Desvío Total -->
+          <div class="p-4 rounded-2xl glass-card glass-card-hover relative">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-[11px] font-semibold text-slate-400">Desvío Hito Final</p>
+                <h3 id="kpi-delay" class="text-2xl font-bold font-mono text-rose-400 mt-1">+5 Días</h3>
+              </div>
+              <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-400">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+            </div>
+            <p class="text-[10px] text-rose-400/90 mt-2 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-triangle-exclamation"></i> Impacta Energización
+            </p>
+          </div>
+
+          <!-- Suministros -->
+          <div class="p-4 rounded-2xl glass-card glass-card-hover relative">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-[11px] font-semibold text-slate-400">Suministros Críticos</p>
+                <h3 id="kpi-materials" class="text-2xl font-bold font-mono text-cyan-400 mt-1">78%</h3>
+              </div>
+              <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
+                <i class="fa-solid fa-truck-ramp-box"></i>
+              </div>
+            </div>
+            <p class="text-[10px] text-cyan-400/90 mt-2 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> Trafo AT en sitio
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Gantt Toolbar -->
+        <div class="px-6 py-2.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0 text-xs">
+          <div class="flex items-center space-x-4">
+            <span class="font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-chart-gantt text-cyan-400"></i> Cronograma Unificado (Línea Base vs Real)
+            </span>
+            <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+              <button onclick="setGanttZoom('weeks')" id="zoomWeeksBtn" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 font-semibold">Semanas</button>
+              <button onclick="setGanttZoom('days')" id="zoomDaysBtn" class="px-2.5 py-1 rounded text-slate-400 hover:text-slate-200">Días</button>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleCriticalPathFilter()" id="criticalPathBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-semibold flex items-center gap-2 transition-colors">
+              <i class="fa-solid fa-route text-amber-400"></i> Ruta Crítica
+            </button>
+            <div class="h-4 w-[1px] bg-slate-800"></div>
+            <div class="flex items-center space-x-3 text-[11px] text-slate-400">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-slate-600 rounded"></span> Baseline</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-emerald-500 rounded"></span> Real</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-rose-500 rounded"></span> Desvío</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gantt Chart Container (Split Pane) -->
+        <div class="flex-1 flex overflow-hidden">
+          
+          <!-- Left Table Columns -->
+          <div class="w-[420px] bg-slate-900/50 border-r border-slate-800 flex flex-col shrink-0 overflow-y-auto">
+            <div class="grid grid-cols-12 bg-slate-900 border-b border-slate-800 px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider sticky top-0 z-10 font-mono">
+              <div class="col-span-2">WBS</div>
+              <div class="col-span-5">Tarea</div>
+              <div class="col-span-2 text-center">% Real</div>
+              <div class="col-span-3 text-right">Desvío</div>
+            </div>
+            <div id="ganttTaskTable" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+              <!-- Dynamic rows -->
+            </div>
+          </div>
+
+          <!-- Right Timeline Graphic Bars -->
+          <div class="flex-1 flex flex-col overflow-x-auto overflow-y-auto bg-slate-950/90 gantt-grid relative" id="ganttTimelineWrapper">
+            <div id="ganttTimeHeader" class="flex bg-slate-900 border-b border-slate-800 sticky top-0 z-10 h-8 shrink-0 text-[11px] font-mono text-slate-400">
+              <!-- Timeline days/weeks header rendered dynamically -->
+            </div>
+            <div id="ganttBarsContainer" class="relative flex-1 divide-y divide-slate-800/30">
+              <!-- Task bars rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Right Panel: Active Alerts -->
+          <div class="w-72 bg-slate-900/40 border-l border-slate-800 p-4 space-y-4 shrink-0 hidden lg:block overflow-y-auto">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+              <span>Detección de Desvíos</span>
+              <span id="alertCountBadge" class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px]">2 Activas</span>
+            </h3>
+
+            <div id="alertsContainer" class="space-y-3">
+              <!-- Alerts dynamically rendered -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="view-v4" class="view-panel h-full overflow-y-auto p-6 space-y-6 hidden">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Header -->
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-purple-400"></i> Business Intelligence & Analítica de Recursos
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Monitoreo de distribución de costos, curva S de avance y horas hombre por especialidad eléctrica.</p>
+            </div>
+            <div class="flex items-center space-x-3 text-xs">
+              <span class="text-slate-400">Período:</span>
+              <select class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200 focus:outline-none font-semibold">
+                <option>Todo el Proyecto (12 Semanas)</option>
+                <option>Último Mes</option>
+                <option>Semanas 1 - 6</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Top Charts Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Chart 1: Donut Cost Distribution -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Distribución de Costos</h3>
+                <i class="fa-solid fa-pie-chart text-purple-400 text-sm"></i>
+              </div>
+              <div class="relative h-56 flex items-center justify-center">
+                <canvas id="costDonutChart"></canvas>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span> Equipamiento MT/AT</div>
+                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Mano de Obra</div>
+                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Materiales</div>
+                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Servicios</div>
+              </div>
+            </div>
+
+            <!-- Chart 2: Labor Hours by Specialty -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Horas Hombre por Especialidad</h3>
+                <i class="fa-solid fa-user-gear text-amber-400 text-sm"></i>
+              </div>
+              <div class="relative h-56">
+                <canvas id="laborBarChart"></canvas>
+              </div>
+              <p class="text-[10px] text-slate-400 pt-3 border-t border-slate-800/80 text-center">
+                Consumo acumulado: <strong class="text-amber-400 font-mono">1,420 H/H Ejecutadas</strong>
+              </p>
+            </div>
+
+            <!-- Chart 3: Financial ROI / Rentabilidad -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Rentabilidad Estimada vs Real</h3>
+                <i class="fa-solid fa-chart-line text-emerald-400 text-sm"></i>
+              </div>
+              <div class="space-y-4 my-auto">
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Margen Previsto</span>
+                    <span class="text-emerald-400 font-mono font-bold">22.5%</span>
+                  </div>
+                  <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-full" style="width: 75%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Margen Real Proyectado</span>
+                    <span class="text-amber-400 font-mono font-bold">20.8%</span>
+                  </div>
+                  <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="bg-amber-400 h-full rounded-full" style="width: 68%"></div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-300">
+                  <i class="fa-solid fa-circle-exclamation text-amber-400 mr-1"></i> La desviación de +5 días en el TGBT disminuyó el margen proyectado en 1.7%.
+                </div>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 flex justify-between text-[11px] text-slate-400 font-mono">
+                <span>Presupuesto: $385k USD</span>
+                <span class="text-emerald-400">Ejecutado: $192k USD</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Full Width Chart: S-Curve Progress -->
+          <div class="glass-card p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Curva S - Avance Físico Planificado vs Real</h3>
+                <p class="text-[11px] text-slate-400">Comparativa acumulada del desempeño global del proyecto eléctrico.</p>
+              </div>
+              <span class="text-xs font-mono px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-xl">
+                Brecha Actual: -4.2%
+              </span>
+            </div>
+
+            <div class="relative h-64">
+              <canvas id="sCurveChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Global Floating Toast Notification -->
+  <div id="globalToast" class="fixed bottom-6 right-6 bg-slate-900 border border-cyan-500/40 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none z-50">
+    <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold text-sm">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <div>
+      <h4 id="toastTitle" class="text-xs font-bold text-white">Notificación</h4>
+      <p id="toastBody" class="text-[11px] text-slate-400">Operación ejecutada correctamente.</p>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================== */
+    /* GLOBAL STATE & DATA STRUCTURES             */
+    /* ========================================== */
+    let currentView = 'v5'; // Default start view: Portfolio
+    let filterCriticalOnly = false;
+    let sidebarOpen = true;
+    let chartInstances = {};
+
+    // Portfolio Database
+    const portfolioProjects = [
+      {
+        id: "p1",
+        name: "Subestación LAT 132kV 'Los Álamos'",
+        client: "Transnoa S.A.",
+        budget: 385000,
+        spent: 192000,
+        planProgress: 60,
+        realProgress: 52,
+        spi: 0.92,
+        cpi: 1.04,
+        delay: 5,
+        status: "Desviado",
+        statusClass: "bg-rose-500/10 text-rose-400 border-rose-500/30"
+      },
+      {
+        id: "p2",
+        name: "Parque Fotovoltaico Sol de Mayo 50MW",
+        client: "Energía Global S.A.",
+        budget: 520000,
+        spent: 260000,
+        planProgress: 50,
+        realProgress: 50,
+        spi: 1.00,
+        cpi: 1.00,
+        delay: 0,
+        status: "A Tiempo",
+        statusClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+      },
+      {
+        id: "p3",
+        name: "Alimentador MT 33kV Planta Industrial",
+        client: "Techint / Arcor",
+        budget: 215000,
+        spent: 80000,
+        planProgress: 40,
+        realProgress: 36,
+        spi: 0.95,
+        cpi: 1.08,
+        delay: 2,
+        status: "En Riesgo",
+        statusClass: "bg-amber-500/10 text-amber-400 border-amber-500/30"
+      }
+    ];
+
+    // Master Task Database for active project
+    let tasksData = [
+      { wbs: "1.1", name: "Estudios de Cargas & Malla Tierra", phase: "ING", planStart: "2026-10-01", planEnd: "2026-10-15", realStart: "2026-10-01", realEnd: "2026-10-15", progress: 100, critical: true, cost: 18000, laborHours: 120 },
+      { wbs: "1.2", name: "Diagramas Unifilares & Planos Disposición", phase: "ING", planStart: "2026-10-10", planEnd: "2026-10-25", realStart: "2026-10-12", realEnd: "2026-10-28", progress: 85, critical: true, cost: 24000, laborHours: 180 },
+      { wbs: "2.1", name: "Suministro Transformador Potencia 132kV", phase: "PRO", planStart: "2026-10-15", planEnd: "2026-11-20", realStart: "2026-10-15", realEnd: "2026-11-20", progress: 70, critical: true, cost: 145000, laborHours: 80 },
+      { wbs: "2.2", name: "Procura Tableros TGBT & Protecciones", phase: "PRO", planStart: "2026-10-20", planEnd: "2026-11-15", realStart: "2026-10-22", realEnd: "2026-11-22", progress: 40, critical: true, cost: 85000, laborHours: 110 },
+      { wbs: "3.1", name: "Montaje Estructuras y Barrajes 132kV", phase: "MON", planStart: "2026-11-01", planEnd: "2026-11-25", realStart: "2026-11-03", realEnd: "2026-11-28", progress: 25, critical: false, cost: 52000, laborHours: 420 },
+      { wbs: "3.2", name: "Tendido Cable Potencia XLPE 33kV", phase: "MON", planStart: "2026-11-15", planEnd: "2026-12-05", realStart: "", realEnd: "", progress: 0, critical: false, cost: 38000, laborHours: 310 },
+      { wbs: "4.1", name: "Pruebas Inyección Secundaria & Meggado", phase: "COM", planStart: "2026-12-01", planEnd: "2026-12-12", realStart: "", realEnd: "", progress: 0, critical: true, cost: 15000, laborHours: 140 },
+      { wbs: "4.2", name: "Puesta en Marcha & Energización Final", phase: "COM", planStart: "2026-12-10", planEnd: "2026-12-20", realStart: "", realEnd: "", progress: 0, critical: true, cost: 8000, laborHours: 60 }
+    ];
+
+    /* Initialize Application on Load */
+    window.onload = function() {
+      switchView('v5');
+      renderPortfolioTable();
+      renderExcelPreview();
+      renderOperationalTable();
+      renderGanttView();
+      initAnalyticsCharts();
+      initPortfolioCharts();
+    };
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('mainSidebar');
+      sidebarOpen = !sidebarOpen;
+      if(sidebarOpen) {
+        sidebar.classList.remove('-ml-64');
+      } else {
+        sidebar.classList.add('-ml-64');
+      }
+    }
+
+    function switchView(viewId) {
+      currentView = viewId;
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
+      document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+      // Sync Top Navbar Styling
+      ['v1', 'v2', 'v3', 'v4', 'v5'].forEach(id => {
+        const topBtn = document.getElementById(`top-nav-${id}`);
+        if(topBtn) {
+          if(id === viewId) topBtn.classList.add('active-nav-tab');
+          else topBtn.classList.remove('active-nav-tab');
+        }
+
+        const sideBtn = document.getElementById(`side-nav-${id}`);
+        if(sideBtn) {
+          if(id === viewId) sideBtn.classList.add('active-sidebar-item');
+          else sideBtn.classList.remove('active-sidebar-item');
+        }
+      });
+
+      // Refresh Chart canvases if opening analytics view
+      if(viewId === 'v4') {
+        setTimeout(() => {
+          if(chartInstances.costDonut) chartInstances.costDonut.resize();
+          if(chartInstances.laborBar) chartInstances.laborBar.resize();
+          if(chartInstances.sCurve) chartInstances.sCurve.resize();
+        }, 100);
+      } else if(viewId === 'v5') {
+        setTimeout(() => {
+          if(chartInstances.portfolioAvance) chartInstances.portfolioAvance.resize();
+          if(chartInstances.portfolioBudget) chartInstances.portfolioBudget.resize();
+        }, 100);
+      }
+    }
+
+    /* Helper: Calculate Delay in Days */
+    function calculateDelay(planEndStr, realEndStr) {
+      if(!planEndStr || !realEndStr) return 0;
+      const planEnd = new Date(planEndStr);
+      const realEnd = new Date(realEndStr);
+      const diffTime = realEnd - planEnd;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+    }
+
+    function renderPortfolioTable() {
+      const tbody = document.getElementById('portfolioTableBody');
+      tbody.innerHTML = '';
+
+      portfolioProjects.forEach((proj) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-amber-400 text-xs"></i> ${proj.name}
+          </td>
+          <td class="p-3 text-slate-400">${proj.client}</td>
+          <td class="p-3 text-right text-emerald-400">$${proj.budget.toLocaleString()} USD</td>
+          <td class="p-3 text-right text-cyan-400">$${proj.spent.toLocaleString()} USD</td>
+          <td class="p-3 text-center text-slate-300">${proj.planProgress}%</td>
+          <td class="p-3 text-center font-bold text-cyan-400">${proj.realProgress}%</td>
+          <td class="p-3 text-center">
+            <span class="font-bold ${proj.spi < 1 ? 'text-amber-400' : 'text-emerald-400'}">${proj.spi.toFixed(2)}</span> / 
+            <span class="font-bold text-emerald-400">${proj.cpi.toFixed(2)}</span>
+          </td>
+          <td class="p-3 text-center font-bold ${proj.delay > 0 ? 'text-rose-400' : 'text-emerald-400'}">
+            ${proj.delay > 0 ? '+' + proj.delay + 'd' : 'A tiempo'}
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="selectProjectFromPortfolio('${proj.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-[10px] flex items-center justify-center gap-1 mx-auto transition-colors">
+              <i class="fa-solid fa-folder-open text-cyan-400"></i> Abrir
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function selectProjectFromPortfolio(projId) {
+      document.getElementById('projectSelector').value = projId;
+      triggerToast('Proyecto Cargado', 'Información de la obra seleccionada sincronizada.');
+      switchView('v3');
+    }
+
+    function initPortfolioCharts() {
+      // 1. Portfolio Progress Comparison Chart
+      const ctxAvance = document.getElementById('portfolioAvanceChart').getContext('2d');
+      chartInstances.portfolioAvance = new Chart(ctxAvance, {
+        type: 'bar',
+        data: {
+          labels: ['LAT Los Álamos', 'Sol de Mayo', 'Alimentador MT'],
+          datasets: [
+            {
+              label: 'Avance Planificado (%)',
+              data: [60, 50, 40],
+              backgroundColor: 'rgba(51, 65, 85, 0.8)',
+              borderRadius: 6
+            },
+            {
+              label: 'Avance Real (%)',
+              data: [52, 50, 36],
+              backgroundColor: '#06b6d4',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#e2e8f0', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', callback: v => v + '%' }, grid: { color: 'rgba(51, 65, 85, 0.3)' } }
+          }
+        }
+      });
+
+      // 2. Portfolio Budget vs Spent Chart
+      const ctxBudget = document.getElementById('portfolioBudgetChart').getContext('2d');
+      chartInstances.portfolioBudget = new Chart(ctxBudget, {
+        type: 'bar',
+        data: {
+          labels: ['LAT Los Álamos', 'Sol de Mayo', 'Alimentador MT'],
+          datasets: [
+            {
+              label: 'Presupuesto Base ($)',
+              data: [385000, 520000, 215000],
+              backgroundColor: '#10b981',
+              borderRadius: 6
+            },
+            {
+              label: 'Costo Ejecutado ($)',
+              data: [192000, 260000, 80000],
+              backgroundColor: '#a855f7',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#e2e8f0', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', callback: v => '$' + (v/1000) + 'k' }, grid: { color: 'rgba(51, 65, 85, 0.3)' } }
+          }
+        }
+      });
+    }
+
+    function renderExcelPreview() {
+      const tbody = document.getElementById('excelPreviewTable');
+      tbody.innerHTML = '';
+      tasksData.forEach(task => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/30';
+        tr.innerHTML = `
+          <td class="p-3 text-cyan-400 font-bold">${task.wbs}</td>
+          <td class="p-3 font-medium text-slate-200">${task.name}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">${task.phase}</span></td>
+          <td class="p-3 text-right text-amber-400">${task.laborHours} H/H</td>
+          <td class="p-3 text-right text-emerald-400">$${task.cost.toLocaleString()} USD</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function simulateFileUpload() {
+      const progress = document.getElementById('uploadProgress');
+      progress.classList.remove('hidden');
+      triggerToast('Procesando Excel', 'Leyendo celdas de WBS, Presupuesto y Recursos...');
+      setTimeout(() => {
+        triggerToast('Importación Exitosa', 'Estructura reconvertida en datos relacionales.');
+      }, 1200);
+    }
+
+    function confirmProjectCreation() {
+      const projectName = document.getElementById('importProjectName').value;
+      triggerToast('Proyecto Creado', `"${projectName}" registrado. Base de datos actualizada.`);
+      setTimeout(() => switchView('v2'), 1000);
+    }
+
+    function downloadSampleExcel() {
+      triggerToast('Descarga Iniciada', 'Descargando plantilla WBS_Electrica_Standard.xlsx');
+    }
+
+    function renderOperationalTable() {
+      const tbody = document.getElementById('operationalTableBody');
+      tbody.innerHTML = '';
+      let totalDrift = 0;
+
+      tasksData.forEach((task, index) => {
+        const delay = calculateDelay(task.planEnd, task.realEnd || task.planEnd);
+        totalDrift += delay;
+
+        let statusClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        let statusLabel = 'En Fecha';
+
+        if (delay > 0 && delay <= 3) {
+          statusClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+          statusLabel = 'En Riesgo';
+        } else if (delay > 3) {
+          statusClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+          statusLabel = 'Desviado';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors';
+        tr.innerHTML = `
+          <td class="p-3 text-cyan-400 font-bold">${task.wbs}</td>
+          <td class="p-3 font-medium text-slate-200">${task.name}</td>
+          <td class="p-3 text-slate-400">${task.planStart}</td>
+          <td class="p-3 text-slate-400">${task.planEnd}</td>
+          <td class="p-3">
+            <input type="date" value="${task.realStart}" onchange="updateTaskDate(${index}, 'realStart', this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:border-amber-500">
+          </td>
+          <td class="p-3">
+            <input type="date" value="${task.realEnd || task.planEnd}" onchange="updateTaskDate(${index}, 'realEnd', this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:border-amber-500">
+          </td>
+          <td class="p-3 text-center">
+            <input type="number" min="0" max="100" value="${task.progress}" onchange="updateTaskProgress(${index}, this.value)" class="w-14 text-center bg-slate-950 border border-slate-800 rounded px-1 py-1 text-slate-200 font-bold"> %
+          </td>
+          <td class="p-3 text-center font-bold ${delay > 0 ? 'text-rose-400' : 'text-slate-500'}">
+            ${delay > 0 ? '+' + delay + 'd' : '0d'}
+          </td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] border font-semibold ${statusClass}">${statusLabel}</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('totalDriftDisplay').innerText = `+${totalDrift} Días`;
+    }
+
+    function updateTaskDate(index, field, value) {
+      tasksData[index][field] = value;
+      renderOperationalTable();
+    }
+
+    function updateTaskProgress(index, value) {
+      tasksData[index].progress = parseInt(value) || 0;
+      renderOperationalTable();
+    }
+
+    function saveOperationalDates() {
+      renderGanttView();
+      triggerToast('Sincronización Completa', 'Fechas guardadas. El Diagrama de Gantt y los KPIs fueron recalculados.');
+    }
+
+    function renderGanttView() {
+      const taskTable = document.getElementById('ganttTaskTable');
+      const timeHeader = document.getElementById('ganttTimeHeader');
+      const barsContainer = document.getElementById('ganttBarsContainer');
+      const alertsContainer = document.getElementById('alertsContainer');
+
+      taskTable.innerHTML = '';
+      timeHeader.innerHTML = '';
+      barsContainer.innerHTML = '';
+      alertsContainer.innerHTML = '';
+
+      // 1. Time Header Weeks (12 Weeks)
+      for(let i = 1; i <= 12; i++) {
+        const col = document.createElement('div');
+        col.className = 'w-20 shrink-0 border-r border-slate-800 flex items-center justify-center font-semibold';
+        col.innerText = `Sem ${i}`;
+        timeHeader.appendChild(col);
+      }
+
+      let activeAlerts = 0;
+
+      // 2. Task Rows
+      tasksData.forEach((task) => {
+        if(filterCriticalOnly && !task.critical) return;
+
+        const delay = calculateDelay(task.planEnd, task.realEnd || task.planEnd);
+
+        // Table row left
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 px-4 py-3 items-center hover:bg-slate-800/40 border-b border-slate-800/50';
+        row.innerHTML = `
+          <div class="col-span-2 text-cyan-400 font-bold flex items-center gap-1">
+            ${task.critical ? '<i class="fa-solid fa-fire text-amber-400 text-[9px]"></i>' : ''}
+            ${task.wbs}
+          </div>
+          <div class="col-span-5 font-medium text-slate-200 truncate pr-2" title="${task.name}">${task.name}</div>
+          <div class="col-span-2 text-center text-slate-300">${task.progress}%</div>
+          <div class="col-span-3 text-right font-bold ${delay > 0 ? 'text-rose-400' : 'text-slate-500'}">
+            ${delay > 0 ? '+' + delay + ' días' : 'A tiempo'}
+          </div>
+        `;
+        taskTable.appendChild(row);
+
+        // Bar Row Right
+        const barRow = document.createElement('div');
+        barRow.className = 'h-[42px] relative flex items-center w-full min-w-max';
+
+        const leftOffset = (parseInt(task.wbs.split('.')[1]) - 1) * 110 + 20;
+        const planWidth = 140;
+        const delayPx = (delay / 7) * 40;
+
+        let barBg = 'bg-emerald-500 border-emerald-400';
+        if(delay > 0 && delay <= 3) barBg = 'bg-amber-500 border-amber-400';
+        if(delay > 3) barBg = 'bg-rose-500 border-rose-400';
+
+        barRow.innerHTML = `
+          <!-- Baseline Gray -->
+          <div class="absolute h-2.5 bg-slate-700/80 rounded-full border border-slate-600" style="left: ${leftOffset}px; width: ${planWidth}px;" title="Línea Base Original"></div>
+          
+          <!-- Real Executed Bar -->
+          <div class="absolute h-3.5 ${barBg} rounded-md border flex items-center justify-between px-1.5 text-[9px] font-bold text-slate-950 shadow-md cursor-pointer hover:brightness-125 transition-all"
+               style="left: ${leftOffset}px; width: ${planWidth + delayPx}px; top: 18px;" onclick="triggerToast('Hito ${task.wbs}', '${task.name} - ${task.progress}% completado')">
+            <span class="truncate">${task.progress}%</span>
+            ${delay > 0 ? `<span class="bg-slate-950 text-rose-400 px-1 rounded font-mono">+${delay}d</span>` : ''}
+          </div>
+        `;
+        barsContainer.appendChild(barRow);
+
+        // 3. Populate Alerts Panel if delayed
+        if(delay > 0) {
+          activeAlerts++;
+          const alertCard = document.createElement('div');
+          alertCard.className = 'p-3 bg-rose-950/20 border border-rose-500/30 rounded-xl space-y-1 text-xs';
+          alertCard.innerHTML = `
+            <div class="flex items-center justify-between font-bold text-rose-400">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Tarea ${task.wbs}</span>
+              <span class="font-mono text-[10px]">+${delay} Días</span>
+            </div>
+            <p class="text-slate-300 text-[11px] leading-tight">${task.name}</p>
+          `;
+          alertsContainer.appendChild(alertCard);
+        }
+      });
+
+      document.getElementById('alertCountBadge').innerText = `${activeAlerts} Activas`;
+    }
+
+    function toggleCriticalPathFilter() {
+      filterCriticalOnly = !filterCriticalOnly;
+      const btn = document.getElementById('criticalPathBtn');
+      if(filterCriticalOnly) {
+        btn.classList.add('bg-amber-500/20', 'text-amber-400', 'border-amber-500/40');
+      } else {
+        btn.classList.remove('bg-amber-500/20', 'text-amber-400', 'border-amber-500/40');
+      }
+      renderGanttView();
+    }
+
+    function setGanttZoom(unit) {
+      const btnWeeks = document.getElementById('zoomWeeksBtn');
+      const btnDays = document.getElementById('zoomDaysBtn');
+      if(unit === 'weeks') {
+        btnWeeks.classList.add('bg-slate-800', 'text-slate-200');
+        btnDays.classList.remove('bg-slate-800', 'text-slate-200');
+      } else {
+        btnDays.classList.add('bg-slate-800', 'text-slate-200');
+        btnWeeks.classList.remove('bg-slate-800', 'text-slate-200');
+      }
+      triggerToast('Escala Ajustada', `Vista cambiada a ${unit === 'weeks' ? 'Semanas' : 'Días'}`);
+    }
+
+    function initAnalyticsCharts() {
+      // 1. Donut Chart
+      const ctxDonut = document.getElementById('costDonutChart').getContext('2d');
+      chartInstances.costDonut = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+          labels: ['Equipamiento MT/AT', 'Mano de Obra', 'Materiales', 'Servicios'],
+          datasets: [{
+            data: [45, 25, 20, 10],
+            backgroundColor: ['#06b6d4', '#f59e0b', '#a855f7', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '72%'
+        }
+      });
+
+      // 2. Bar Chart
+      const ctxBar = document.getElementById('laborBarChart').getContext('2d');
+      chartInstances.laborBar = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: ['Oficiales Eléctricos', 'Linieros LAT', 'Montajistas', 'Ensayistas'],
+          datasets: [{
+            label: 'Horas Hombre Consumidas',
+            data: [520, 410, 340, 150],
+            backgroundColor: '#f59e0b',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.3)' } }
+          }
+        }
+      });
+
+      // 3. S-Curve Line Chart
+      const ctxSCurve = document.getElementById('sCurveChart').getContext('2d');
+      chartInstances.sCurve = new Chart(ctxSCurve, {
+        type: 'line',
+        data: {
+          labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8', 'Sem 9', 'Sem 10'],
+          datasets: [
+            {
+              label: 'Planificado (Baseline)',
+              data: [5, 12, 22, 35, 50, 65, 78, 88, 95, 100],
+              borderColor: '#06b6d4',
+              borderDash: [5, 5],
+              tension: 0.4,
+              borderWidth: 2,
+              pointRadius: 0
+            },
+            {
+              label: 'Real Ejecutado',
+              data: [5, 11, 20, 31, 45, 58],
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#e2e8f0', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51, 65, 85, 0.2)' } },
+            y: { ticks: { color: '#94a3b8', callback: v => v + '%' }, grid: { color: 'rgba(51, 65, 85, 0.2)' } }
+          }
+        }
+      });
+    }
+
+    /* Global Utilities */
+    function changeProject(projId) {
+      triggerToast('Cambiando Proyecto', 'Cargando datos y cronogramas asociados...');
+    }
+
+    function triggerSyncNotification() {
+      triggerToast('Sincronización Realizada', 'Datos actualizados con el servidor central.');
+    }
+
+    function triggerToast(title, body) {
+      const toast = document.getElementById('globalToast');
+      document.getElementById('toastTitle').innerText = title;
+      document.getElementById('toastBody').innerText = body;
+
+      toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

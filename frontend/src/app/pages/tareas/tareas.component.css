@@ -2,29 +2,13 @@
   display: block;
 }
 
-/* La grilla de fechas tiene 8 columnas: no entra en los 60rem de .page (styles.css). */
+/* La grilla de fechas tiene 9 columnas: no entra en los 60rem de .page (styles.css). */
 .page.tareas-page {
   max-width: 90rem;
 }
 
 .selector {
-  min-width: min(28rem, 100%);
-}
-
-/* Selector, "Ver proyecto" y la barra de situación en un renglón; la barra contra el borde
-   derecho (es más alta: el resto se centra en vez de estirarse). */
-.filters {
-  align-items: center;
-}
-
-.situacion-proyecto {
-  margin-left: auto;
-}
-
-.ver-proyecto {
-  text-decoration: none;
-  font-weight: 600;
-  color: var(--color-primary);
+  max-width: min(28rem, 100%);
 }
 
 /* Colores por significado: azul = plan, verde = real, cobre = control (los mismos de los

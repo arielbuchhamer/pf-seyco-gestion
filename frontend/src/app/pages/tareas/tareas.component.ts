@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PuedeDirective } from '../../core/directives/puede.directive';
 import { Proyecto } from '../../core/models/proyecto.model';
@@ -11,9 +11,10 @@ import { diasEntre, fecha, fechaCorta, hoy } from '../../core/utils/formato';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 import { DIAS_EN_RIESGO, SITUACION_LABEL, Situacion, situacion } from './situacion';
+import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
 import { TareasSituacionComponent } from './tareas-situacion.component';
 
-type CampoFecha = Exclude<keyof FechasTarea, 'id'>;
+type CampoFecha = Exclude<keyof FechasTarea, 'id' | 'avance'>;
 
 interface FilaTarea {
   tarea: Tarea;
@@ -30,14 +31,17 @@ interface FilaTarea {
 // Pantalla Tareas: carga de fechas por proyecto (pantalla "Carga de Fechas" de la preview).
 // Se elige el proyecto arriba (?proyecto=<id>) y se ve el árbol tarea › subtarea. Mientras el
 // proyecto está en planificación se cargan las fechas plan; al fijar la línea base quedan
-// congeladas y se cargan el inicio real y el fin estimado/real, con el desvío contra la base.
+// congeladas y se cargan el inicio real, el fin estimado/real y el % de avance, con el desvío
+// contra la base (el avance alimenta la curva S y los indicadores del proyecto).
 // Las fechas se cargan en las subtareas; la tarea que las agrupa muestra el consolidado (igual
 // que el backend). Sin permiso tareas:editar, la grilla es de sólo lectura.
+// Con embebido = true es la solapa "Carga de fechas" de la vista del proyecto: sin ruta, título
+// ni selector de proyecto, y avisa con (cambio) cada vez que guarda, para que el proyecto recargue.
 // (El cambio de estado de las tareas queda para más adelante.)
 @Component({
   selector: 'app-tareas',
   standalone: true,
-  imports: [RouterLink, PuedeDirective, TareasSituacionComponent],
+  imports: [RouterLink, PuedeDirective, TareasSituacionComponent, CabeceraComponent],
   templateUrl: './tareas.component.html',
   styleUrl: './tareas.component.css',
 })
@@ -50,6 +54,8 @@ export class TareasComponent {
 
   // Query param ?proyecto=<id> (withComponentInputBinding).
   readonly proyecto = input<string>();
+  readonly embebido = input(false);
+  readonly cambio = output<void>();
 
   protected readonly fecha = fecha;
   protected readonly fechaCorta = fechaCorta;
@@ -60,7 +66,9 @@ export class TareasComponent {
   protected readonly puedeEditar = computed(() => this.auth.puede('tareas', 'editar'));
 
   // Los más recientes primero; sin ?proyecto= se abre el primero.
-  protected readonly proyectosResource = httpResource<Proyecto[]>(() => '/api/proyectos', { defaultValue: [] });
+  protected readonly proyectosResource = httpResource<Proyecto[]>(() => (this.embebido() ? undefined : '/api/proyectos'), {
+    defaultValue: [],
+  });
   protected readonly proyectos = computed(() => [...this.proyectosResource.value()].sort((a, b) => b.id - a.id));
   protected readonly proyectoId = computed(() => Number(this.proyecto()) || this.proyectos()[0]?.id || null);
 
@@ -159,8 +167,16 @@ export class TareasComponent {
   });
 
   editarFecha(tarea: Tarea, campo: CampoFecha, valor: string): void {
+    this.editar(tarea, { [campo]: valor || null });
+  }
+
+  editarAvance(tarea: Tarea, valor: string): void {
+    this.editar(tarea, { avance: valor === '' ? null : Math.max(0, Math.min(100, Math.round(Number(valor)))) });
+  }
+
+  private editar(tarea: Tarea, cambio: Partial<FechasTarea>): void {
     const original = fechasGuardadas(tarea);
-    const editada = { ...this.fechasDe(tarea), [campo]: valor || null };
+    const editada = { ...this.fechasDe(tarea), ...cambio };
     this.borradores.update((actual) => {
       const nuevo = new Map(actual);
       const igual = (Object.keys(original) as (keyof FechasTarea)[]).every((k) => original[k] === editada[k]);
@@ -184,6 +200,7 @@ export class TareasComponent {
         this.borradores.set(new Map());
         this.snackbar.mostrar('Fechas guardadas.');
         this.tareasResource.reload();
+        this.cambio.emit();
       },
       error: (err) => {
         this.guardandoFechas.set(false);
@@ -205,6 +222,7 @@ export class TareasComponent {
         this.confirmandoLineaBase.set(false);
         this.snackbar.mostrar('Línea base fijada. Ya se pueden cargar las fechas reales.');
         this.proyectoResource.reload();
+        this.cambio.emit();
       },
       error: (err) => {
         this.fijandoLineaBase.set(false);
@@ -239,6 +257,7 @@ function fechasGuardadas(tarea: Tarea): FechasTarea {
     fechaFin: tarea.fechaFin,
     fechaInicioReal: tarea.fechaInicioReal,
     fechaFinReal: tarea.fechaFinReal,
+    avance: tarea.avance,
   };
 }
 
@@ -253,7 +272,7 @@ function mayor(a: string | null, b: string | null): string | null {
 
 // Consolidado de una tarea a partir de sus subtareas (mismo criterio que TareaService del back):
 // plan e inicio real de punta a punta; fin estimado/real el de la última en terminar, con el plan
-// de las que no tienen estimación, o vacío si ninguna la tiene.
+// de las que no tienen estimación, o vacío si ninguna la tiene. Avance: el promedio de las subtareas.
 function consolidar(id: number, subtareas: FechasTarea[]): FechasTarea {
   const hayFinReal = subtareas.some((s) => s.fechaFinReal);
   return {
@@ -262,6 +281,9 @@ function consolidar(id: number, subtareas: FechasTarea[]): FechasTarea {
     fechaFin: subtareas.reduce<string | null>((acc, s) => mayor(acc, s.fechaFin), null),
     fechaInicioReal: subtareas.reduce<string | null>((acc, s) => menor(acc, s.fechaInicioReal), null),
     fechaFinReal: hayFinReal ? subtareas.reduce<string | null>((acc, s) => mayor(acc, s.fechaFinReal ?? s.fechaFin), null) : null,
+    avance: subtareas.some((s) => s.avance != null)
+      ? Math.round(subtareas.reduce((acc, s) => acc + (s.avance ?? 0), 0) / subtareas.length)
+      : null,
   };
 }
 

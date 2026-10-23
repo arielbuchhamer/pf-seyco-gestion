@@ -20,7 +20,8 @@ interface FilaTarea {
 }
 
 // Solapa Tareas: el árbol tarea › subtarea. El avance de una tarea es cuántas de sus subtareas están
-// completadas. (El estado de las tareas se cambia desde la pantalla Tareas.)
+// completadas. (El estado de las tareas se cambia desde la pantalla Tareas.) Las tareas vienen del
+// Excel, pero se puede agregar una tarea principal o una subtarea de una existente.
 @Component({
   selector: 'app-proyecto-tareas',
   standalone: true,
@@ -123,7 +124,11 @@ export class ProyectoTareasComponent {
   protected readonly mostrarForm = signal(false);
   protected readonly guardando = signal(false);
   protected readonly errorForm = signal<string | null>(null);
+  // Tareas principales: opciones de "¿Dónde va?" (subtarea de cuál).
+  protected readonly principales = computed(() => this.tareas().filter((t) => t.padreId == null).sort(ordenar));
+
   protected readonly form = this.fb.nonNullable.group({
+    padreId: [''],
     nombre: ['', [Validators.required]],
     descripcion: [''],
     fechaInicio: [''],
@@ -132,8 +137,8 @@ export class ProyectoTareasComponent {
     responsableId: [''],
   });
 
-  abrirNuevaTarea(): void {
-    this.form.reset({ nombre: '', descripcion: '', fechaInicio: '', fechaFin: '', prioridad: 'MEDIA', responsableId: '' });
+  abrirNuevaTarea(padreId: number | null = null): void {
+    this.form.reset({ padreId: padreId ? String(padreId) : '', nombre: '', descripcion: '', fechaInicio: '', fechaFin: '', prioridad: 'MEDIA', responsableId: '' });
     this.errorForm.set(null);
     this.mostrarForm.set(true);
   }
@@ -143,7 +148,7 @@ export class ProyectoTareasComponent {
       this.form.markAllAsTouched();
       return;
     }
-    const { nombre, descripcion, fechaInicio, fechaFin, prioridad, responsableId } = this.form.getRawValue();
+    const { padreId, nombre, descripcion, fechaInicio, fechaFin, prioridad, responsableId } = this.form.getRawValue();
     const payload: TareaInput = {
       nombre,
       descripcion: descripcion || undefined,
@@ -155,7 +160,7 @@ export class ProyectoTareasComponent {
     };
     this.guardando.set(true);
     this.errorForm.set(null);
-    this.tareaService.crear(payload).subscribe({
+    this.tareaService.crear(payload, padreId ? Number(padreId) : null).subscribe({
       next: () => {
         this.guardando.set(false);
         this.mostrarForm.set(false);

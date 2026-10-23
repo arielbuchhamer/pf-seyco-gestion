@@ -12,6 +12,8 @@ export interface Tarea {
   // Seguimiento: inicio real y "fin estimado / real" (se cargan después de fijar la línea base).
   fechaInicioReal: string | null;
   fechaFinReal: string | null;
+  // % de avance físico (0-100), cargado con las fechas reales. En una tarea con subtareas, el promedio.
+  avance: number | null;
   estado: EstadoTarea;
   prioridad: Prioridad | null;
   proyecto: { id: number; nombre: string };
@@ -42,6 +44,7 @@ export interface FechasTarea {
   fechaFin: string | null;
   fechaInicioReal: string | null;
   fechaFinReal: string | null;
+  avance: number | null;
 }
 
 export const ESTADOS_TAREA: EstadoTarea[] = ['PENDIENTE', 'EN_PROGRESO', 'COMPLETADA'];

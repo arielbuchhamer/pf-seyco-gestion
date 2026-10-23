@@ -1,0 +1,47 @@
+/* Ancho completo, márgenes chicos: es un tablero y tiene que entrar en pantalla. */
+.page.portafolio-page {
+  max-width: none;
+  padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 2rem;
+}
+
+.vacio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.unico {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.unico .badge,
+.nombre-unico {
+  margin-right: 0.4rem;
+}
+
+.abrir {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.tabla-scroll {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.desplazable a {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+}

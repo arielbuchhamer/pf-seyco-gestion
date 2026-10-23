@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Informe: seguimiento de obra</title>
+<style>
+  :root { --tinta: #12131a; --texto: #1c1f2a; --suave: #6b7280; --borde: #e2e5ec; --fondo: #f4f6fb; --azul: #0f5fa6; --verde: #1f9d55; --cobre: #c8790f; --rojo: #d6483f; }
+  body { margin: 0; font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; color: var(--texto); background: var(--fondo); line-height: 1.55; }
+  main { max-width: 60rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  h1 { color: var(--tinta); margin: 0 0 .25rem; font-size: 1.7rem; }
+  h2 { color: var(--azul); margin: 2.2rem 0 .6rem; font-size: 1.15rem; border-bottom: 2px solid var(--borde); padding-bottom: .3rem; }
+  h3 { margin: 1.3rem 0 .4rem; font-size: 1rem; color: var(--tinta); }
+  .sub { color: var(--suave); margin: 0 0 1.5rem; }
+  .card { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 1rem 1.25rem; margin: .75rem 0; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--borde); border-radius: 10px; overflow: hidden; font-size: .9rem; }
+  th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  th { background: #eef3fa; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); }
+  code { background: #eef0f4; padding: 1px 5px; border-radius: 4px; font-size: .85em; }
+  .ok { color: var(--verde); font-weight: 600; }
+  .parcial { color: var(--cobre); font-weight: 600; }
+  .no { color: var(--rojo); font-weight: 600; }
+  ul { padding-left: 1.2rem; }
+  li { margin: .2rem 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .75rem; }
+  .grid .card { margin: 0; }
+  .etq { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); font-weight: 600; }
+  .flujo { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; font-size: .9rem; }
+  .flujo span { background: #fff; border: 1px solid var(--borde); border-radius: 999px; padding: .2rem .7rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Seguimiento de obra: lo que se agregó</h1>
+  <p class="sub">Rama <code>b-luz</code> · 22/10/2026 · Basado en el prototipo VoltControl (<code>contexto/voltcontrol_…html</code>) y en los requerimientos del cliente.</p>
+
+  <div class="card">
+    <strong>Resumen.</strong> La plataforma ya importaba el Excel de presupuesto (crea proyecto, tareas, subtareas y presupuesto por rubro) y tenía la carga de fechas plan/real con línea base en la pantalla Tareas. Sobre eso se agregó lo que muestra el prototipo y pide el cliente: <strong>portafolio con filtros</strong>, <strong>Gantt</strong>, <strong>indicadores proyectado vs. real</strong> (plazo, SPI/CPI, torta de gasto por rubro, curva S), <strong>costos reales</strong>, <strong>certificaciones y cobranza</strong> con alertas de saldos olvidados, y un <strong>reporte de obra</strong> imprimible.
+  </div>
+
+  <div class="flujo" aria-label="Ciclo del proyecto">
+    <span>1. Importar Excel</span>→<span>2. Carga de fechas + línea base</span>→<span>3. Avance real y % avance</span>→<span>4. Gantt e Indicadores</span>→<span>5. Costos y certificaciones</span>→<span>6. Portafolio / Reporte</span>
+  </div>
+
+  <h2>Cobertura de los requerimientos del cliente</h2>
+  <table>
+    <thead><tr><th>Requerimiento</th><th>Dónde quedó</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td>Seguimiento y rendimiento de proyectos</td><td>Portafolio (tabla comparativa) y solapa Indicadores de cada proyecto</td><td class="ok">Hecho</td></tr>
+      <tr><td>Ej. 1: cotizó 30 días y lo hizo en 20 → positivo</td><td>Indicadores › Plazo: «N días antes» y alerta informativa «Adelanto de N días – rendimiento positivo»</td><td class="ok">Hecho</td></tr>
+      <tr><td>Ej. 2: cotizó $30 M de grúa y van $40 M → negativo</td><td>Costos reales por rubro vs. cotizado; alerta crítica «Equipos y grúas excedido (+33 %)»</td><td class="ok">Hecho</td></tr>
+      <tr><td>Gráfico de torta: % de materiales, equipos, etc.</td><td>Indicadores › Distribución del gasto real / cotizado (alterna entre los dos)</td><td class="ok">Hecho</td></tr>
+      <tr><td>Análisis proyectado vs. real</td><td>Indicadores: avance plan vs. real, SPI, CPI, costo proyectado al final, cotizado vs. gastado por rubro, curva S</td><td class="ok">Hecho</td></tr>
+      <tr><td>Filtrar por EPE, Vialidad, privados, industrias</td><td>Campo «Tipo de cliente» en el proyecto (al importar o editar) + filtro del Portafolio</td><td class="ok">Hecho</td></tr>
+      <tr><td>… y dentro: zanjeo, iluminación, redes EPE, obras industriales</td><td>Campo «Tipo de obra» + filtro del Portafolio</td><td class="ok">Hecho</td></tr>
+      <tr><td>Filtros por montos de obra</td><td>Portafolio: «Monto desde / hasta» (en millones)</td><td class="ok">Hecho</td></tr>
+      <tr><td>Filtros por año</td><td>Portafolio: año de inicio de la obra</td><td class="ok">Hecho</td></tr>
+      <tr><td>Certificaciones (anticipo 30 % + avances cada 2-3 meses)</td><td>Solapa Certificaciones: anticipo / avance / final, por % o monto, registrar cobro</td><td class="ok">Hecho</td></tr>
+      <tr><td>Que no se pierda el 15 % final sin cobrar</td><td>Alerta crítica «Saldo sin certificar» en obras terminadas, «Sin certificar hace N días», «Avance sin certificar», «Certificaciones sin cobrar &gt; 60 días»; KPI «Saldo sin certificar» del portafolio</td><td class="ok">Hecho</td></tr>
+      <tr><td>Ver cuánta plata queda por cobrar</td><td>Portafolio: «Queda por cobrar», «Cobrado», «Pendiente de cobro»; columna «Por cobrar» por obra</td><td class="ok">Hecho</td></tr>
+      <tr><td>Generar reporte del estado de la obra</td><td>Botón «Reporte de obra» en el proyecto → página imprimible / Guardar como PDF</td><td class="ok">Hecho</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Pantallas nuevas o modificadas</h2>
+  <div class="grid">
+    <div class="card"><div class="etq">Menú › Gestión global</div><h3>Portafolio <code>/portafolio</code></h3>
+      Reemplaza el «Próximamente». Filtros (cliente, tipo de obra, año, estado, montos), 6 KPIs, tabla comparativa con SPI/CPI, desvío, % certificado y por cobrar, gráficos de avance plan vs. real y presupuesto vs. costo, torta de cartera por tipo de cliente y lista de alertas de todas las obras.</div>
+    <div class="card"><div class="etq">Proyecto › solapa</div><h3>Gantt</h3>
+      Barra de línea base y barra real por tarea (verde / ámbar / rojo según el desvío, relleno según % avance), línea de «hoy», filtro «Sólo desviadas» y panel «Detección de desvíos».</div>
+    <div class="card"><div class="etq">Proyecto › solapa</div><h3>Indicadores</h3>
+      KPIs de plazo, avance, costo, costo proyectado y por cobrar; torta de gasto; barras cotizado vs. gastado por rubro; curva S con tooltip; alertas y tabla de tareas atrasadas.</div>
+    <div class="card"><div class="etq">Proyecto › solapa</div><h3>Costos reales</h3>
+      Alta/edición/baja de gastos por rubro (fecha, descripción, comprobante, monto). Tarjetas con lo gastado contra lo cotizado de cada rubro.</div>
+    <div class="card"><div class="etq">Proyecto › solapa</div><h3>Certificaciones</h3>
+      Contrato, certificado, cobrado, pendiente y saldo por certificar; barra de estado de cobro; tabla con «Registrar cobro». La primera se propone como anticipo del 30 %.</div>
+    <div class="card"><div class="etq">Proyecto › botón</div><h3>Reporte de obra <code>/proyectos/:id/reporte</code></h3>
+      Datos, plazo, resumen de indicadores, rubros, cobranza y detalle de certificaciones, curva S, atrasos y alertas. Al imprimir se oculta la barra superior.</div>
+    <div class="card"><div class="etq">Proyecto › solapa (reutiliza la pantalla Tareas)</div><h3>Carga de fechas</h3>
+      La grilla de la pantalla Tareas (la «Carga de Fechas» del prototipo) se muestra también como solapa dentro del proyecto, sin salir de él. Se le agregó la columna <strong>% avance</strong> (después de fijar la línea base). Al guardar, el Gantt y los indicadores se recalculan.</div>
+    <div class="card"><div class="etq">Existentes, ampliadas</div><h3>Importar / Editar proyecto</h3>
+      Selectores «Tipo de cliente» y «Tipo de obra». En la cabecera del proyecto se muestra la clasificación.</div>
+  </div>
+
+  <h2>Rediseño de las pantallas (segunda iteración)</h2>
+  <ul>
+    <li><strong>Indicadores del proyecto</strong> (como las vistas «Gantt &amp; desvíos» y «KPIs &amp; recursos» del prototipo): seis tarjetas con ícono y semáforo (SPI, CPI, desvío del hito final, avance físico real vs. plan, costo real vs. presupuesto, queda por cobrar). Debajo, la distribución de costos (real / cotizado), cotizado vs. gastado por rubro, rentabilidad (margen sobre lo ejecutado y proyectado) con la cobranza, la curva S y la detección de desvíos. Entra en una pantalla de escritorio sin scroll.</li>
+    <li><strong>Portafolio</strong>: con <em>un</em> proyecto en el filtro muestra el tablero de ese proyecto; con <em>dos o más</em> compara: KPIs globales (cartera, costo, SPI promedio, obras críticas, por cobrar, sin certificar), tabla comparativa con barras de avance y cobranza y una «salud» por obra, alertas, avance plan vs. real, presupuesto vs. costo y cartera por tipo de cliente. Los filtros quedaron en una barra compacta arriba a la derecha.</li>
+    <li><strong>Vista del proyecto</strong>: encabezado en tarjeta (nombre, estado, línea base, cliente, clasificación, plazo y Excel en dos renglones) y solapas tipo píldora con íconos. La <strong>Carga de fechas</strong> es una solapa más (no sale del proyecto).</li>
+    <li>Gantt con escala que se adapta al largo de la obra y barras reales en tono claro con el tramo de avance en color pleno.</li>
+    <li>Si el backend no tiene el cálculo de indicadores (por ejemplo, no se reinició), la solapa lo avisa en vez de quedar vacía.</li>
+  </ul>
+
+  <h2>Tercera iteración: más simple y una cabecera común</h2>
+  <ul>
+    <li><strong>Indicadores en lenguaje simple</strong>: una frase que resume cómo va la obra («La obra va atrasada 7 días y ya se gastó más de lo previsto en equipos y grúas. Falta cobrar $ 11,1 M.»), cuatro preguntas (¿Va a tiempo? ¿Cuánto se avanzó? ¿Cuánto se gastó? ¿Cuánto falta cobrar?), «¿En qué se gastó?» (torta), «Gastado vs. previsto» por rubro y los avisos. Se sacaron la curva S, SPI/CPI, márgenes y los gráficos de barras de la vista principal (la curva S sigue en el reporte de obra).</li>
+    <li><strong>Portafolio</strong>: cuatro tarjetas (obras, presupuesto total, gastado, falta cobrar), un listado de obras con avance, «¿va a tiempo?», gastado, falta cobrar y «cómo viene», y los avisos. Con un solo proyecto muestra su tablero.</li>
+    <li><strong>Cabecera común</strong> en Proyectos, Portafolio, Tareas, Usuarios, Roles y Mi perfil: título y subtítulo a la izquierda; a la derecha el filtro de fechas (calendario con atajos «Este mes», «Últimos 3 meses», «Este año»…), el botón «Filtros» (desplegable con buscador y checks) y las acciones.</li>
+    <li><strong>Proyectos</strong>: la importación quedó chica a la izquierda y el listado ocupa el resto, ordenable (selector «Ordenar» o clic en las columnas: más recientes, inicio, fin, nombre, presupuesto, avance) y filtrable. Al elegir el Excel se lee solo y se muestran los datos detectados (proyecto, cliente, cotización y plazo, presupuesto, tareas, si el Excel tiene errores) con el botón «Revisar y crear». El proyecto se crea sólo desde la revisión: se quitó «Crear proyecto» directo.</li>
+    <li>Backend: el portafolio acepta varios valores por filtro (<code>?tipoCliente=EPE&amp;tipoCliente=VIALIDAD</code>) y un rango <code>desde</code>/<code>hasta</code>.</li>
+  </ul>
+
+  <h2>Cuarta iteración: estilo del prototipo, en claro</h2>
+  <ul>
+    <li><strong>Encabezado del proyecto mínimo</strong>: nombre, estado y fechas (con «plazo vencido» si corresponde). Cliente, atención y referencia quedan en «Editar»; el Excel original se descarga con un ícono.</li>
+    <li><strong>Indicadores</strong>: frase de resumen y las cuatro preguntas; después «¿En qué se gastó?» (torta grande) y «Gastado vs. previsto» lado a lado; abajo la <strong>curva S</strong> (con el área del avance real rellena) y el panel de <strong>avisos</strong> rediseñado (contadores, tarjetas por nivel con ícono, tareas atrasadas con su avance y los días de atraso, o «Todo en orden»).</li>
+    <li><strong>Portafolio con 2 o más obras</strong>: además de las tarjetas, el listado y los avisos, dos gráficos de columnas grandes como los del prototipo: avance planificado vs. real y presupuesto vs. gastado, una obra al lado de la otra.</li>
+    <li><strong>Subtareas manuales</strong>: «Nueva tarea» pregunta «¿Dónde va?» (tarea principal o subtarea de una existente) y cada tarea principal tiene «+ subtarea». El número se calcula solo (3.3, o 4 si es principal) y la tarea principal pasa a mostrar el consolidado. Backend: <code>POST /api/tareas?padreId=</code>.</li>
+    <li><strong>Segundo proyecto de ejemplo</strong> (datos inventados): «Iluminación Av. Circunvalación – Tramo 3», Vialidad · Iluminación, $ 50,5 M, adelantado 3 días y con gastos dentro de lo previsto, para comparar con la obra atrasada en el portafolio.</li>
+  </ul>
+
+  <h2>Cómo se calculan los indicadores</h2>
+  <ul>
+    <li><strong>Peso de cada tarea</strong>: su monto en el presupuesto (una subtarea de $10 M pesa diez veces más que una de $1 M). Sin presupuesto, todas pesan igual.</li>
+    <li><strong>Avance plan</strong>: qué parte del plazo de la línea base de cada tarea ya pasó a hoy. <strong>Avance real</strong>: el % cargado (o 100 % si la tarea está Completada y no tiene %).</li>
+    <li><strong>SPI</strong> = avance real / avance plan. <strong>CPI</strong> = valor ganado (avance real × presupuesto) / costo real. Menos de 1 es peor de lo previsto; 0,9–1 se muestra «en riesgo».</li>
+    <li><strong>Plazo</strong>: fin estimado = el último fin estimado/real de las tareas (una tarea vencida sin estimación cuenta como «termina hoy»). Desvío &gt; 0 = atraso; &lt; 0 = adelanto (rendimiento positivo). Con la línea base fijada se compara contra el plan de las tareas.</li>
+    <li><strong>Cobranza</strong>: el contrato es el total del presupuesto importado (sin IVA). Saldo por certificar = contrato − certificado; por cobrar = contrato − cobrado.</li>
+  </ul>
+
+  <h2>Cambios técnicos</h2>
+  <h3>Backend (Spring Boot)</h3>
+  <table>
+    <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td><code>entity/TipoCliente</code>, <code>TipoObra</code></td><td>Clasificación del proyecto (nuevas columnas <code>proyecto.tipo_cliente</code>, <code>tipo_obra</code>)</td></tr>
+      <tr><td><code>entity/Tarea</code></td><td>Columna <code>avance</code>; <code>TareaService.guardarFechas</code> la valida (0-100, sólo con línea base) y la consolida en la tarea padre</td></tr>
+      <tr><td><code>entity/CostoReal</code>, <code>Rubro</code>, <code>CostoRealService</code></td><td>Gastos reales por rubro</td></tr>
+      <tr><td><code>entity/Certificacion</code>, <code>TipoCertificacion</code>, <code>EstadoCertificacion</code>, <code>CertificacionService</code></td><td>Certificaciones; monto calculado desde el % del contrato; resumen de cobranza</td></tr>
+      <tr><td><code>service/IndicadoresService</code></td><td>Análisis proyectado vs. real, curva S, desvíos y alertas</td></tr>
+      <tr><td><code>service/PortafolioService</code></td><td>Todos los proyectos con indicadores, filtros y totales</td></tr>
+      <tr><td><code>controller/SeguimientoController</code></td><td><code>GET /api/portafolio</code>, <code>GET /api/proyectos/{id}/indicadores</code>, CRUD <code>/api/proyectos/{id}/costos</code> y <code>/certificaciones</code>, <code>PATCH …/certificaciones/{id}/cobro</code></td></tr>
+      <tr><td><code>ProyectoService.eliminar</code></td><td>Borra también costos y certificaciones del proyecto</td></tr>
+      <tr><td><code>database/3-seguimientoDeObra.sql</code></td><td>DDL de referencia para pgAdmin (el backend lo crea solo con <code>ddl-auto=update</code>)</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Permisos</strong>: se reutiliza el módulo <code>proyectos</code> (ver = <code>leer</code>; cargar costos y certificaciones = <code>editar</code>) y el panel <code>paneles-proyectos</code> para el Portafolio, así no hace falta tocar la base de roles. El rol <em>visor</em> ve todo pero no carga nada.</p>
+
+  <h3>Frontend (Angular)</h3>
+  <ul>
+    <li>Páginas: <code>pages/portafolio/</code>, <code>pages/reporte/</code>; solapas <code>proyecto-gantt</code>, <code>proyecto-indicadores</code>, <code>proyecto-costos</code>, <code>proyecto-certificaciones</code>.</li>
+    <li>Gráficos propios en SVG/CSS, sin librerías nuevas: <code>shared/graficos/</code> (torta, barras agrupadas, curva S) y <code>shared/alertas/</code>.</li>
+    <li>Modelos y servicio: <code>seguimiento.model.ts</code>, <code>seguimiento.service.ts</code>, <code>utils/seguimiento.ts</code>.</li>
+    <li>Estilos comunes (KPIs, alertas, tablas, impresión) en <code>styles.css</code> para respetar el budget de 4 kB por componente.</li>
+    <li>Paleta de rubros: <em>Materiales</em> pasó de celeste a verde azulado y <em>Terceros</em> de gris a violeta, para que se distingan con daltonismo y tengan contraste suficiente (también en la «Distribución por rubro» del presupuesto).</li>
+  </ul>
+
+  <h2>Verificación</h2>
+  <ul>
+    <li class="ok">Backend y frontend compilan (<code>ng build</code> sin errores; el único aviso es del CSS de login, que ya estaba).</li>
+    <li class="ok">Prueba de punta a punta de la API contra una base temporal aparte (después se borró; la base <code>seyco</code> no se tocó): importar un Excel sintético con clasificación EPE/Zanjeo → plan → línea base → fechas reales y % avance → costos (grúa 30 % arriba de lo cotizado) → anticipo 30 % cobrado + una certificación sin cobrar → indicadores (atraso de 27 días, SPI 0,43, CPI 0,79, alertas «Equipos y grúas excedido» y «1 certificación sin cobrar») → portafolio filtrado por EPE / Vialidad / monto → borrar el proyecto con todo lo asociado.</li>
+    <li class="parcial">Las pantallas no se revisaron en un navegador: conviene recorrerlas con datos reales y ajustar lo visual.</li>
+    <li class="parcial">Los tests de Maven no se pudieron correr (sin conexión no está el plugin surefire en la caché local).</li>
+  </ul>
+
+  <h2>Pendientes y próximos pasos sugeridos</h2>
+  <ul>
+    <li>Los proyectos ya importados quedan «Sin clasificar»: hay que cargarles tipo de cliente y obra desde «Editar proyecto».</li>
+    <li>La curva S real se reconstruye linealmente desde el inicio real hasta el avance actual de cada tarea (no hay historial del % de avance). Si se quiere exacta, guardar un historial de avance por fecha.</li>
+    <li>Horas hombre por especialidad (gráfico del prototipo): el Excel de Seyco trae montos de mano de obra, no horas; se podría agregar si se cargan horas en los costos.</li>
+    <li>Ruta crítica del Gantt: necesitaría dependencias entre tareas, que hoy no existen.</li>
+    <li>Reporte en PDF del lado servidor (hoy es «Imprimir / guardar como PDF» del navegador).</li>
+    <li>El umbral de alertas (60 días sin cobrar, 90 sin certificar, 3 días de atraso) está fijo en el código; podría ser configurable.</li>
+  </ul>
+</main>
+</body>
+</html>
