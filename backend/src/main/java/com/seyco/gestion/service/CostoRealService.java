@@ -7,19 +7,25 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.seyco.gestion.entity.CostoReal;
+import com.seyco.gestion.entity.ItemPresupuesto;
 import com.seyco.gestion.entity.Proyecto;
 import com.seyco.gestion.repository.CostoRealRepository;
+import com.seyco.gestion.repository.ItemPresupuestoRepository;
 
 // Gastos reales de la obra por rubro (solapa Costos reales). Alimentan la comparación
-// cotizado vs. real de IndicadoresService.
+// cotizado vs. real de IndicadoresService: por rubro y, si el gasto indica su renglón del
+// presupuesto, también por renglón ("Hora de grúa: cotizado $30 M, real $40 M").
 @Service
 public class CostoRealService {
 
 	private final CostoRealRepository costoRealRepository;
+	private final ItemPresupuestoRepository itemPresupuestoRepository;
 	private final ProyectoService proyectoService;
 
-	public CostoRealService(CostoRealRepository costoRealRepository, ProyectoService proyectoService) {
+	public CostoRealService(CostoRealRepository costoRealRepository, ItemPresupuestoRepository itemPresupuestoRepository,
+			ProyectoService proyectoService) {
 		this.costoRealRepository = costoRealRepository;
+		this.itemPresupuestoRepository = itemPresupuestoRepository;
 		this.proyectoService = proyectoService;
 	}
 
@@ -32,13 +38,13 @@ public class CostoRealService {
 		Proyecto proyecto = proyectoService.buscarPorId(proyectoId);
 		CostoReal costo = new CostoReal();
 		costo.setProyecto(proyecto);
-		copiar(nuevo, costo);
+		copiar(proyectoId, nuevo, costo);
 		return costoRealRepository.save(costo);
 	}
 
 	public CostoReal actualizar(Long proyectoId, Long id, CostoReal cambios) {
 		CostoReal costo = buscar(proyectoId, id);
-		copiar(cambios, costo);
+		copiar(proyectoId, cambios, costo);
 		return costoRealRepository.save(costo);
 	}
 
@@ -52,7 +58,7 @@ public class CostoRealService {
 				.orElseThrow(() -> ServiceException.noEncontrado("El costo no existe."));
 	}
 
-	private static void copiar(CostoReal origen, CostoReal destino) {
+	private void copiar(Long proyectoId, CostoReal origen, CostoReal destino) {
 		if (origen.getFecha() == null) {
 			throw ServiceException.datosInvalidos("La fecha es obligatoria.");
 		}
@@ -71,6 +77,17 @@ public class CostoRealService {
 		destino.setComprobante(origen.getComprobante() == null || origen.getComprobante().isBlank() ? null
 				: origen.getComprobante().trim());
 		destino.setMonto(origen.getMonto().setScale(2, RoundingMode.HALF_UP));
+		destino.setItem(renglon(proyectoId, origen.getItemPresupuestoId()));
+	}
+
+	// El renglón tiene que ser del presupuesto de la misma obra.
+	private ItemPresupuesto renglon(Long proyectoId, Long itemId) {
+		if (itemId == null) {
+			return null;
+		}
+		return itemPresupuestoRepository.findById(itemId)
+				.filter(i -> i.getPresupuesto().getProyecto().getId().equals(proyectoId))
+				.orElseThrow(() -> ServiceException.datosInvalidos("El renglón del presupuesto no es de esta obra."));
 	}
 
 	public static BigDecimal total(List<CostoReal> costos) {

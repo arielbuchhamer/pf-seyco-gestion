@@ -6,6 +6,12 @@
   </nav>
 
   <app-cabecera titulo="Portafolio de proyectos" [subtitulo]="unico() ? 'Hay un proyecto en el filtro: se muestra su detalle.' : 'Cómo vienen todas las obras: avance, gastos y cobros.'">
+    <select class="boton-cabecera" aria-label="Año" [value]="anio()" (change)="anio.set($any($event.target).value)">
+      <option value="">Todos los años</option>
+      @for (a of anios(); track a) {
+        <option [value]="'' + a">{{ a }}</option>
+      }
+    </select>
     <app-filtro-fechas [(desde)]="desde" [(hasta)]="hasta" />
     <app-panel-filtros [activos]="cantidadFiltros()" (limpiar)="limpiarFiltros()">
       <div class="filtro-grupo">
@@ -40,6 +46,13 @@
         </div>
       </div>
     </app-panel-filtros>
+    <button type="button" class="boton-cabecera" [disabled]="descargando() || !proyectos().length" (click)="descargarExcel()"
+      title="Descarga las obras filtradas en Excel">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+        <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      {{ descargando() ? 'Descargando…' : 'Excel' }}
+    </button>
   </app-cabecera>
 
   @if (recurso.error()) {
@@ -143,6 +156,45 @@
             <app-columnas titulo="Presupuesto vs. gastado por obra" [series]="seriesCosto" [grupos]="gruposCosto()" [formato]="pesosCorto" />
           </section>
         </div>
+
+        <section class="panel tablero__panel">
+          <div class="tablero__cabecera">
+            <div>
+              <h3>Aprendizaje por tipo de obra</h3>
+              <span class="muted chico">Cuánto se desvían en promedio las obras de cada tipo, para cotizar mejor la próxima (+ = de más, − = de menos)</span>
+            </div>
+          </div>
+          <div class="tabla-scroll">
+            <table class="tabla-obras">
+              <thead>
+                <tr>
+                  <th>Tipo de obra</th>
+                  <th class="num">Obras</th>
+                  <th class="num">Plazo</th>
+                  <th class="num">Costo</th>
+                  <th>Rubro que más se pasa</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of port.aprendizaje; track a.tipoObra) {
+                  <tr>
+                    <td>{{ tipoDe(a) }}</td>
+                    <td class="num">{{ a.obras }}</td>
+                    <td class="num" [title]="a.obrasConPlazo + ' obras con plan fijado'"><strong [class]="tono(a.desvioPlazo)">{{ signo(a.desvioPlazo) }}</strong></td>
+                    <td class="num" [title]="a.obrasConCosto + ' obras con gastos cargados'"><strong [class]="tono(a.desvioCosto)">{{ signo(a.desvioCosto) }}</strong></td>
+                    <td>
+                      @if (a.rubroMasExcedido) {
+                        {{ rubroLabel[a.rubroMasExcedido] }} <strong [class]="tono(a.desvioRubro)">{{ signo(a.desvioRubro) }}</strong>
+                      } @else {
+                        <span class="muted">Ninguno se pasa</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     }
   } @else {

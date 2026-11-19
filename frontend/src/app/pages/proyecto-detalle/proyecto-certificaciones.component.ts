@@ -54,7 +54,10 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
             <h2 class="panel__titulo">Certificaciones</h2>
             <div class="panel__subtitulo">Anticipo, certificados de avance y certificado final</div>
           </div>
-          <button type="button" class="btn btn--primary boton" *puede="'proyectos:editar'" (click)="abrir(null)">Nueva certificación</button>
+          <div class="barra-acciones">
+            <button type="button" class="btn-chico" [disabled]="descargando()" (click)="descargarExcel()">{{ descargando() ? 'Descargando…' : 'Descargar Excel' }}</button>
+            <button type="button" class="btn btn--primary boton" *puede="'proyectos:editar'" (click)="abrir(null)">Nueva certificación</button>
+          </div>
         </div>
         <div class="scroll">
           <table class="tabla-seguimiento">
@@ -148,6 +151,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
     .punto--cobrado { background: var(--color-success); }
     .punto--pendiente { background: var(--color-accent); }
     .boton { font-size: 0.8rem; padding: 0.45rem 0.9rem; }
+    .barra-acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .table__actions .btn-chico { margin-right: 0.25rem; }
   `,
 })
@@ -157,6 +161,21 @@ export class ProyectoCertificacionesComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly proyectoId = input.required<number>();
+  // Para el nombre del archivo de Excel.
+  readonly nombreProyecto = input('');
+
+  protected readonly descargando = signal(false);
+
+  descargarExcel(): void {
+    this.descargando.set(true);
+    this.seguimiento.descargarCertificaciones(this.proyectoId(), this.nombreProyecto()).subscribe({
+      next: () => this.descargando.set(false),
+      error: () => {
+        this.descargando.set(false);
+        this.snackbar.mostrar('No se pudo descargar el Excel.', 'error');
+      },
+    });
+  }
 
   protected readonly lista = httpResource<Certificacion[]>(() => `/api/proyectos/${this.proyectoId()}/certificaciones`, { defaultValue: [] });
   protected readonly resumen = httpResource<ResumenCertificacion>(() => `/api/proyectos/${this.proyectoId()}/certificaciones/resumen`);

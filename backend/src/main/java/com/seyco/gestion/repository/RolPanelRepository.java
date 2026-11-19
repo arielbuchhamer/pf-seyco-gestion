@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -18,6 +19,11 @@ public interface RolPanelRepository extends JpaRepository<RolPanel, Long> {
 	boolean existsByRolIdAndPanelId(Long idRol, Long idPanel);
 
 	long countByRolId(Long idRol);
+
+	// Al retirar un panel: se quita de todos los roles.
+	@Modifying
+	@Query("delete from RolPanel rp where rp.panel.id = :idPanel")
+	int borrarDelPanel(@Param("idPanel") Long idPanel);
 
 	// Paneles de todos los roles del usuario, sin repetir.
 	@Query("""

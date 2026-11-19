@@ -52,6 +52,13 @@ export const routes: Routes = [
           import('./pages/portafolio/portafolio.component').then((m) => m.PortafolioComponent),
       },
       {
+        // Gestión global, igual que el portafolio: usa el panel de proyectos.
+        path: 'cobranzas',
+        canActivate: [panelGuard(PANELES.proyectos)],
+        loadComponent: () =>
+          import('./pages/cobranzas/cobranzas.component').then((m) => m.CobranzasComponent),
+      },
+      {
         path: 'usuarios',
         canActivate: [panelGuard(PANELES.usuarios)],
         loadComponent: () =>

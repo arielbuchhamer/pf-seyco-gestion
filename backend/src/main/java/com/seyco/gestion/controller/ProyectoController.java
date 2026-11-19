@@ -64,12 +64,6 @@ public class ProyectoController {
 		return proyectoService.progreso(id);
 	}
 
-	@GetMapping("/{id}/rendimiento")
-	@PreAuthorize("hasAuthority('proyectos:leer')")
-	public Map<String, Object> rendimiento(@PathVariable Long id) {
-		return proyectoService.rendimiento(id);
-	}
-
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasAuthority('proyectos:editar')")
 	public ResponseEntity<Void> eliminar(@PathVariable Long id) {

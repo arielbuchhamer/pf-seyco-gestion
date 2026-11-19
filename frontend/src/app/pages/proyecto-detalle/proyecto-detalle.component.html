@@ -78,9 +78,9 @@
     } @else if (solapa() === 'indicadores') {
       <app-proyecto-indicadores role="tabpanel" [proyectoId]="proyecto.id" />
     } @else if (solapa() === 'costos') {
-      <app-proyecto-costos role="tabpanel" [proyectoId]="proyecto.id" [cotizado]="presupuesto()?.totales ?? null" />
+      <app-proyecto-costos role="tabpanel" [proyectoId]="proyecto.id" [cotizado]="presupuesto()?.totales ?? null" [items]="presupuesto()?.items ?? []" />
     } @else if (solapa() === 'certificaciones') {
-      <app-proyecto-certificaciones role="tabpanel" [proyectoId]="proyecto.id" />
+      <app-proyecto-certificaciones role="tabpanel" [proyectoId]="proyecto.id" [nombreProyecto]="proyecto.nombre" />
     } @else {
       <app-proyecto-tareas
         role="tabpanel"

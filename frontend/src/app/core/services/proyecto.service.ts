@@ -6,7 +6,6 @@ import {
   Progreso,
   Proyecto,
   ProyectoInput,
-  Rendimiento,
 } from '../models/proyecto.model';
 
 @Injectable({ providedIn: 'root' })
@@ -41,10 +40,5 @@ export class ProyectoService {
   // Seguimiento: conteo de tareas por estado + % de avance.
   progreso(id: number): Observable<Progreso> {
     return this.http.get<Progreso>(`${this.baseUrl}/${id}/progreso`);
-  }
-
-  // Rendimiento: duración real (historial de estados) vs. planificada, por tarea.
-  rendimiento(id: number): Observable<Rendimiento> {
-    return this.http.get<Rendimiento>(`${this.baseUrl}/${id}/rendimiento`);
   }
 }

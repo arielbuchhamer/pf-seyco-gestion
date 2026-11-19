@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -23,8 +24,10 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.seyco.gestion.dto.SeguimientoDtos.Alerta;
+import com.seyco.gestion.dto.SeguimientoDtos.ComparacionRenglon;
 import com.seyco.gestion.dto.SeguimientoDtos.ComparacionRubro;
 import com.seyco.gestion.dto.SeguimientoDtos.DesvioTarea;
+import com.seyco.gestion.dto.SeguimientoDtos.EnDolares;
 import com.seyco.gestion.dto.SeguimientoDtos.Indicadores;
 import com.seyco.gestion.dto.SeguimientoDtos.NivelAlerta;
 import com.seyco.gestion.dto.SeguimientoDtos.Plazo;
@@ -73,16 +76,19 @@ public class IndicadoresService {
 	private final ItemPresupuestoRepository itemPresupuestoRepository;
 	private final CostoRealRepository costoRealRepository;
 	private final CertificacionRepository certificacionRepository;
+	private final CotizacionDolarService dolar;
 
 	public IndicadoresService(ProyectoService proyectoService, TareaRepository tareaRepository,
 			PresupuestoRepository presupuestoRepository, ItemPresupuestoRepository itemPresupuestoRepository,
-			CostoRealRepository costoRealRepository, CertificacionRepository certificacionRepository) {
+			CostoRealRepository costoRealRepository, CertificacionRepository certificacionRepository,
+			CotizacionDolarService dolar) {
 		this.proyectoService = proyectoService;
 		this.tareaRepository = tareaRepository;
 		this.presupuestoRepository = presupuestoRepository;
 		this.itemPresupuestoRepository = itemPresupuestoRepository;
 		this.costoRealRepository = costoRealRepository;
 		this.certificacionRepository = certificacionRepository;
+		this.dolar = dolar;
 	}
 
 	public Indicadores indicadores(Long proyectoId) {
@@ -118,6 +124,7 @@ public class IndicadoresService {
 				: null;
 
 		List<ComparacionRubro> rubros = rubros(items, costos);
+		List<ComparacionRenglon> renglones = renglones(items, costos);
 		List<Certificacion> certificaciones = certificacionRepository.findByProyectoIdOrderByNumeroAsc(id);
 		ResumenCertificacion certificacion = CertificacionService.resumen(presupuesto == null ? null : total,
 				certificaciones);
@@ -126,11 +133,87 @@ public class IndicadoresService {
 		List<PuntoCurvaS> curva = detalle ? curvaS(hojas, pesos, pesoTotal, plazo, lineaBase, hoy) : List.of();
 		List<DesvioTarea> desvios = detalle && lineaBase ? desvios(hojas, hoy) : List.of();
 		List<Alerta> alertas = alertas(proyecto, !tareas.isEmpty(), lineaBase, plazo, avanceReal, rubros,
-				certificacion, certificaciones, hoy);
+				renglones, certificacion, certificaciones, hoy);
+		EnDolares enDolares = detalle ? enDolares(proyecto, presupuesto, total, rubros, costos, hoy) : null;
 
 		return new Indicadores(id, proyecto.getNombre(), lineaBase, plazo, redondear(avancePlan * 100),
 				redondear(avanceReal * 100), spi, cpi, total, costoReal, valorGanado, costoProyectado, rubros,
-				certificacion, curva, desvios, alertas);
+				certificacion, curva, desvios, alertas, renglones, enDolares);
+	}
+
+	// Gastos asignados a un renglón del presupuesto, por renglón y rubro, contra lo cotizado en
+	// ese renglón para ese rubro. Primero los más consumidos.
+	private static List<ComparacionRenglon> renglones(List<ItemPresupuesto> items, List<CostoReal> costos) {
+		Map<Long, ItemPresupuesto> porId = items.stream().collect(Collectors.toMap(ItemPresupuesto::getId, i -> i));
+		Map<Long, Map<Rubro, BigDecimal>> real = new LinkedHashMap<>();
+		for (CostoReal c : costos) {
+			Long itemId = c.getItemPresupuestoId();
+			if (itemId != null && porId.containsKey(itemId)) {
+				real.computeIfAbsent(itemId, k -> new EnumMap<>(Rubro.class)).merge(c.getRubro(), c.getMonto(), BigDecimal::add);
+			}
+		}
+		List<ComparacionRenglon> resultado = new ArrayList<>();
+		real.forEach((itemId, porRubro) -> {
+			ItemPresupuesto item = porId.get(itemId);
+			porRubro.forEach((rubro, gastado) -> {
+				BigDecimal plan = cero(columna(item, rubro));
+				double consumido = plan.signum() == 0 ? 100 : redondear(gastado.doubleValue() * 100 / plan.doubleValue());
+				resultado.add(new ComparacionRenglon(itemId, item.getNumero(), item.getDescripcion(), rubro, plan, gastado,
+						gastado.subtract(plan), consumido));
+			});
+		});
+		resultado.sort(Comparator.comparingDouble(ComparacionRenglon::porcentajeConsumido).reversed());
+		return resultado;
+	}
+
+	private static BigDecimal columna(ItemPresupuesto item, Rubro rubro) {
+		return switch (rubro) {
+			case MANO_OBRA -> item.getManoObra();
+			case EQUIPOS -> item.getEquipos();
+			case MATERIALES -> item.getMateriales();
+			case TERCEROS -> item.getTerceros();
+		};
+	}
+
+	// La obra en dólares: lo cotizado al dólar del día del presupuesto y cada gasto al dólar del
+	// día en que se hizo. Así un "excedido" no es sólo inflación.
+	private EnDolares enDolares(Proyecto proyecto, Presupuesto presupuesto, BigDecimal total,
+			List<ComparacionRubro> rubros, List<CostoReal> costos, LocalDate hoy) {
+		if (presupuesto == null || total.signum() == 0) {
+			return EnDolares.noDisponible("La obra no tiene presupuesto importado.");
+		}
+		LocalDate fechaPresupuesto = presupuesto.getFecha() != null ? presupuesto.getFecha()
+				: proyecto.getFechaInicio() != null ? proyecto.getFechaInicio()
+						: proyecto.getFechaImportacion() == null ? null : proyecto.getFechaImportacion().toLocalDate();
+		if (fechaPresupuesto == null) {
+			return EnDolares.noDisponible("El presupuesto no tiene fecha para buscar la cotización.");
+		}
+		var cotizacionPresupuesto = dolar.al(fechaPresupuesto);
+		var cotizacionHoy = dolar.al(hoy);
+		if (cotizacionPresupuesto.isEmpty() || cotizacionHoy.isEmpty()) {
+			return EnDolares.noDisponible("No se pudo obtener la cotización del dólar. Probá de nuevo más tarde.");
+		}
+		BigDecimal dolarPresupuesto = cotizacionPresupuesto.get().venta();
+		BigDecimal dolarHoy = cotizacionHoy.get().venta();
+
+		Map<Rubro, BigDecimal> realUsd = new EnumMap<>(Rubro.class);
+		for (CostoReal c : costos) {
+			BigDecimal tipoCambio = dolar.al(c.getFecha()).map(CotizacionDolarService.Cotizacion::venta).orElse(dolarPresupuesto);
+			realUsd.merge(c.getRubro(), c.getMonto().divide(tipoCambio, 2, RoundingMode.HALF_UP), BigDecimal::add);
+		}
+		List<ComparacionRubro> rubrosUsd = rubros.stream().map(r -> {
+			BigDecimal plan = r.presupuestado().divide(dolarPresupuesto, 2, RoundingMode.HALF_UP);
+			BigDecimal gastado = realUsd.getOrDefault(r.rubro(), BigDecimal.ZERO);
+			double consumido = plan.signum() == 0 ? (gastado.signum() > 0 ? 100 : 0)
+					: redondear(gastado.doubleValue() * 100 / plan.doubleValue());
+			return new ComparacionRubro(r.rubro(), plan, gastado, gastado.subtract(plan), consumido);
+		}).toList();
+
+		BigDecimal presupuestoUsd = total.divide(dolarPresupuesto, 2, RoundingMode.HALF_UP);
+		BigDecimal costoUsd = realUsd.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+		return new EnDolares(true, null, dolar.casa(), cotizacionPresupuesto.get().fecha(), dolarPresupuesto,
+				cotizacionHoy.get().fecha(), dolarHoy, presupuestoUsd, costoUsd,
+				presupuestoUsd.multiply(dolarHoy).setScale(2, RoundingMode.HALF_UP), rubrosUsd);
 	}
 
 	// Monto del presupuesto de cada tarea hoja (los renglones de capítulo/grupo apuntan a su tarea).
@@ -284,8 +367,8 @@ public class IndicadoresService {
 	}
 
 	private static List<Alerta> alertas(Proyecto proyecto, boolean hayTareas, boolean lineaBase, Plazo plazo,
-			double avanceReal, List<ComparacionRubro> rubros, ResumenCertificacion cert,
-			List<Certificacion> certificaciones, LocalDate hoy) {
+			double avanceReal, List<ComparacionRubro> rubros, List<ComparacionRenglon> renglones,
+			ResumenCertificacion cert, List<Certificacion> certificaciones, LocalDate hoy) {
 		List<Alerta> alertas = new ArrayList<>();
 		boolean terminada = proyecto.getEstado() == EstadoProyecto.FINALIZADO || avanceReal >= 0.95;
 
@@ -317,6 +400,19 @@ public class IndicadoresService {
 			} else if (r.presupuestado().signum() == 0 && r.real().signum() > 0) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, rubro + " sin cotizar",
 						"Hay " + pesos(r.real()) + " de gastos en un rubro que no estaba en el presupuesto."));
+			}
+		}
+
+		for (ComparacionRenglon r : renglones) {
+			if (r.cotizado().signum() > 0 && r.real().compareTo(r.cotizado()) > 0) {
+				// Si todo el rubro es este renglón, el aviso del rubro dice lo mismo: queda sólo este.
+				alertas.removeIf(a -> a.titulo().equals(RUBRO_LABEL.get(r.rubro()) + " excedido")
+						&& rubros.stream().anyMatch(c -> c.rubro() == r.rubro() && c.real().compareTo(r.real()) == 0
+								&& c.presupuestado().compareTo(r.cotizado()) == 0));
+				String nombre = r.descripcion() == null ? "Renglón " + r.numero() : r.descripcion();
+				alertas.add(new Alerta(NivelAlerta.CRITICA, nombre + " excedido",
+						"Se cotizaron " + pesos(r.cotizado()) + " de " + RUBRO_LABEL.get(r.rubro()).toLowerCase(Locale.ROOT)
+								+ " y van " + pesos(r.real()) + " (+" + Math.round(r.porcentajeConsumido() - 100) + " %)."));
 			}
 		}
 

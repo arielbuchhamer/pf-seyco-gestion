@@ -73,21 +73,3 @@ export interface Progreso {
   // Responsables de las tareas del proyecto, sin repetir (avatares de la tarjeta del listado).
   responsables: Usuario[];
 }
-
-// GET /api/proyectos/{id}/rendimiento — duración real (según el historial de estados de
-// cada tarea) contra la planificada. Tareas que nunca pasaron por EN_PROGRESO/COMPLETADA
-// quedan afuera del cálculo (no hay con qué comparar).
-export interface RendimientoTarea {
-  tareaId: number;
-  nombre: string;
-  diasPlanificados: number;
-  diasReales: number;
-  desvioDias: number;
-}
-
-export interface Rendimiento {
-  proyectoId: number;
-  tareasConsideradas: number;
-  desvioPromedioDias: number;
-  detalle: RendimientoTarea[];
-}

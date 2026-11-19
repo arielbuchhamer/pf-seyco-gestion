@@ -208,7 +208,7 @@ public class ImportacionService {
 			NodoPresupuesto nodo = new NodoPresupuesto(item.getTipo(), item.getNumero(), item.getCodigo(),
 					item.getDescripcion(), item.getCantidad(), item.getUnidad(), item.getManoObra(), item.getEquipos(),
 					item.getMateriales(), item.getTerceros(), unitario(item.getTotal(), item.getCantidad()),
-					item.getTotal(), item.getTarea() == null ? null : item.getTarea().getId(), hijos);
+					item.getTotal(), item.getTarea() == null ? null : item.getTarea().getId(), hijos, item.getId());
 			if (item.getPadre() == null) {
 				raices.add(nodo);
 			} else {
@@ -261,7 +261,7 @@ public class ImportacionService {
 		return new NodoPresupuesto(n.getTipo(), n.getNumero(), n.getCodigo(), n.getDescripcion(), n.getCantidad(),
 				n.getUnidad(), pesos(n.getManoObra()), pesos(n.getEquipos()), pesos(n.getMateriales()),
 				pesos(n.getTerceros()), unitario(total, n.getCantidad()), total, tareaId,
-				n.getHijos().stream().map(h -> aNodo(h, null)).toList());
+				n.getHijos().stream().map(h -> aNodo(h, null)).toList(), null);
 	}
 
 	private static TotalesRubro totales(List<Nodo> capitulos) {

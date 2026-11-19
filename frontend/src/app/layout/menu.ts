@@ -1,6 +1,6 @@
 import { PANELES } from '../core/models/acceso.model';
 
-export type IconoMenu = 'usuarios' | 'roles' | 'proyectos' | 'portafolio';
+export type IconoMenu = 'usuarios' | 'roles' | 'proyectos' | 'portafolio' | 'cobranzas';
 
 export interface MenuItem {
   label: string;
@@ -36,6 +36,14 @@ export const MENU: MenuSeccion[] = [
         descripcion: 'Avance, gastos y cobros de todas las obras.',
         color: '#0f5fa6',
         icon: 'portafolio',
+      },
+      {
+        label: 'Cobranzas',
+        path: '/cobranzas',
+        panel: PANELES.proyectos,
+        descripcion: 'Lo que falta certificar y cobrar en todas las obras.',
+        color: '#1f9d55',
+        icon: 'cobranzas',
       },
     ],
   },

@@ -3,18 +3,20 @@ import { Component, computed, input } from '@angular/core';
 import { Indicadores } from '../../core/models/seguimiento.model';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { TableroProyectoComponent } from '../../shared/tablero/tablero-proyecto.component';
+import { ProyectoAnalisisComponent } from './proyecto-analisis.component';
 
 // Solapa "Indicadores": tablero de KPIs del proyecto (proyectado vs. real) calculado por
 // GET /api/proyectos/{id}/indicadores (ver IndicadoresService en el backend).
 @Component({
   selector: 'app-proyecto-indicadores',
   standalone: true,
-  imports: [TableroProyectoComponent],
+  imports: [TableroProyectoComponent, ProyectoAnalisisComponent],
   template: `
     @if (error(); as mensaje) {
       <p class="error" role="alert">{{ mensaje }}</p>
     } @else if (recurso.value(); as i) {
       <app-tablero-proyecto [indicadores]="i" />
+      <app-proyecto-analisis [indicadores]="i" />
     } @else {
       <p class="muted">Calculando indicadores…</p>
     }
