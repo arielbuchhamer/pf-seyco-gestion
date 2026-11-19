@@ -47,6 +47,12 @@ const COLORES = ['#0f5fa6', '#167a41', '#b0680c', '#6d4bb8', '#0e7c86', '#b23c5a
       height: 2.1rem;
       font-size: 0.8rem;
     }
+    .avatar--lg {
+      width: 4.75rem;
+      height: 4.75rem;
+      font-size: 1.65rem;
+      font-weight: 700;
+    }
     .avatar--vacio {
       background: var(--color-surface);
       color: var(--color-text-muted);
@@ -56,7 +62,7 @@ const COLORES = ['#0f5fa6', '#167a41', '#b0680c', '#6d4bb8', '#0e7c86', '#b23c5a
 })
 export class AvatarComponent {
   readonly usuario = input<Usuario | null | undefined>(null);
-  readonly tamano = input<'sm' | 'md'>('sm');
+  readonly tamano = input<'sm' | 'md' | 'lg'>('sm');
 
   protected readonly nombre = computed(() => {
     const u = this.usuario();

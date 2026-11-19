@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.seyco.gestion.dto.Mensaje;
 import com.seyco.gestion.dto.PerfilDtos.ActualizarPerfilRequest;
+import com.seyco.gestion.dto.PerfilDtos.CambiarContrasenaRequest;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.security.UsuarioAutenticado;
 import com.seyco.gestion.service.UsuarioService;
@@ -34,5 +36,12 @@ public class PerfilController {
 	public Usuario actualizar(@AuthenticationPrincipal UsuarioAutenticado usuario,
 			@RequestBody ActualizarPerfilRequest pedido) {
 		return usuarioService.actualizarPerfil(usuario.id(), pedido);
+	}
+
+	@PutMapping("/contrasena")
+	public Mensaje cambiarContrasena(@AuthenticationPrincipal UsuarioAutenticado usuario,
+			@RequestBody CambiarContrasenaRequest pedido) {
+		usuarioService.cambiarContrasena(usuario.id(), usuario.token(), pedido);
+		return new Mensaje("Contraseña actualizada. Se cerraron tus sesiones en otros dispositivos.");
 	}
 }

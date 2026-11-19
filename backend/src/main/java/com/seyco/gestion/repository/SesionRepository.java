@@ -26,6 +26,14 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
 	@Query("update Sesion s set s.activo = false, s.fechaLogout = :ahora where s.usuario.id = :idUsuario and s.activo = true")
 	int cerrarTodas(@Param("idUsuario") Long idUsuario, @Param("ahora") Instant ahora);
 
+	// Todas menos la del token indicado (cambio de contraseña: la sesión actual sigue abierta).
+	@Modifying
+	@Query("""
+			update Sesion s set s.activo = false, s.fechaLogout = :ahora
+			where s.usuario.id = :idUsuario and s.activo = true and s.token <> :token
+			""")
+	int cerrarOtras(@Param("idUsuario") Long idUsuario, @Param("token") String token, @Param("ahora") Instant ahora);
+
 	// Filas [idUsuario, cantidad] para la columna "Sesiones" del listado de usuarios.
 	@Query("select s.usuario.id, count(s) from Sesion s group by s.usuario.id")
 	List<Object[]> contarPorUsuario();

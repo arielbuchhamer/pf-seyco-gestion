@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
+import { Mensaje } from '../models/acceso.model';
 import { PerfilInput, Usuario } from '../models/usuario.model';
 import { AuthService } from './auth.service';
 
@@ -12,6 +13,11 @@ export class PerfilService {
 
   obtener(): Observable<Usuario> {
     return this.http.get<Usuario>(this.baseUrl);
+  }
+
+  // Cierra las sesiones en otros dispositivos; la actual sigue abierta.
+  cambiarContrasena(actual: string, nueva: string): Observable<Mensaje> {
+    return this.http.put<Mensaje>(`${this.baseUrl}/contrasena`, { actual, nueva });
   }
 
   // Se mezcla con el usuario de la sesión (en vez de pedir /api/auth/me de nuevo) para que la
