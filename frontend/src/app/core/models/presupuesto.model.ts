@@ -23,6 +23,8 @@ export interface NodoPresupuesto {
   total: number;
   // Tarea creada para el capítulo/grupo (null en la previsualización y en armados/ítems).
   tareaId: number | null;
+  // Id del renglón guardado (null en la previsualización): lo usan los gastos reales.
+  id: number | null;
   hijos: NodoPresupuesto[];
 }
 

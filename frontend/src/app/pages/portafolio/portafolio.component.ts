@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   ESTADOS_PROYECTO,
@@ -12,7 +12,9 @@ import {
   TipoCliente,
   TipoObra,
 } from '../../core/models/proyecto.model';
-import { Indicadores, Portafolio, ResumenProyecto } from '../../core/models/seguimiento.model';
+import { AprendizajeTipoObra, Indicadores, Portafolio, RUBRO_LABEL, ResumenProyecto } from '../../core/models/seguimiento.model';
+import { SeguimientoService } from '../../core/services/seguimiento.service';
+import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 import { numero, pesosCorto } from '../../core/utils/formato';
 import { Semaforo, alternar, semaforoDesvio } from '../../core/utils/seguimiento';
 import { AvisosComponent, Aviso } from '../../shared/alertas/avisos.component';
@@ -52,9 +54,17 @@ export class PortafolioComponent {
   // En millones de pesos (más cómodo que tipear el monto completo).
   protected readonly montoMin = signal('');
   protected readonly montoMax = signal('');
+  // Año de la obra (el de inicio, o el de la importación). '' = todos.
+  protected readonly anio = signal('');
 
-  protected readonly recurso = httpResource<Portafolio>(() => {
+  private readonly seguimiento = inject(SeguimientoService);
+  private readonly snackbar = inject(SnackbarService);
+  protected readonly descargando = signal(false);
+
+  // Mismos filtros para la pantalla y para la descarga en Excel.
+  private readonly params = computed(() => {
     const params: Record<string, string | string[]> = {};
+    if (this.anio()) params['anio'] = this.anio();
     if (this.desde()) params['desde'] = this.desde();
     if (this.hasta()) params['hasta'] = this.hasta();
     if (this.clientes().length) params['tipoCliente'] = this.clientes();
@@ -62,8 +72,43 @@ export class PortafolioComponent {
     if (this.estados().length) params['estado'] = this.estados();
     if (this.montoMin()) params['montoMin'] = String(Number(this.montoMin()) * 1_000_000);
     if (this.montoMax()) params['montoMax'] = String(Number(this.montoMax()) * 1_000_000);
-    return { url: '/api/portafolio', params };
+    return params;
   });
+
+  protected readonly recurso = httpResource<Portafolio>(() => ({ url: '/api/portafolio', params: this.params() }));
+
+  // Opciones del selector de año: se conservan mientras se recarga el portafolio.
+  protected readonly anios = linkedSignal<number[] | undefined, number[]>({
+    source: () => this.recurso.value()?.anios,
+    computation: (nuevos, anterior) => nuevos ?? anterior?.value ?? [],
+  });
+
+  descargarExcel(): void {
+    this.descargando.set(true);
+    this.seguimiento.descargarPortafolio(this.params()).subscribe({
+      next: () => this.descargando.set(false),
+      error: () => {
+        this.descargando.set(false);
+        this.snackbar.mostrar('No se pudo descargar el Excel.', 'error');
+      },
+    });
+  }
+
+  // Aprendizaje por tipo de obra: "+12 %" / "−5 %" / "—" (sin datos).
+  protected readonly rubroLabel = RUBRO_LABEL;
+  protected signo(valor: number | null): string {
+    if (valor == null) return '—';
+    const r = Math.round(valor);
+    return r === 0 ? '0 %' : `${r > 0 ? '+' : '−'}${numero(Math.abs(r))} %`;
+  }
+  // + es peor (más días, más caro): rojo si se pasa más de 10 %, ámbar si se pasa algo, verde si no.
+  protected tono(valor: number | null): string {
+    if (valor == null) return 'muted';
+    return valor > 10 ? 'texto-critico' : valor > 0 ? 'texto-riesgo' : 'texto-ok';
+  }
+  protected tipoDe(a: AprendizajeTipoObra): string {
+    return a.tipoObra ? this.tipoObraLabel[a.tipoObra] : 'Sin clasificar';
+  }
 
   protected readonly proyectos = computed(() => this.recurso.value()?.proyectos ?? []);
 
@@ -88,7 +133,9 @@ export class PortafolioComponent {
   protected readonly cantidadFiltros = computed(
     () => this.clientes().length + this.obras().length + this.estados().length + (this.montoMin() || this.montoMax() ? 1 : 0),
   );
-  protected readonly hayFiltros = computed(() => this.cantidadFiltros() > 0 || !!this.desde() || !!this.hasta());
+  protected readonly hayFiltros = computed(
+    () => this.cantidadFiltros() > 0 || !!this.desde() || !!this.hasta() || !!this.anio(),
+  );
 
   limpiarFiltros(): void {
     this.clientes.set([]);
@@ -100,6 +147,7 @@ export class PortafolioComponent {
 
   limpiarTodo(): void {
     this.limpiarFiltros();
+    this.anio.set('');
     this.desde.set('');
     this.hasta.set('');
   }

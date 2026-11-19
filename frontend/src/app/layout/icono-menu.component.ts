@@ -20,6 +20,10 @@ import { IconoMenu } from './menu';
         @case ('portafolio') {
           <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />
         }
+        @case ('cobranzas') {
+          <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+          <path d="M9 8h6M9 12h6M9 16h3" />
+        }
         @case ('proyectos') {
           <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
           <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />

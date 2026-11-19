@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 // Gasto real de la obra (horas de grúa contratadas, compra de materiales, una cuadrilla de
 // terceros...). Se carga por rubro para compararlo con lo cotizado en el presupuesto: si se
@@ -50,6 +51,18 @@ public class CostoReal {
 	// En pesos, sin IVA (igual que el presupuesto).
 	@Column(nullable = false, precision = 19, scale = 2)
 	private BigDecimal monto;
+
+	// Renglón del presupuesto al que corresponde el gasto (opcional), para comparar contra lo
+	// cotizado en ese renglón: "Hora de grúa: cotizado $30 M, real $40 M". En el JSON viaja como
+	// itemPresupuestoId (al leer, el del renglón guardado; al escribir, el que se pide).
+	@JsonIgnore
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "item_presupuesto_id")
+	private ItemPresupuesto item;
+
+	@JsonIgnore
+	@Transient
+	private Long itemPresupuestoIdPedido;
 
 	public Long getId() {
 		return id;
@@ -101,5 +114,21 @@ public class CostoReal {
 
 	public void setMonto(BigDecimal monto) {
 		this.monto = monto;
+	}
+
+	public ItemPresupuesto getItem() {
+		return item;
+	}
+
+	public void setItem(ItemPresupuesto item) {
+		this.item = item;
+	}
+
+	public Long getItemPresupuestoId() {
+		return item == null ? itemPresupuestoIdPedido : item.getId();
+	}
+
+	public void setItemPresupuestoId(Long itemPresupuestoId) {
+		this.itemPresupuestoIdPedido = itemPresupuestoId;
 	}
 }

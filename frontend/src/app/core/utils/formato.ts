@@ -18,6 +18,13 @@ export function pesosCorto(valor: number | null | undefined): string {
   return Math.abs(valor) >= 1_000_000 ? `$ ${MILLONES.format(valor / 1_000_000)} M` : PESOS.format(valor);
 }
 
+const DOLARES = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+
+// "US$ 25.300" (vista de la obra en dólares).
+export function dolares(valor: number | null | undefined): string {
+  return valor == null ? '' : `US$ ${DOLARES.format(valor)}`;
+}
+
 export function numero(valor: number | null | undefined): string {
   return valor == null ? '' : NUMERO.format(valor);
 }

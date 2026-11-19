@@ -1,14 +1,18 @@
 import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PuedeDirective } from '../../core/directives/puede.directive';
-import { TotalesRubro } from '../../core/models/presupuesto.model';
+import { NodoPresupuesto, TotalesRubro } from '../../core/models/presupuesto.model';
 import { CostoReal, CostoRealInput, RUBROS, RUBRO_COLOR, RUBRO_LABEL, Rubro } from '../../core/models/seguimiento.model';
 import { SeguimientoService } from '../../core/services/seguimiento.service';
 import { fecha, hoy, numero, pesos } from '../../core/utils/formato';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
+
+// Sangría de cada nivel del árbol en el selector de renglón.
+const NIVEL: Record<NodoPresupuesto['tipo'], number> = { CAPITULO: 0, GRUPO: 1, ARMADO: 2, ITEM: 3 };
 
 const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
   MANO_OBRA: 'manoObra',
@@ -18,7 +22,8 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
 };
 
 // Solapa "Costos reales": lo que realmente se gasta en la obra, por rubro (horas de grúa,
-// materiales, cuadrillas...), contra lo cotizado en el presupuesto.
+// materiales, cuadrillas...), contra lo cotizado en el presupuesto. Cada gasto puede indicar
+// su renglón del presupuesto para comparar contra lo cotizado en ese renglón (solapa Indicadores).
 @Component({
   selector: 'app-proyecto-costos',
   standalone: true,
@@ -54,13 +59,14 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
         </div>
         <div class="scroll">
           <table class="tabla-seguimiento">
-            <thead><tr><th>Fecha</th><th>Rubro</th><th>Descripción</th><th>Comprobante</th><th class="num">Monto</th><th></th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Rubro</th><th>Descripción</th><th>Renglón</th><th>Comprobante</th><th class="num">Monto</th><th></th></tr></thead>
             <tbody>
               @for (c of visibles(); track c.id) {
                 <tr>
                   <td>{{ fecha(c.fecha) }}</td>
                   <td><span class="punto" [style.background]="rubroColor[c.rubro]"></span>{{ rubroLabel[c.rubro] }}</td>
                   <td>{{ c.descripcion }}</td>
+                  <td class="muted" [title]="renglon(c.itemPresupuestoId)?.descripcion ?? ''">{{ renglon(c.itemPresupuestoId)?.numero ?? '—' }}</td>
                   <td class="muted">{{ c.comprobante ?? '—' }}</td>
                   <td class="num">{{ pesos(c.monto) }}</td>
                   <td class="table__actions">
@@ -71,7 +77,7 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="6" class="muted">{{ recurso.isLoading() ? 'Cargando…' : 'Todavía no hay gastos cargados.' }}</td></tr>
+                <tr><td colspan="7" class="muted">{{ recurso.isLoading() ? 'Cargando…' : 'Todavía no hay gastos cargados.' }}</td></tr>
               }
             </tbody>
           </table>
@@ -94,6 +100,19 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
             </label>
           </div>
           <label class="field"><span>Descripción</span><input type="text" formControlName="descripcion" placeholder="Ej.: 40 h de grúa 25 t" /></label>
+          @if (opcionesRenglon().length) {
+            <label class="field"><span>Renglón del presupuesto (opcional)</span>
+              <select formControlName="itemPresupuestoId">
+                <option [ngValue]="null">Sin asignar (sólo por rubro)</option>
+                @for (o of opcionesRenglon(); track o.id) { <option [ngValue]="o.id">{{ o.etiqueta }}</option> }
+              </select>
+              @if (cotizadoRenglon(); as c) {
+                <small class="field__hint">Cotizado en este renglón para {{ rubroLabel[c.rubro].toLowerCase() }}: <strong>{{ pesos(c.monto) }}</strong></small>
+              } @else {
+                <small class="field__hint">Elegilo para comparar el gasto contra lo cotizado en ese renglón (ej.: hora de grúa).</small>
+              }
+            </label>
+          }
           <div class="field-row">
             <label class="field"><span>Comprobante</span><input type="text" formControlName="comprobante" placeholder="Factura / remito" /></label>
             <label class="field"><span>Monto sin IVA ($)</span><input type="number" min="0" step="0.01" formControlName="monto" /></label>
@@ -129,6 +148,23 @@ export class ProyectoCostosComponent {
   readonly proyectoId = input.required<number>();
   // Totales del presupuesto importado (null en proyectos sin presupuesto).
   readonly cotizado = input<TotalesRubro | null>(null);
+  // Árbol del presupuesto: sus renglones se pueden asignar a cada gasto.
+  readonly items = input<NodoPresupuesto[]>([]);
+
+  // Renglones en orden, con sangría según el nivel (capítulo › grupo › armado › ítem).
+  private readonly renglones = computed(() => {
+    const lista: NodoPresupuesto[] = [];
+    const recorrer = (nodos: NodoPresupuesto[]) => nodos.forEach((n) => { lista.push(n); recorrer(n.hijos); });
+    recorrer(this.items());
+    return lista.filter((n) => n.id != null);
+  });
+  private readonly porId = computed(() => new Map(this.renglones().map((n) => [n.id as number, n])));
+  protected readonly opcionesRenglon = computed(() =>
+    this.renglones().map((n) => ({
+      id: n.id as number,
+      etiqueta: '\u00a0\u00a0\u00a0'.repeat(NIVEL[n.tipo]) + [n.numero, n.descripcion].filter(Boolean).join(' · '),
+    })),
+  );
 
   protected readonly recurso = httpResource<CostoReal[]>(() => `/api/proyectos/${this.proyectoId()}/costos`, { defaultValue: [] });
 
@@ -164,12 +200,26 @@ export class ProyectoCostosComponent {
     descripcion: ['', Validators.required],
     comprobante: [''],
     monto: [0, [Validators.required, Validators.min(0.01)]],
+    itemPresupuestoId: [null as number | null],
   });
+  private readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+
+  // Lo cotizado en el renglón elegido para el rubro elegido (ayuda al cargar el gasto).
+  protected readonly cotizadoRenglon = computed(() => {
+    const { itemPresupuestoId, rubro } = this.valores();
+    const nodo = itemPresupuestoId != null ? this.porId().get(itemPresupuestoId) : undefined;
+    return nodo && rubro ? { rubro, monto: nodo[CAMPO_RUBRO[rubro]] } : null;
+  });
+
+  protected renglon(id: number | null): NodoPresupuesto | undefined {
+    return id == null ? undefined : this.porId().get(id);
+  }
 
   abrir(costo: CostoReal | null): void {
     this.form.reset(costo
-      ? { fecha: costo.fecha, rubro: costo.rubro, descripcion: costo.descripcion, comprobante: costo.comprobante ?? '', monto: costo.monto }
-      : { fecha: hoy(), rubro: 'EQUIPOS', descripcion: '', comprobante: '', monto: 0 });
+      ? { fecha: costo.fecha, rubro: costo.rubro, descripcion: costo.descripcion, comprobante: costo.comprobante ?? '', monto: costo.monto,
+          itemPresupuestoId: costo.itemPresupuestoId ?? null }
+      : { fecha: hoy(), rubro: 'EQUIPOS', descripcion: '', comprobante: '', monto: 0, itemPresupuestoId: null });
     this.error.set(null);
     this.editando.set(costo);
   }

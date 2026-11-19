@@ -51,6 +51,35 @@ export interface ComparacionRubro {
   porcentajeConsumido: number;
 }
 
+// Lo cotizado en un renglón del presupuesto (en el rubro del gasto) contra los gastos cargados
+// para ese renglón. Ej.: "Hora de grúa", Equipos: cotizado $30 M, real $40 M.
+export interface ComparacionRenglon {
+  itemId: number;
+  numero: string | null;
+  descripcion: string | null;
+  rubro: Rubro;
+  cotizado: number;
+  real: number;
+  desvio: number;
+  porcentajeConsumido: number;
+}
+
+// La obra en dólares (sin el efecto de la inflación): lo cotizado al dólar del día del
+// presupuesto y cada gasto al dólar de su fecha. presupuestoActualizado = lo cotizado en pesos de hoy.
+export interface EnDolares {
+  disponible: boolean;
+  motivo: string | null;
+  casa: string | null;
+  fechaPresupuesto: string | null;
+  dolarPresupuesto: number | null;
+  fechaHoy: string | null;
+  dolarHoy: number | null;
+  presupuestoUsd: number | null;
+  costoRealUsd: number | null;
+  presupuestoActualizado: number | null;
+  rubros: ComparacionRubro[];
+}
+
 export interface PuntoCurvaS {
   fecha: string;
   plan: number;
@@ -99,6 +128,10 @@ export interface Indicadores {
   curvaS: PuntoCurvaS[];
   desvios: DesvioTarea[];
   alertas: Alerta[];
+  // Sólo los renglones que tienen gastos asignados.
+  renglones: ComparacionRenglon[];
+  // null en el portafolio (se calcula sólo en el detalle de la obra).
+  enDolares: EnDolares | null;
 }
 
 export interface CostoReal {
@@ -108,6 +141,8 @@ export interface CostoReal {
   descripcion: string;
   comprobante: string | null;
   monto: number;
+  // Renglón del presupuesto al que corresponde el gasto (opcional).
+  itemPresupuestoId: number | null;
 }
 
 export type CostoRealInput = Omit<CostoReal, 'id'>;
@@ -185,9 +220,62 @@ export interface TotalesPortafolio {
   spiPromedio: number | null;
 }
 
+// Cómo vienen en promedio las obras de un tipo (para cotizar mejor la próxima). Porcentajes:
+// + = de más (más días, más caro), − = de menos. null = ninguna obra con datos para calcularlo.
+export interface AprendizajeTipoObra {
+  tipoObra: TipoObra | null;
+  obras: number;
+  desvioPlazo: number | null;
+  obrasConPlazo: number;
+  desvioCosto: number | null;
+  obrasConCosto: number;
+  rubroMasExcedido: Rubro | null;
+  desvioRubro: number | null;
+}
+
 // GET /api/portafolio
 export interface Portafolio {
   totales: TotalesPortafolio;
   proyectos: ResumenProyecto[];
   anios: number[];
+  aprendizaje: AprendizajeTipoObra[];
+}
+
+// ── Cobranzas (GET /api/cobranzas) ──
+
+export interface ObraCobranza {
+  proyectoId: number;
+  nombre: string;
+  cliente: string | null;
+  tipoCliente: TipoCliente | null;
+  estado: EstadoProyecto;
+  avanceReal: number;
+  terminada: boolean;
+  certificacion: ResumenCertificacion;
+  // CRITICA = obra terminada con saldo sin certificar (el 15 % que se pierde).
+  nivel: NivelAlerta;
+  motivo: string;
+}
+
+export interface FacturaPendiente {
+  proyectoId: number;
+  proyecto: string;
+  certificacionId: number;
+  numero: number;
+  tipo: TipoCertificacion;
+  fechaEmision: string;
+  nroFactura: string | null;
+  monto: number;
+  dias: number;
+}
+
+export interface Cobranzas {
+  // Todo lo que falta entrar: sin certificar + facturado sin cobrar.
+  porCobrar: number;
+  facturadoSinCobrar: number;
+  sinCertificar: number;
+  sinCertificarTerminadas: number;
+  obrasTerminadasConSaldo: number;
+  obras: ObraCobranza[];
+  facturas: FacturaPendiente[];
 }

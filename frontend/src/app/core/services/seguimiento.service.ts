@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Certificacion, CertificacionInput, CostoReal, CostoRealInput } from '../models/seguimiento.model';
 
 // Altas, cambios y bajas de costos reales y certificaciones de un proyecto. Las consultas
@@ -41,5 +41,38 @@ export class SeguimientoService {
 
   eliminarCertificacion(proyectoId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.url(proyectoId, 'certificaciones')}/${id}`);
+  }
+
+  // ── Descargas en Excel ──
+
+  // Con los mismos filtros que la pantalla del portafolio.
+  descargarPortafolio(params: Record<string, string | string[]>): Observable<void> {
+    return this.descargar('/api/portafolio/excel', 'Portafolio.xlsx', params);
+  }
+
+  descargarCobranzas(): Observable<void> {
+    return this.descargar('/api/cobranzas/excel', 'Cobranzas.xlsx');
+  }
+
+  descargarCertificaciones(proyectoId: number, nombre: string): Observable<void> {
+    return this.descargar(`${this.url(proyectoId, 'certificaciones')}/excel`, `Certificaciones ${nombre}.xlsx`);
+  }
+
+  // Por HttpClient (y no un <a href>) para que la descarga lleve el token. El nombre del archivo
+  // sale del encabezado Content-Disposition del backend; si no viene, se usa el sugerido.
+  private descargar(url: string, sugerido: string, params: Record<string, string | string[]> = {}): Observable<void> {
+    return this.http.get(url, { params, responseType: 'blob', observe: 'response' }).pipe(
+      map((respuesta) => {
+        const disposicion = respuesta.headers.get('Content-Disposition') ?? '';
+        const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(disposicion);
+        const simple = /filename="?([^";]+)"?/i.exec(disposicion);
+        const nombre = utf8 ? decodeURIComponent(utf8[1]) : simple ? simple[1] : sugerido;
+        const enlace = document.createElement('a');
+        enlace.href = URL.createObjectURL(respuesta.body as Blob);
+        enlace.download = nombre;
+        enlace.click();
+        URL.revokeObjectURL(enlace.href);
+      }),
+    );
   }
 }

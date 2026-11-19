@@ -21,7 +21,6 @@ export const SIN_PERMISOS: Permisos = { paneles: [], modulos: {} };
 // acá y en la base (DataSeeder del backend, o desde la pantalla Roles).
 export const PANELES = {
   proyectos: 'paneles-proyectos',
-  tareas: 'paneles-tareas',
   usuarios: 'paneles-usuarios',
   roles: 'paneles-roles',
 } as const;

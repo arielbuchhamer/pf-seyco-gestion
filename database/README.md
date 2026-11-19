@@ -13,7 +13,7 @@ El diagrama de todas las tablas está en [DER.png](DER.png).
 | 1 | `1-gestionDeAccesos.sql` | Usuarios, roles, permisos y sesiones | usuarios, roles, modulos, paneles, roles_usuarios, roles_modulos, roles_paneles, sesiones, recuperaciones_contrasena |
 | 2 | `2-gestionDeProyectos.sql` | Obras y tareas | proyecto, archivo_proyecto, tarea, historial_estado_tarea |
 | 3 | `3-presupuesto.sql` | Presupuesto de cada obra | presupuesto, item_presupuesto |
-| 4 | `4-seguimientoDeObra.sql` | Gastos y cobros | costo_real, certificacion |
+| 4 | `4-seguimientoDeObra.sql` | Gastos y cobros | costo_real (puede apuntar a un renglón del presupuesto), certificacion |
 
 Cada script depende de los anteriores (por las claves foráneas), así que van en ese orden.
 Todos se pueden correr más de una vez sin problema (`IF NOT EXISTS`).

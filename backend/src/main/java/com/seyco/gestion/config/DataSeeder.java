@@ -33,7 +33,7 @@ import com.seyco.gestion.service.RolService;
  * Datos iniciales de la gestión de accesos (idempotente: sólo crea lo que falta).
  *
  * Módulos:  proyectos, tareas, usuarios, roles
- * Paneles:  paneles-proyectos, paneles-tareas, paneles-usuarios, paneles-roles
+ * Paneles:  paneles-proyectos, paneles-usuarios, paneles-roles (las tareas no tienen pantalla propia)
  * Roles:
  *   admin -> todos los módulos (leer/escribir/editar) y todos los paneles
  *   visor -> sólo proyectos (leer) y el panel de proyectos
@@ -55,8 +55,10 @@ public class DataSeeder {
 	private static final int TOKEN_DURACION_MINUTOS = 480;
 
 	private static final List<String> MODULOS = List.of("proyectos", "tareas", "usuarios", "roles");
-	private static final List<String> PANELES = List.of("paneles-proyectos", "paneles-tareas", "paneles-usuarios",
-			"paneles-roles");
+	private static final List<String> PANELES = List.of("paneles-proyectos", "paneles-usuarios", "paneles-roles");
+	// La pantalla Tareas se quitó (las tareas viven dentro de cada proyecto): si su panel quedó en
+	// la base, se borra al arrancar para que no aparezca en la pantalla Roles.
+	private static final String PANEL_RETIRADO = "paneles-tareas";
 
 	@Bean
 	CommandLineRunner seedGestionDeAccesos(TransactionTemplate transaction, ModuloRepository moduloRepository,
@@ -72,6 +74,12 @@ public class DataSeeder {
 					return moduloRepository.save(modulo);
 				}));
 			}
+
+			panelRepository.findByNombreIgnoreCase(PANEL_RETIRADO).ifPresent(panel -> {
+				rolPanelRepository.borrarDelPanel(panel.getId());
+				panelRepository.delete(panel);
+				log.info("Panel retirado: {}", PANEL_RETIRADO);
+			});
 
 			Map<String, Panel> paneles = new HashMap<>();
 			for (String nombre : PANELES) {

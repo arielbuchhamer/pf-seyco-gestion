@@ -17,9 +17,11 @@ public final class ImportacionDtos {
 
 	// Renglón del árbol del presupuesto (capítulo › grupo › armado › ítem). Lo usan tanto la
 	// previsualización (tareaId = null, todavía no hay tareas) como el presupuesto ya guardado.
+	// id: el del renglón guardado (null en la previsualización); los gastos reales lo referencian.
 	public record NodoPresupuesto(TipoItemPresupuesto tipo, String numero, String codigo, String descripcion,
 			BigDecimal cantidad, String unidad, BigDecimal manoObra, BigDecimal equipos, BigDecimal materiales,
-			BigDecimal terceros, BigDecimal unitario, BigDecimal total, Long tareaId, List<NodoPresupuesto> hijos) {
+			BigDecimal terceros, BigDecimal unitario, BigDecimal total, Long tareaId, List<NodoPresupuesto> hijos,
+			Long id) {
 	}
 
 	public record TotalesRubro(BigDecimal manoObra, BigDecimal equipos, BigDecimal materiales, BigDecimal terceros,
