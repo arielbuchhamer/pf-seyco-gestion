@@ -4,7 +4,7 @@
 -- singular, con las columnas `clave` y `rol`). Una base nueva no lo necesita.
 --
 -- Pasos (con el backend APAGADO):
---   1. Correr 1-crearTablasGestionDeAccesos.sql
+--   1. Correr ../1-gestionDeAccesos.sql
 --   2. Correr este script
 --   3. Levantar el backend: DataSeeder completa módulos, paneles y permisos.
 --

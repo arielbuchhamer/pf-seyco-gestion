@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.seyco.gestion.dto.AccesoDtos.RolResumen;
 import com.seyco.gestion.dto.AccesoDtos.UsuarioListado;
 import com.seyco.gestion.dto.PerfilDtos.ActualizarPerfilRequest;
+import com.seyco.gestion.dto.PerfilDtos.CambiarContrasenaRequest;
 import com.seyco.gestion.entity.Usuario;
 import com.seyco.gestion.repository.RolUsuarioRepository;
 import com.seyco.gestion.repository.SesionRepository;
@@ -165,6 +166,27 @@ public class UsuarioService {
 		existente.setTelefono(cambios.getTelefono());
 		existente.setFechaActualizacion(Instant.now());
 		return usuarioRepository.save(existente);
+	}
+
+	// Mi perfil: pide la contraseña actual. Las otras sesiones del usuario (otros dispositivos)
+	// se cierran; la sesión desde la que se hizo el cambio sigue abierta.
+	@Transactional
+	public void cambiarContrasena(Long id, String tokenSesion, CambiarContrasenaRequest pedido) {
+		Usuario existente = buscarActivo(id);
+
+		if (pedido.actual() == null || !passwordEncoder.matches(pedido.actual(), existente.getContrasena())) {
+			throw ServiceException.datosInvalidos("La contraseña actual no es correcta.");
+		}
+		validarContrasena(pedido.nueva());
+		if (passwordEncoder.matches(pedido.nueva(), existente.getContrasena())) {
+			throw ServiceException.datosInvalidos("La nueva contraseña tiene que ser distinta de la actual.");
+		}
+
+		Instant ahora = Instant.now();
+		existente.setContrasena(passwordEncoder.encode(pedido.nueva()));
+		existente.setFechaActualizacion(ahora);
+		usuarioRepository.save(existente);
+		sesionRepository.cerrarOtras(id, tokenSesion, ahora);
 	}
 
 	private static Integer convertirDniPerfil(String dni) {

@@ -10,4 +10,8 @@ public final class PerfilDtos {
 	// "Sólo se aceptan números." (con Integer, Jackson fallaría antes con un mensaje genérico).
 	public record ActualizarPerfilRequest(String nombre, String apellido, String dni, String telefono) {
 	}
+
+	// Cambiar contraseña desde Mi perfil: se pide la actual para confirmar que es el dueño.
+	public record CambiarContrasenaRequest(String actual, String nueva) {
+	}
 }

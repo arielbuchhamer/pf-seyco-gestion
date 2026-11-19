@@ -21,14 +21,9 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
-        // Sin panelGuard: cualquier rol con sesión entra a su propio perfil.
-        path: 'perfil',
-        loadComponent: () =>
-          import('./pages/perfil/perfil.component').then((m) => m.PerfilComponent),
-      },
-      {
+        // Mi perfil no es una ruta: es un diálogo que abre el shell (shared/perfil).
         // Patrón para proteger una view: panelGuard(panel) acá, y el mismo panel en su entrada
-        // de MENU_ITEMS (layout/shell.component.ts) para que no aparezca en el menú. Qué roles
+        // de MENU (layout/menu.ts) para que no aparezca en el menú. Qué roles
         // ven cada panel se configura en la base (roles_paneles) desde la pantalla Roles.
         path: 'proyectos',
         canActivate: [panelGuard(PANELES.proyectos)],
@@ -55,11 +50,6 @@ export const routes: Routes = [
         canActivate: [panelGuard(PANELES.proyectos)],
         loadComponent: () =>
           import('./pages/portafolio/portafolio.component').then((m) => m.PortafolioComponent),
-      },
-      {
-        path: 'tareas',
-        canActivate: [panelGuard(PANELES.tareas)],
-        loadComponent: () => import('./pages/tareas/tareas.component').then((m) => m.TareasComponent),
       },
       {
         path: 'usuarios',

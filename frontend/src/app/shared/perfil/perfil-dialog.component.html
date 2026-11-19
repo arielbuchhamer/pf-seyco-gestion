@@ -1,0 +1,168 @@
+<dialog #dialogo class="perfil" aria-labelledby="perfil-titulo" (close)="cerrado()" (cancel)="cancelarEscape($event)" (click)="clicFondo($event)">
+  <div class="perfil__cabecera">
+    <h2 id="perfil-titulo">{{ titulo() }}</h2>
+    <button type="button" class="perfil__cerrar" title="Cerrar" aria-label="Cerrar" [disabled]="saving()" (click)="salir()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="perfil__estado muted">Cargando tus datos…</p>
+  } @else if (errorMessage()) {
+    <div class="perfil__estado">
+      <p class="error" role="alert">{{ errorMessage() }}</p>
+      <button type="button" class="btn btn--ghost" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (perfil(); as perfil) {
+    @switch (vista()) {
+      @case ('ver') {
+        <div class="perfil__identidad">
+          <app-avatar [usuario]="perfil" tamano="lg" />
+          <div class="perfil__quien">
+            <strong>{{ nombre(perfil) }}</strong>
+            <span class="muted">{{ perfil.email }}</span>
+            <div class="perfil__roles">
+              @for (rol of roles(); track rol) {
+                <span class="badge rol">{{ rol }}</span>
+              } @empty {
+                <span class="badge rol">sin rol</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <dl class="perfil__datos">
+          <div><dt>Nombre</dt><dd>{{ perfil.nombre || '-' }}</dd></div>
+          <div><dt>Apellido</dt><dd>{{ perfil.apellido || '-' }}</dd></div>
+          <div><dt>DNI</dt><dd>{{ perfil.dni ?? '-' }}</dd></div>
+          <div><dt>Teléfono</dt><dd>{{ perfil.telefono || '-' }}</dd></div>
+          <div><dt>Miembro desde</dt><dd>{{ perfil.fechaAlta ? (perfil.fechaAlta | date: 'dd/MM/yyyy') : '-' }}</dd></div>
+        </dl>
+
+        <div class="dialog__actions">
+          <button type="button" class="btn btn--ghost con-icono" (click)="cambiarClave()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+              <rect x="5" y="10.5" width="14" height="9.5" rx="2" stroke="currentColor" stroke-width="1.7" />
+              <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" stroke-width="1.7" />
+            </svg>
+            Cambiar contraseña
+          </button>
+          <button type="button" class="btn btn--primary" (click)="editar()">Editar perfil</button>
+        </div>
+      }
+
+      @case ('editar') {
+        <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" [value]="perfil.email" readonly />
+            <small class="field__hint">El email identifica tu cuenta y no se puede cambiar.</small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Nombre</span>
+              <input type="text" formControlName="nombre" autocomplete="given-name" />
+              @if (form.controls.nombre.touched && form.controls.nombre.errors; as errores) {
+                <small class="field__error">{{ errores['maxlength'] ? 'Se aceptan hasta 50 caracteres.' : 'El nombre es obligatorio.' }}</small>
+              }
+            </label>
+            <label class="field">
+              <span>Apellido</span>
+              <input type="text" formControlName="apellido" autocomplete="family-name" />
+              @if (form.controls.apellido.touched && form.controls.apellido.errors; as errores) {
+                <small class="field__error">{{ errores['maxlength'] ? 'Se aceptan hasta 50 caracteres.' : 'El apellido es obligatorio.' }}</small>
+              }
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>DNI</span>
+              <input type="text" inputmode="numeric" formControlName="dni" autocomplete="off" />
+              @if (form.controls.dni.touched && form.controls.dni.errors; as errores) {
+                <small class="field__error">{{ errores['soloNumeros'] ? 'Sólo se aceptan números.' : 'DNI inválido.' }}</small>
+              }
+            </label>
+            <label class="field">
+              <span>Teléfono</span>
+              <input type="text" inputmode="tel" formControlName="telefono" autocomplete="tel" />
+              @if (form.controls.telefono.touched && form.controls.telefono.errors; as errores) {
+                <small class="field__error">{{ errores['soloNumeros'] ? 'Sólo se aceptan números.' : 'Hasta 50 caracteres.' }}</small>
+              }
+            </label>
+          </div>
+          @if (formError()) {
+            <p class="error" role="alert">{{ formError() }}</p>
+          }
+          <div class="dialog__actions">
+            <button type="button" class="btn btn--ghost" [disabled]="saving()" (click)="irA('ver')">Cancelar</button>
+            <button type="submit" class="btn btn--primary" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
+          </div>
+        </form>
+      }
+
+      @case ('contrasena') {
+        <form [formGroup]="claveForm" (ngSubmit)="guardarClave()" novalidate>
+          <label class="field">
+            <span>Contraseña actual</span>
+            <div class="field__password">
+              <input [type]="visibles().actual ? 'text' : 'password'" formControlName="actual" autocomplete="current-password" />
+              <ng-container *ngTemplateOutlet="ojo; context: { campo: 'actual' }" />
+            </div>
+            @if (claveForm.controls.actual.touched && claveForm.controls.actual.invalid) {
+              <small class="field__error">Ingresá tu contraseña actual.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Nueva contraseña</span>
+            <div class="field__password">
+              <input [type]="visibles().nueva ? 'text' : 'password'" formControlName="nueva" autocomplete="new-password" />
+              <ng-container *ngTemplateOutlet="ojo; context: { campo: 'nueva' }" />
+            </div>
+            @if (claveForm.controls.nueva.touched && claveForm.controls.nueva.invalid) {
+              <small class="field__error">Tiene que tener entre 8 y 72 caracteres y al menos un número.</small>
+            } @else {
+              <small class="field__hint">Entre 8 y 72 caracteres, con al menos un número.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Repetir nueva contraseña</span>
+            <div class="field__password">
+              <input [type]="visibles().repetir ? 'text' : 'password'" formControlName="repetir" autocomplete="new-password" />
+              <ng-container *ngTemplateOutlet="ojo; context: { campo: 'repetir' }" />
+            </div>
+            @if (claveForm.controls.repetir.touched && (claveForm.controls.repetir.invalid || claveForm.hasError('noCoinciden'))) {
+              <small class="field__error">{{ claveForm.hasError('noCoinciden') ? 'Las contraseñas no coinciden.' : 'Repetí la nueva contraseña.' }}</small>
+            }
+          </label>
+          <p class="perfil__aviso">Al cambiarla se cierran tus sesiones abiertas en otros dispositivos.</p>
+          @if (formError()) {
+            <p class="error" role="alert">{{ formError() }}</p>
+          }
+          <div class="dialog__actions">
+            <button type="button" class="btn btn--ghost" [disabled]="saving()" (click)="irA('ver')">Cancelar</button>
+            <button type="submit" class="btn btn--primary" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Cambiar contraseña' }}</button>
+          </div>
+        </form>
+      }
+    }
+  }
+</dialog>
+
+<ng-template #ojo let-campo="campo">
+  <button
+    type="button"
+    class="field__toggle"
+    (click)="alternarVisible(campo)"
+    [attr.aria-label]="esVisible(campo) ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+  >
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M1.5 12S5.3 4.5 12 4.5 22.5 12 22.5 12 18.7 19.5 12 19.5 1.5 12 1.5 12Z" stroke="currentColor" stroke-width="1.6" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
+      @if (esVisible(campo)) {
+        <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      }
+    </svg>
+  </button>
+</ng-template>

@@ -9,76 +9,31 @@
     >
       <span></span><span></span><span></span>
     </button>
-    <a class="topbar__brand" routerLink="/dashboard" title="Ir al menú principal" aria-label="Seyco S.A - Ir al menú principal">
-      <img src="assets/img/Logo_seyco.png" alt="Seyco S.A" class="topbar__logo" />
+    <a class="topbar__brand" routerLink="/dashboard" title="Ir al menú principal" aria-label="Obralia - Ir al menú principal">
+      <img src="assets/img/logo_obralia.png" alt="Obralia" class="topbar__logo" />
     </a>
     @if (auth.currentUser(); as usuario) {
-      <app-usuario-menu [usuario]="usuario" (perfil)="irAPerfil()" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
+      <app-usuario-menu [usuario]="usuario" (perfil)="perfilOpen.set(true)" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
     }
   </header>
 
   @if (menuOpen()) {
     <button type="button" class="backdrop" aria-label="Cerrar menú" (click)="closeMenu()"></button>
     <nav class="menu">
-      @if (visibleMenuItems().length > 0) {
-        @for (item of visibleMenuItems(); track item.path) {
-          @if (iniciaSeccion($index)) {
-            <p class="menu__seccion">{{ item.seccion }}</p>
-          }
+      <a class="menu__item" routerLink="/dashboard" routerLinkActive="menu__item--activo" (click)="closeMenu()">
+        <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+          <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        </svg>
+        Menú principal
+      </a>
+      @for (seccion of secciones(); track seccion.titulo) {
+        <p class="menu__seccion">{{ seccion.titulo }}</p>
+        @for (item of seccion.items; track item.path) {
           <a class="menu__item" [routerLink]="item.path" routerLinkActive="menu__item--activo" (click)="closeMenu()">
-            @switch (item.icon) {
-              @case ('usuarios') {
-                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6" />
-                  <path
-                    d="M4.5 19.5c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              }
-              @case ('roles') {
-                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <path
-                    d="M12 3.5l7 2.8v5.2c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.3l7-2.8Z"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linejoin="round"
-                  />
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              }
-              @case ('tareas') {
-                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <path d="M9 6.5h11M9 12h11M9 17.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                  <path
-                    d="M3.5 6.5l1.2 1.2 2.3-2.4M3.5 12l1.2 1.2 2.3-2.4M3.5 17.5l1.2 1.2 2.3-2.4"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              }
-              @case ('portafolio') {
-                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                </svg>
-              }
-              @case ('proyectos') {
-                <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.6" />
-                  <path d="M3.5 9.5h17" stroke="currentColor" stroke-width="1.6" />
-                  <path d="M8 3.5v3M16 3.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                </svg>
-              }
-            }
+            <app-icono-menu class="menu__icon" [icono]="item.icon" />
             {{ item.label }}
           </a>
         }
-      } @else {
-        <p class="menu__empty">No hay opciones disponibles.</p>
       }
     </nav>
   }
@@ -89,6 +44,10 @@
 
   @if (faqOpen()) {
     <app-faq-dialog (cerrar)="faqOpen.set(false)" />
+  }
+
+  @if (perfilOpen()) {
+    <app-perfil-dialog (cerrar)="perfilOpen.set(false)" />
   }
 
   <app-snackbar />

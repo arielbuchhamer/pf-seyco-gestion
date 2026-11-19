@@ -105,13 +105,6 @@
   background: var(--color-bg);
 }
 
-.menu__empty {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  padding: 0.7rem 0.75rem;
-  margin: 0;
-}
-
 .content {
   flex: 1;
 }
