@@ -1,0 +1,184 @@
+<aside class="barra" [class.barra--contraida]="contraida()">
+  <a class="marca" routerLink="/dashboard" aria-label="Obralia, ir al menú principal">
+    <span class="marca__emblema">
+      <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+        <defs>
+          <linearGradient id="emblema-fondo" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1b74c2" />
+            <stop offset="1" stop-color="#0b4880" />
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="9" fill="url(#emblema-fondo)" />
+        <circle
+          cx="20"
+          cy="20"
+          r="11.5"
+          fill="none"
+          stroke="#ffffff"
+          stroke-opacity="0.3"
+          stroke-width="2.6"
+        />
+        <path
+          d="M20 8.5a11.5 11.5 0 1 1-11.5 11.5"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="2.6"
+          stroke-linecap="round"
+        />
+        <path d="M21.6 11.5 14.5 21.7h4.7l-1.1 6.8 7.4-10.4h-4.8z" fill="#f2a93b" />
+      </svg>
+    </span>
+    @if (!contraida()) {
+      <span class="marca__texto">
+        <span class="marca__nombre">Obral<span>ia</span></span>
+        <span class="marca__lema">GESTIÓN DE OBRAS</span>
+      </span>
+    }
+  </a>
+
+  <nav class="nav" aria-label="Navegación principal">
+    @for (grupo of grupos(); track $index) {
+      @if ($index > 0) {
+        <hr class="separador" />
+      }
+      <div class="grupo" role="group" [attr.aria-label]="grupo.titulo">
+        @if (grupo.titulo && !contraida()) {
+          <p class="grupo__titulo" aria-hidden="true">{{ grupo.titulo }}</p>
+        }
+        @for (item of grupo.items; track item.path) {
+          <a
+            class="item"
+            [routerLink]="item.path"
+            routerLinkActive="item--activa"
+            ariaCurrentWhenActive="page"
+            [attr.aria-label]="item.label"
+            (mouseenter)="mostrarTooltip(item, $event)"
+            (focus)="mostrarTooltip(item, $event)"
+            (mouseleave)="ocultarTooltip()"
+            (blur)="ocultarTooltip()"
+          >
+            <span class="item__icono"><app-icono-menu [icono]="item.icono" [tamano]="20" /></span>
+            @if (!contraida()) {
+              <span class="item__texto">{{ item.label }}</span>
+            }
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <div class="pie">
+    <div #filaPie class="pie__fila">
+      @if (usuario(); as u) {
+        <button
+          #botonUsuario
+          type="button"
+          class="usuario"
+          [class.abierto]="menuAbierto()"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuAbierto()"
+          [attr.aria-label]="'Menú de usuario: ' + nombre(u) + ', ' + rol(u)"
+          (click)="alternarMenu()"
+        >
+          <span class="usuario__avatar" aria-hidden="true">{{ iniciales(u) }}</span>
+          @if (!contraida()) {
+            <span class="usuario__datos">
+              <span class="usuario__nombre">{{ nombre(u) }}</span>
+              <span class="usuario__rol">{{ rol(u) }}</span>
+            </span>
+            <svg
+              class="usuario__flechas"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M8 9.5l4-4 4 4M8 14.5l4 4 4-4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          }
+        </button>
+      }
+      @if (puedeVerAvisos()) {
+        <button
+          #botonAvisos
+          type="button"
+          class="campana"
+          [class.abierto]="avisosAbierto()"
+          aria-haspopup="dialog"
+          [attr.aria-expanded]="avisosAbierto()"
+          [attr.aria-label]="etiquetaAvisos()"
+          (click)="alternarAvisos()"
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+            <path
+              d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          @if (avisosNuevos()) {
+            <span class="campana__globito" aria-hidden="true">{{ avisosNuevos() }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <button
+      type="button"
+      class="contraer"
+      [attr.aria-label]="contraida() ? 'Expandir menú' : null"
+      (click)="alternarContraida()"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+        @if (contraida()) {
+          <path
+            d="M6 6l6 6-6 6M13 6l6 6-6 6"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        } @else {
+          <path
+            d="M18 6l-6 6 6 6M11 6l-6 6 6 6"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        }
+      </svg>
+      @if (!contraida()) {
+        <span>Contraer menú</span>
+      }
+    </button>
+  </div>
+
+  @if (tooltip(); as t) {
+    <div class="tooltip" role="tooltip" [style.top.px]="t.top">{{ t.texto }}</div>
+  }
+
+  @if (menuAbierto() && usuario(); as u) {
+    <app-usuario-menu
+      [usuario]="u"
+      [ancla]="anclaMenu()"
+      [rol]="rol(u)"
+      (perfil)="elegir('perfil')"
+      (faqs)="elegir('faqs')"
+      (cerrarSesion)="elegir('cerrarSesion')"
+    />
+  }
+
+  @if (avisosAbierto() && puedeVerAvisos()) {
+    <app-avisos-panel (cerrar)="cerrarAvisos()" />
+  }
+</aside>

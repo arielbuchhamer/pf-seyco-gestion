@@ -1,42 +1,9 @@
 <div class="shell">
-  <header class="topbar">
-    <button
-      type="button"
-      class="hamburger"
-      (click)="toggleMenu()"
-      [attr.aria-expanded]="menuOpen()"
-      aria-label="Abrir menú"
-    >
-      <span></span><span></span><span></span>
-    </button>
-    <a class="topbar__brand" routerLink="/dashboard" title="Ir al menú principal" aria-label="Obralia - Ir al menú principal">
-      <img src="assets/img/logo_obralia.png" alt="Obralia" class="topbar__logo" />
-    </a>
-    @if (auth.currentUser(); as usuario) {
-      <app-usuario-menu [usuario]="usuario" (perfil)="perfilOpen.set(true)" (faqs)="faqOpen.set(true)" (cerrarSesion)="logout()" />
-    }
-  </header>
-
-  @if (menuOpen()) {
-    <button type="button" class="backdrop" aria-label="Cerrar menú" (click)="closeMenu()"></button>
-    <nav class="menu">
-      <a class="menu__item" routerLink="/dashboard" routerLinkActive="menu__item--activo" (click)="closeMenu()">
-        <svg class="menu__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-          <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-        </svg>
-        Menú principal
-      </a>
-      @for (seccion of secciones(); track seccion.titulo) {
-        <p class="menu__seccion">{{ seccion.titulo }}</p>
-        @for (item of seccion.items; track item.path) {
-          <a class="menu__item" [routerLink]="item.path" routerLinkActive="menu__item--activo" (click)="closeMenu()">
-            <app-icono-menu class="menu__icon" [icono]="item.icon" />
-            {{ item.label }}
-          </a>
-        }
-      }
-    </nav>
-  }
+  <app-sidebar
+    (perfil)="perfilOpen.set(true)"
+    (faqs)="faqOpen.set(true)"
+    (cerrarSesion)="logout()"
+  />
 
   <main class="content">
     <router-outlet />

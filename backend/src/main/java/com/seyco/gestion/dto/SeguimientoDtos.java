@@ -110,6 +110,23 @@ public final class SeguimientoDtos {
 			List<AprendizajeTipoObra> aprendizaje) {
 	}
 
+	// ── Avisos (todas las obras en una sola lista) ──
+
+	// Un aviso de una obra. Se calcula al momento: no se guarda. solapa: la solapa de la obra donde se
+	// resuelve (fechas, gantt, indicadores, costos o certificaciones).
+	public record AvisoProyecto(Long proyectoId, String proyectoNombre, NivelAlerta nivel, String titulo,
+			String detalle, String solapa) {
+	}
+
+	// proyectosConCriticos: obras con al menos un aviso crítico (no avisos críticos).
+	public record TotalesAvisos(int criticos, int advertencias, int informativos, int proyectosConCriticos) {
+	}
+
+	// GET /api/avisos. Críticos primero, luego advertencias e informativos; dentro de cada nivel,
+	// por nombre de obra.
+	public record Avisos(TotalesAvisos totales, List<AvisoProyecto> avisos) {
+	}
+
 	// ── Cobranzas (pantalla global: qué falta certificar y cobrar en todas las obras) ──
 
 	// Una obra con plata pendiente. nivel/motivo: lo más urgente (CRITICA = obra terminada con

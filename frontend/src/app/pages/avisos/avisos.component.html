@@ -1,0 +1,115 @@
+<section class="page avisos-page">
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a routerLink="/dashboard">Menú principal</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/avisos" aria-current="page">Avisos</a>
+  </nav>
+
+  <app-cabecera titulo="Avisos" subtitulo="Lo que hay que revisar en todas las obras.">
+    <button
+      type="button"
+      class="boton-cabecera"
+      [disabled]="!avisosSvc.puedeVer() || avisosSvc.cargando()"
+      (click)="avisosSvc.recargar(true)"
+    >
+      {{ avisosSvc.cargando() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </app-cabecera>
+
+  @if (!avisosSvc.puedeVer()) {
+    <p class="error" role="alert">No tenés permiso para ver los avisos de las obras.</p>
+  } @else if (avisosSvc.error() && !avisosSvc.totales()) {
+    <p class="error" role="alert">
+      No se pudieron cargar los avisos.
+      <button type="button" class="avisos-page__reintentar" (click)="avisosSvc.recargar(true)">
+        Reintentar
+      </button>
+    </p>
+  } @else if (avisosSvc.totales(); as t) {
+    @if (avisosSvc.error()) {
+      <p class="error" role="alert">
+        No se pudieron actualizar los avisos; se muestran los últimos.
+      </p>
+    }
+
+    <div class="avisos-page__totales">
+      <app-kpi
+        etiqueta="Para revisar"
+        icono="alerta"
+        [valor]="'' + t.criticos"
+        [tono]="t.criticos ? 'critico' : 'ok'"
+        [nota]="
+          t.proyectosConCriticos +
+          (t.proyectosConCriticos === 1 ? ' obra afectada' : ' obras afectadas')
+        "
+      />
+      <app-kpi
+        etiqueta="De atención"
+        icono="alerta"
+        [valor]="'' + t.advertencias"
+        [tono]="t.advertencias ? 'riesgo' : 'ok'"
+        nota="Conviene mirarlos pronto"
+      />
+      <app-kpi
+        etiqueta="Informativos"
+        icono="reloj"
+        [valor]="'' + t.informativos"
+        nota="Sólo para tener en cuenta"
+      />
+    </div>
+
+    @if (!avisosSvc.avisos().length) {
+      <div class="panel avisos-page__vacio" role="status">
+        <span aria-hidden="true">✓</span>
+        <div>
+          <strong>No hay avisos para revisar</strong>
+          <p>Ninguna obra tiene avisos por ahora.</p>
+        </div>
+      </div>
+    } @else {
+      <div class="avisos-page__filtros">
+        <label>
+          Obra
+          <select
+            class="filtro-proyecto"
+            [value]="proyecto()"
+            (change)="proyecto.set($any($event.target).value)"
+          >
+            <option value="">Todos los proyectos</option>
+            @for (p of proyectos(); track p.id) {
+              <option [value]="'' + p.id">{{ p.nombre }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Nivel
+          <select
+            class="filtro-nivel"
+            [value]="nivel()"
+            (change)="nivel.set($any($event.target).value)"
+          >
+            <option value="">Todos los niveles</option>
+            @for (n of niveles; track n) {
+              <option [value]="n">{{ etiquetaNivel(n) }}</option>
+            }
+          </select>
+        </label>
+        @if (hayFiltros()) {
+          <button type="button" class="avisos-page__limpiar" (click)="limpiarFiltros()">
+            Quitar filtros
+          </button>
+        }
+      </div>
+
+      @if (filtrados().length) {
+        <app-avisos [alertas]="filtrados()" />
+      } @else {
+        <p class="avisos-page__sin-resultados" role="status">
+          Ningún aviso coincide con los filtros elegidos.
+        </p>
+      }
+    }
+  } @else {
+    <p class="muted" role="status">Cargando avisos…</p>
+  }
+</section>

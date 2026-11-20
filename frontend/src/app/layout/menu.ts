@@ -1,6 +1,6 @@
 import { PANELES } from '../core/models/acceso.model';
 
-export type IconoMenu = 'usuarios' | 'roles' | 'proyectos' | 'portafolio' | 'cobranzas';
+export type IconoMenu = 'inicio' | 'usuarios' | 'roles' | 'proyectos' | 'portafolio' | 'cobranzas' | 'avisos';
 
 export interface MenuItem {
   label: string;
@@ -22,7 +22,7 @@ export interface MenuSeccion {
 // Una sola definición para la barra lateral y el menú principal (pages/dashboard).
 // Patrón a repetir: cada opción declara qué panel la habilita; debe ser el mismo panel que el
 // panelGuard de su ruta. Qué roles ven cada panel se configura en la base (roles_paneles) desde
-// la pantalla Roles. "Gestión global" (Portafolio) usa el panel de proyectos.
+// la pantalla Roles. "Gestión global" (Portafolio, Cobranzas y Avisos) usa el panel de proyectos.
 // Las tareas no tienen opción propia: viven dentro de cada proyecto (solapa Tareas).
 export const MENU: MenuSeccion[] = [
   {
@@ -44,6 +44,14 @@ export const MENU: MenuSeccion[] = [
         descripcion: 'Lo que falta certificar y cobrar en todas las obras.',
         color: '#1f9d55',
         icon: 'cobranzas',
+      },
+      {
+        label: 'Avisos',
+        path: '/avisos',
+        panel: PANELES.proyectos,
+        descripcion: 'Lo que hay que revisar en todas las obras.',
+        color: '#c43c33',
+        icon: 'avisos',
       },
     ],
   },

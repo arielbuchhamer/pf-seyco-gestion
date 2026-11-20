@@ -1,8 +1,9 @@
 /* Paleta y variables compartidas por toda la app â€” mantiene el CSS de cada
    componente liviano (hay un budget de 4kB/8kB por componente en angular.json). */
 :root {
-  /* Alto fijo de la barra superior: las pantallas de tablero (Usuarios, Roles) ocupan el resto. */
-  --alto-topbar: 4.75rem;
+  /* Alto de la barra superior: ya no hay (la navegación es la barra lateral), queda en 0 para que
+     las pantallas de tablero (Usuarios, Roles, Proyectos) ocupen toda la altura. */
+  --alto-topbar: 0px;
 
   --color-bg: #f4f6fb;
   --color-surface: #ffffff;
