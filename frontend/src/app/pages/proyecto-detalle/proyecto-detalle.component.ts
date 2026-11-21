@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { PuedeDirective } from '../../core/directives/puede.directive';
@@ -96,7 +96,13 @@ export class ProyectoDetalleComponent {
     return p ? estaVencido(p.fechaFin, p.estado) : false;
   });
 
-  protected readonly solapa = signal<Solapa>('tareas');
+  // Solapa pedida por la URL (?solapa=gantt). La elegida con un clic gana, pero se descarta si la
+  // URL cambia (por ejemplo, al ir a otro aviso de la misma obra).
+  readonly solapaPedida = input<string | undefined>(undefined, { alias: 'solapa' });
+  private readonly solapaElegida = linkedSignal<string | undefined, Solapa | null>({
+    source: this.solapaPedida,
+    computation: () => null,
+  });
   // Orden del ciclo del proyecto; Presupuesto sólo si el proyecto se importó con uno.
   protected readonly solapasVisibles = computed<{ id: Solapa; label: string; contador?: string }[]>(() => {
     const p = this.presupuesto();
@@ -110,16 +116,24 @@ export class ProyectoDetalleComponent {
       ...(p ? [{ id: 'presupuesto' as Solapa, label: 'Presupuesto', contador: pesosCorto(p.totales.total) }] : []),
     ];
   });
+  // Una solapa inexistente, o Presupuesto en un proyecto sin presupuesto, vuelve a la de por defecto.
+  protected readonly solapa = computed<Solapa>(() => {
+    const ids = this.solapasVisibles().map((s) => s.id);
+    const elegida = this.solapaElegida();
+    if (elegida) return elegida;
+    const pedida = this.solapaPedida();
+    return ids.find((id) => id === pedida) ?? 'tareas';
+  });
   protected readonly abrirEnPresupuesto = signal<string[] | null>(null);
 
   irAlPresupuesto(camino: string[]): void {
     this.abrirEnPresupuesto.set(camino);
-    this.solapa.set('presupuesto');
+    this.solapaElegida.set('presupuesto');
   }
 
   verSolapa(solapa: Solapa): void {
     if (solapa === 'presupuesto') this.abrirEnPresupuesto.set(null);
-    this.solapa.set(solapa);
+    this.solapaElegida.set(solapa);
   }
 
   recargar(): void {

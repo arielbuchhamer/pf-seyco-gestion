@@ -6,6 +6,8 @@ import { semaforoDesvio } from '../../core/utils/seguimiento';
 export interface Aviso extends Alerta {
   // En el Portafolio, de qué obra es el aviso (link al proyecto).
   proyecto?: { id: number; nombre: string };
+  // Solapa de la obra donde se resuelve el aviso (de /api/avisos).
+  solapa?: string;
 }
 
 // Panel "Avisos" (como "Detección de desvíos" del prototipo): contadores arriba, cada aviso como
@@ -50,7 +52,7 @@ export interface Aviso extends Alerta {
             </span>
             <div class="aviso__texto">
               @if (a.proyecto) {
-                <a class="aviso__obra" [routerLink]="['/proyectos', a.proyecto.id]">{{ a.proyecto.nombre }}</a>
+                <a class="aviso__obra" [routerLink]="['/proyectos', a.proyecto.id]" [queryParams]="a.solapa ? { solapa: a.solapa } : null">{{ a.proyecto.nombre }}</a>
               }
               <strong>{{ a.titulo }}</strong>
               <span class="sr-only">({{ a.nivel === 'CRITICA' ? 'para revisar' : a.nivel === 'ADVERTENCIA' ? 'de atención' : 'informativo' }})</span>

@@ -35,6 +35,12 @@ export function nombreCompleto(usuario: Pick<Usuario, 'email' | 'nombre' | 'apel
   return nombre || usuario.email;
 }
 
+// Nombre + apellido ("Pablo Castro" → "PC"); usuarios anteriores a esos campos, del email.
+export function iniciales(usuario: Pick<Usuario, 'email' | 'nombre' | 'apellido'>): string {
+  if (usuario.nombre && usuario.apellido) return (usuario.nombre[0] + usuario.apellido[0]).toUpperCase();
+  return usuario.email[0].toUpperCase();
+}
+
 // Payload para crear/editar. La contraseña es obligatoria al crear; al editar,
 // omitirla significa "no cambiarla" (el backend lo interpreta así).
 // El rol se asigna aparte, con /api/roles/{id}/usuarios (ver RolService).

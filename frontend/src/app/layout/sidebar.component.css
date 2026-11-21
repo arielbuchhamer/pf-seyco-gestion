@@ -1,0 +1,327 @@
+:host {
+  flex: none;
+  width: var(--ancho-barra, 260px);
+  transition: width 0.2s ease;
+}
+
+.barra {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  background: #0b4880;
+  color: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 1rem 1rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  text-decoration: none;
+}
+
+.barra--contraida .marca {
+  justify-content: center;
+  margin-inline: 0.5rem;
+}
+
+.marca__emblema {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 3px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.marca__texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.marca__nombre {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.marca__nombre span {
+  color: #9cc7ec;
+}
+
+.marca__lema {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: #b9d3ec;
+}
+
+.nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.75rem 0.75rem;
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grupo__titulo {
+  margin: 0.25rem 0.75rem 0.4rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b9d3ec;
+}
+
+.separador {
+  height: 0;
+  margin: 0.7rem 0.25rem;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 44px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14.5px;
+  text-decoration: none;
+}
+
+.item__icono {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: #dbe9f6;
+}
+
+.item__texto {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.item--activa,
+.item--activa:hover {
+  background: #fff;
+  color: #0b4880;
+  font-weight: 600;
+}
+
+.item--activa .item__icono {
+  color: #0f5fa6;
+}
+
+.campana__globito {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #f2a93b;
+  color: #1c1f2a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.barra--contraida .item {
+  justify-content: center;
+  padding: 0;
+}
+
+.item:focus-visible,
+.marca:focus-visible,
+.usuario:focus-visible,
+.campana:focus-visible,
+.contraer:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.pie {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0 0.75rem;
+  padding: 0.75rem 0 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.pie__fila {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.barra--contraida .pie__fila {
+  flex-direction: column;
+}
+
+.barra--contraida .campana {
+  order: -1;
+}
+
+.usuario,
+.campana,
+.contraer {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.usuario {
+  flex: 1;
+  min-width: 0;
+  gap: 0.6rem;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+}
+
+.barra--contraida .usuario {
+  flex: none;
+  padding: 0.3rem;
+}
+
+.usuario__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #0b4880;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.usuario__datos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.usuario__nombre,
+.usuario__rol {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.usuario__rol {
+  font-size: 12px;
+  font-weight: 400;
+  color: #b9d3ec;
+}
+
+.usuario__flechas {
+  flex-shrink: 0;
+  color: #b9d3ec;
+}
+
+.campana {
+  position: relative;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+}
+
+.campana__globito {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+.usuario:hover,
+.campana:hover,
+.contraer:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.abierto,
+.abierto:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.contraer {
+  gap: 0.6rem;
+  height: 40px;
+  padding: 0 0.75rem;
+  font-size: 14px;
+  color: #b9d3ec;
+}
+
+.barra--contraida .contraer {
+  justify-content: center;
+  padding: 0;
+}
+
+.tooltip {
+  position: fixed;
+  left: 80px;
+  z-index: 50;
+  transform: translateY(-50%);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  background: #1c1f2a;
+  color: #fff;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+/* Celular: la barra ocupa siempre 72 px de la página; expandida se superpone al contenido. */
+@media (max-width: 767px) {
+  :host {
+    width: 72px;
+  }
+
+  .barra:not(.barra--contraida) {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 260px;
+    z-index: 30;
+    box-shadow: var(--shadow-card);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    transition: none;
+  }
+}
