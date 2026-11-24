@@ -87,7 +87,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-success);
 }
 
@@ -108,7 +108,7 @@
 
 .ayuda {
   margin: -0.5rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
 }
 
@@ -131,7 +131,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
 }
 
@@ -147,7 +147,7 @@
   padding: 0.6rem 0.75rem;
   min-height: 44px;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--texto-cuerpo);
   color: var(--color-ink);
 }
 
@@ -176,7 +176,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  font-size: 0.95rem;
+  font-size: var(--texto-destacado);
 }
 
 .barra-confirmar__texto {

@@ -77,7 +77,7 @@ import { pesosCorto } from '../../core/utils/formato';
       text-align: left;
     }
     .cifra span, .nota {
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
       color: var(--color-text-muted);
     }
     .cifra em {
@@ -97,7 +97,7 @@ import { pesosCorto } from '../../core/utils/formato';
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
-      font-size: 0.875rem;
+      font-size: var(--texto-cuerpo);
     }
     .check {
       display: flex;

@@ -46,20 +46,20 @@ export interface GrupoColumnas {
     </div>
   `,
   styles: `
-    .leyenda { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.6rem; }
+    .leyenda { display: flex; gap: 1rem; font-size: var(--texto-secundario); color: var(--color-text-muted); margin-bottom: 0.6rem; }
     .leyenda span { display: inline-flex; align-items: center; gap: 0.35rem; }
     .leyenda i { width: 10px; height: 10px; border-radius: 3px; }
     .grafico { position: relative; height: 210px; padding-left: 3rem; margin-top: 1.1rem; }
     .grilla { position: absolute; inset: 0 0 1.6rem 0; display: flex; flex-direction: column; justify-content: space-between; }
     .grilla__linea { border-top: 1px solid var(--color-border); position: relative; height: 0; }
-    .grilla__linea span { position: absolute; left: 0; top: -0.5rem; font-size: 0.68rem; color: var(--color-text-muted); }
+    .grilla__linea span { position: absolute; left: 0; top: -0.5rem; font-size: var(--texto-chico); color: var(--color-text-muted); }
     .grupos { position: relative; height: 100%; display: flex; gap: 1rem; }
     .grupo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .columnas { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
     .columna { position: relative; flex: 1; max-width: 2.6rem; height: 100%; }
     .columna__barra { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 6px 6px 0 0; min-height: 2px; }
-    .columna__valor { position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--color-text); white-space: nowrap; }
-    .grupo__etiqueta { height: 1.6rem; line-height: 1.6rem; font-size: 0.75rem; text-align: center; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .columna__valor { position: absolute; left: 50%; transform: translateX(-50%); font-size: var(--texto-chico); font-weight: 600; color: var(--color-text); white-space: nowrap; }
+    .grupo__etiqueta { height: 1.6rem; line-height: 1.6rem; font-size: var(--texto-chico); text-align: center; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   `,
 })
 export class ColumnasComponent {

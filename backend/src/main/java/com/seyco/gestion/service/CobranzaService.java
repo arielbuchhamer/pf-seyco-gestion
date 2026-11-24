@@ -5,10 +5,13 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.seyco.gestion.dto.SeguimientoDtos.ActualizacionCac;
 import com.seyco.gestion.dto.SeguimientoDtos.Cobranzas;
 import com.seyco.gestion.dto.SeguimientoDtos.FacturaPendiente;
 import com.seyco.gestion.dto.SeguimientoDtos.Indicadores;
@@ -41,12 +44,14 @@ public class CobranzaService {
 	private final ProyectoRepository proyectoRepository;
 	private final CertificacionRepository certificacionRepository;
 	private final IndicadoresService indicadoresService;
+	private final CertificacionService certificacionService;
 
 	public CobranzaService(ProyectoRepository proyectoRepository, CertificacionRepository certificacionRepository,
-			IndicadoresService indicadoresService) {
+			IndicadoresService indicadoresService, CertificacionService certificacionService) {
 		this.proyectoRepository = proyectoRepository;
 		this.certificacionRepository = certificacionRepository;
 		this.indicadoresService = indicadoresService;
+		this.certificacionService = certificacionService;
 	}
 
 	public Cobranzas cobranzas() {
@@ -56,11 +61,19 @@ public class CobranzaService {
 
 		for (Proyecto p : proyectoRepository.findAll()) {
 			List<Certificacion> certificaciones = certificacionRepository.findByProyectoIdOrderByNumeroAsc(p.getId());
+			boolean hayPendientes = certificaciones.stream().anyMatch(c -> c.getEstado() == EstadoCertificacion.PENDIENTE_COBRO);
+			// Lo pendiente llevado a hoy con el índice CAC (mismo cálculo que la solapa Certificaciones).
+			ActualizacionCac cac = hayPendientes ? certificacionService.actualizacionCac(p.getId()) : null;
+			Map<Long, BigDecimal> actualizados = new HashMap<>();
+			if (cac != null && cac.disponible()) {
+				cac.certificaciones().forEach(a -> actualizados.put(a.certificacionId(), a.montoActualizado()));
+			}
+			LocalDate periodoCac = cac != null && cac.disponible() ? cac.periodoActual() : null;
 			List<FacturaPendiente> pendientes = certificaciones.stream()
 					.filter(c -> c.getEstado() == EstadoCertificacion.PENDIENTE_COBRO)
 					.map(c -> new FacturaPendiente(p.getId(), p.getNombre(), c.getId(), c.getNumero(), c.getTipo(),
 							c.getFechaEmision(), c.getNroFactura(), c.getMonto(),
-							ChronoUnit.DAYS.between(c.getFechaEmision(), hoy)))
+							ChronoUnit.DAYS.between(c.getFechaEmision(), hoy), actualizados.get(c.getId()), periodoCac))
 					.toList();
 			facturas.addAll(pendientes);
 
@@ -81,10 +94,15 @@ public class CobranzaService {
 		BigDecimal sinCertificarTerminadas = sumar(obras, true);
 		BigDecimal facturadoSinCobrar = facturas.stream().map(FacturaPendiente::monto).reduce(BigDecimal.ZERO,
 				BigDecimal::add);
+		// Si alguna factura no se pudo actualizar (sin índice), se toma su monto original.
+		BigDecimal facturadoCac = facturas.stream().anyMatch(f -> f.montoActualizado() != null)
+				? facturas.stream().map(f -> f.montoActualizado() != null ? f.montoActualizado() : f.monto())
+						.reduce(BigDecimal.ZERO, BigDecimal::add)
+				: null;
 		return new Cobranzas(sinCertificar.add(facturadoSinCobrar), facturadoSinCobrar, sinCertificar,
 				sinCertificarTerminadas,
 				(int) obras.stream().filter(o -> o.terminada() && o.certificacion().saldoPorCertificar().signum() > 0).count(),
-				obras, facturas);
+				obras, facturas, facturadoCac);
 	}
 
 	private static ObraCobranza obra(Proyecto p, Indicadores i, ResumenCertificacion cert, boolean terminada,

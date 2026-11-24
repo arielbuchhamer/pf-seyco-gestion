@@ -13,7 +13,7 @@
   align-items: center;
   gap: 0.5rem;
   margin: 0 0 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
@@ -83,18 +83,18 @@
 
 .kanban__card-desc {
   margin: 0 0 0.3rem;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .kanban__card-meta {
   margin: 0 0 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
 }
 
 .kanban__estado-select {
   width: 100%;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
@@ -109,7 +109,7 @@
 .kanban__card-proyecto {
   display: inline-block;
   margin: 0 0 0.3rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   font-weight: 600;
   color: var(--color-primary);
   text-decoration: none;
@@ -124,7 +124,7 @@
   align-items: center;
   gap: 0.4rem;
   margin: 0 0 0.6rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
 }
 
 .kanban__sin-asignar {
@@ -132,7 +132,7 @@
 }
 
 .kanban__empty {
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .kanban__pager {
@@ -141,7 +141,7 @@
   justify-content: center;
   gap: 0.75rem;
   margin-top: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .kanban__pager .icon-btn {

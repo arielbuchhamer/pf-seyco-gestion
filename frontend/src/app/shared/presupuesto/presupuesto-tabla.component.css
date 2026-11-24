@@ -23,7 +23,7 @@
   width: 100%;
   min-width: 47rem;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .arbol--rubros {
@@ -50,7 +50,7 @@
 
 .arbol th {
   border-top: 0;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 
 .rol {
   margin-left: 0.5rem;
-  font-size: 0.7rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
@@ -117,7 +117,7 @@
 }
 
 .codigo {
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 400;
   color: var(--color-text-muted);
 }

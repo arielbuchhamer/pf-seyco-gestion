@@ -51,7 +51,7 @@ const M = { izq: 36, der: 12, arr: 10, aba: 24 };
     }
   `,
   styles: `
-    .leyenda { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+    .leyenda { display: flex; gap: 1rem; font-size: var(--texto-chico); color: var(--color-text-muted); margin-bottom: 0.5rem; }
     .leyenda > span { display: inline-flex; align-items: center; gap: 0.4rem; }
     .linea { width: 18px; border-top: 2px solid #2a9d8f; }
     .linea--plan { border-top-style: dashed; }
@@ -69,7 +69,7 @@ const M = { izq: 36, der: 12, arr: 10, aba: 24 };
     .punto--plan { fill: #2a9d8f; }
     .punto--real { fill: var(--color-primary); }
     .tooltip { position: absolute; top: 0; transform: translateX(-50%); background: var(--color-ink); color: #fff;
-      font-size: 0.72rem; padding: 0.35rem 0.55rem; border-radius: 6px; pointer-events: none; white-space: nowrap; }
+      font-size: var(--texto-chico); padding: 0.35rem 0.55rem; border-radius: 6px; pointer-events: none; white-space: nowrap; }
   `,
 })
 export class CurvaSComponent {

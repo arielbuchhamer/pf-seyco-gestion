@@ -60,13 +60,13 @@
 
 .lateral__header h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--texto-destacado);
   color: var(--color-ink);
 }
 
 .lateral__sub {
   margin: 0.15rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
 }
 
@@ -88,7 +88,7 @@
   gap: 0.5rem;
   padding: 0.55rem 0;
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.9rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .lateral__nombre {
@@ -110,7 +110,7 @@
 .chip {
   padding: 0.05rem 0.45rem;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
   color: var(--color-text-muted);
@@ -129,14 +129,14 @@
 
 .dialog h3 {
   margin: 0.5rem 0 0;
-  font-size: 0.95rem;
+  font-size: var(--texto-destacado);
   color: var(--color-ink);
 }
 
 .permisos {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .permisos th,
@@ -152,7 +152,7 @@
 }
 
 .permisos th {
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);

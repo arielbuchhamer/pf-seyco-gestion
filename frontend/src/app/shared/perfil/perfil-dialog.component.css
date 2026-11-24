@@ -26,7 +26,7 @@
 
 h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--texto-titulo);
   color: var(--color-ink);
 }
 
@@ -60,12 +60,12 @@ h2 {
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   overflow-wrap: anywhere;
 }
 
 .perfil__quien strong {
-  font-size: 1.1rem;
+  font-size: var(--texto-titulo);
   color: var(--color-ink);
 }
 
@@ -91,7 +91,7 @@ h2 {
 
 dt {
   margin-bottom: 0.2rem;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -141,7 +141,7 @@ form {
 
 .perfil__aviso {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
 }
 

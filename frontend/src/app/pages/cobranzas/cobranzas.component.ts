@@ -43,7 +43,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
             nota="Sin certificar + facturado sin cobrar" />
           <app-kpi etiqueta="Facturado sin cobrar" icono="factura" [valor]="pesosCorto(c.facturadoSinCobrar)"
             [tono]="c.facturas.length ? 'riesgo' : 'neutro'"
-            [nota]="c.facturas.length + (c.facturas.length === 1 ? ' factura pendiente' : ' facturas pendientes')" />
+            [nota]="c.facturas.length + (c.facturas.length === 1 ? ' factura pendiente' : ' facturas pendientes') + (c.facturadoSinCobrarCac != null ? ' · con índice CAC hoy ' + pesosCorto(c.facturadoSinCobrarCac) : '')" />
           <app-kpi etiqueta="Sin certificar" icono="costo" [valor]="pesosCorto(c.sinCertificar)"
             nota="Trabajo del contrato todavía no facturado" />
           <app-kpi etiqueta="Se puede perder" icono="alerta" [valor]="pesosCorto(c.sinCertificarTerminadas)"
@@ -70,7 +70,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
                     <tr>
                       <td><span class="badge" [class]="'badge ' + badge[o.nivel]">{{ prioridad[o.nivel] }}</span></td>
                       <td>
-                        <a class="obra-link" [routerLink]="['/proyectos', o.proyectoId]">{{ o.nombre }}</a>
+                        <a class="obra-link" [routerLink]="['/proyectos', o.proyectoId]" [queryParams]="{ solapa: 'certificaciones' }">{{ o.nombre }}</a>
                         <div class="muted chico">{{ o.cliente ?? 'Sin cliente' }} · {{ estadoLabel[o.estado] }}</div>
                       </td>
                       <td class="chico">{{ redondo(o.avanceReal) }} %</td>
@@ -98,16 +98,25 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
             <div class="tabla-scroll">
               <table class="tabla-obras">
                 <thead>
-                  <tr><th>Obra</th><th>Certificación</th><th>Emitida</th><th>Factura</th><th class="num">Monto</th><th class="num">Días sin cobrar</th></tr>
+                  <tr><th>Obra</th><th>Certificación</th><th>Emitida</th><th>Factura</th><th class="num">Monto original</th><th class="num">Con índice CAC hoy</th><th class="num">Días sin cobrar</th></tr>
                 </thead>
                 <tbody>
                   @for (f of facturas.pagina().items; track f.certificacionId) {
                     <tr>
-                      <td><a class="obra-link" [routerLink]="['/proyectos', f.proyectoId]">{{ f.proyecto }}</a></td>
+                      <td><a class="obra-link" [routerLink]="['/proyectos', f.proyectoId]" [queryParams]="{ solapa: 'certificaciones' }">{{ f.proyecto }}</a></td>
                       <td>N.º {{ f.numero }} · {{ tipoLabel[f.tipo] }}</td>
                       <td>{{ fecha(f.fechaEmision) }}</td>
                       <td class="muted">{{ f.nroFactura ?? '—' }}</td>
                       <td class="num">{{ pesos(f.monto) }}</td>
+                      <td class="num">
+                        @if (f.montoActualizado != null) {
+                          <span class="monto-cac">{{ pesos(f.montoActualizado) }}</span>
+                          <span class="nota-cac">Actualizado al día de hoy · CAC {{ mes(f.cacPeriodo) }}</span>
+                        } @else {
+                          <span class="muted">—</span>
+                          <span class="nota-cac nota-cac--gris">Índice CAC no disponible</span>
+                        }
+                      </td>
                       <td class="num"><span class="badge" [class]="'badge ' + (f.dias > 60 ? 'badge--critico' : f.dias > 30 ? 'badge--riesgo' : 'badge--ok')">{{ f.dias }} días</span></td>
                     </tr>
                   }
@@ -158,6 +167,11 @@ export class CobranzasComponent {
   protected readonly descargando = signal(false);
 
   protected readonly pesos = pesos;
+
+  // "octubre de 2026" a partir del día 1 del mes (yyyy-mm-dd).
+  mes(iso: string | null | undefined): string {
+    return iso ? new Date(iso + 'T00:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }) : '';
+  }
   protected readonly pesosCorto = pesosCorto;
   protected readonly fecha = fecha;
   protected readonly estadoLabel = ESTADO_PROYECTO_LABEL;

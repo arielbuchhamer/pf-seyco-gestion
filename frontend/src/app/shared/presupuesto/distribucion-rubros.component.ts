@@ -56,7 +56,7 @@ import { numero, pesos } from '../../core/utils/formato';
       flex: none;
     }
     .leyenda__etiqueta {
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
       color: var(--color-text-muted);
     }
     .leyenda__monto {

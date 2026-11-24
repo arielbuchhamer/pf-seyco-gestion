@@ -41,8 +41,17 @@ CREATE TABLE IF NOT EXISTS public.certificacion
     estado        varchar(20)    NOT NULL
         CHECK (estado IN ('PENDIENTE_COBRO', 'COBRADA')),
     fecha_cobro   date,
-    observaciones varchar(500)
+    observaciones varchar(500),
+    -- Al cobrar: el monto actualizado por índice CAC al mes del cobro (queda fijo).
+    monto_cobrado numeric(19, 2),
+    indice_cac    numeric(14, 2),
+    cac_periodo   date
 );
+
+ALTER TABLE public.certificacion
+    ADD COLUMN IF NOT EXISTS monto_cobrado numeric(19, 2),
+    ADD COLUMN IF NOT EXISTS indice_cac    numeric(14, 2),
+    ADD COLUMN IF NOT EXISTS cac_periodo   date;
 
 -- Base creada con una versión anterior de este script: agrega la columna nueva.
 ALTER TABLE public.costo_real

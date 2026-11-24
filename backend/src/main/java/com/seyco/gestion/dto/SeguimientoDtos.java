@@ -37,7 +37,18 @@ public final class SeguimientoDtos {
 	public record ResumenCertificacion(BigDecimal montoContrato, BigDecimal certificado, BigDecimal cobrado,
 			BigDecimal pendienteCobro, BigDecimal saldoPorCertificar, BigDecimal saldoPorCobrar,
 			double porcentajeCertificado, double porcentajeCobrado, LocalDate ultimaCertificacion,
-			Long diasDesdeUltima) {
+			Long diasDesdeUltima, BigDecimal cobradoPesos) {
+	}
+
+	// Lo pendiente de cobro llevado a hoy con el índice CAC: monto × CAC del mes actual (o el último
+	// publicado) / CAC del mes del presupuesto. El monto de un avance ya viene neto del anticipo.
+	public record ActualizacionCac(boolean disponible, String motivo, LocalDate periodoBase, BigDecimal indiceBase,
+			LocalDate periodoActual, BigDecimal indiceActual, boolean mesActualPublicado, double variacion,
+			double anticipoPorcentaje, BigDecimal pendienteNominal, BigDecimal pendienteActualizado,
+			List<CertificacionActualizada> certificaciones) {
+	}
+
+	public record CertificacionActualizada(Long certificacionId, BigDecimal monto, BigDecimal montoActualizado) {
 	}
 
 	// Lo cotizado de un rubro contra lo gastado (CostoReal). desvio > 0 = se gastó más de lo cotizado.
@@ -144,12 +155,14 @@ public final class SeguimientoDtos {
 
 	// Certificación emitida y todavía no cobrada.
 	public record FacturaPendiente(Long proyectoId, String proyecto, Long certificacionId, Integer numero,
-			TipoCertificacion tipo, LocalDate fechaEmision, String nroFactura, BigDecimal monto, long dias) {
+			TipoCertificacion tipo, LocalDate fechaEmision, String nroFactura, BigDecimal monto, long dias,
+			BigDecimal montoActualizado, LocalDate cacPeriodo) {
 	}
 
 	// GET /api/cobranzas. porCobrar = todo lo que falta entrar (sin certificar + facturado sin cobrar).
+	// facturadoSinCobrarCac = lo facturado sin cobrar actualizado a hoy por índice CAC (null si no hay índice).
 	public record Cobranzas(BigDecimal porCobrar, BigDecimal facturadoSinCobrar, BigDecimal sinCertificar,
 			BigDecimal sinCertificarTerminadas, int obrasTerminadasConSaldo, List<ObraCobranza> obras,
-			List<FacturaPendiente> facturas) {
+			List<FacturaPendiente> facturas, BigDecimal facturadoSinCobrarCac) {
 	}
 }

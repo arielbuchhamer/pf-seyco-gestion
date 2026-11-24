@@ -64,6 +64,42 @@ public class Certificacion {
 	@Column(length = 500)
 	private String observaciones;
 
+	// Lo que realmente se cobró: el monto llevado por índice CAC al mes del cobro. Se fija al
+	// registrar el cobro y ya no cambia. Null en certificaciones viejas (se cobró el monto).
+	@Column(name = "monto_cobrado", precision = 19, scale = 2)
+	private BigDecimal montoCobrado;
+
+	// Índice CAC aplicado al cobrar y su mes (día 1).
+	@Column(name = "indice_cac", precision = 14, scale = 2)
+	private BigDecimal indiceCac;
+
+	@Column(name = "cac_periodo")
+	private LocalDate cacPeriodo;
+
+	public BigDecimal getMontoCobrado() {
+		return montoCobrado;
+	}
+
+	public void setMontoCobrado(BigDecimal montoCobrado) {
+		this.montoCobrado = montoCobrado;
+	}
+
+	public BigDecimal getIndiceCac() {
+		return indiceCac;
+	}
+
+	public void setIndiceCac(BigDecimal indiceCac) {
+		this.indiceCac = indiceCac;
+	}
+
+	public LocalDate getCacPeriodo() {
+		return cacPeriodo;
+	}
+
+	public void setCacPeriodo(LocalDate cacPeriodo) {
+		this.cacPeriodo = cacPeriodo;
+	}
+
 	public Long getId() {
 		return id;
 	}

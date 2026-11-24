@@ -52,7 +52,7 @@ export interface SegmentoTorta {
     .centro__valor { font-size: 15px; font-weight: 700; fill: var(--color-ink); }
     .centro__etiqueta { font-size: 8px; fill: var(--color-text-muted); }
     .leyenda { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 11rem; display: grid; gap: 0.35rem; }
-    .leyenda li { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 0.6rem; align-items: center; font-size: 0.85rem; padding: 0.3rem 0.4rem; border-radius: 8px; }
+    .leyenda li { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 0.6rem; align-items: center; font-size: var(--texto-cuerpo); padding: 0.3rem 0.4rem; border-radius: 8px; }
     .leyenda .num:not(.muted) { font-weight: 700; }
     .leyenda li.activo { background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface)); }
     .punto { width: 10px; height: 10px; border-radius: 3px; }

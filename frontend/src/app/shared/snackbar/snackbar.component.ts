@@ -27,7 +27,7 @@ import { SnackbarService } from './snackbar.service';
       border-radius: var(--radius-sm);
       background: var(--color-ink);
       color: #fff;
-      font-size: 0.9rem;
+      font-size: var(--texto-cuerpo);
       box-shadow: var(--shadow-card);
       animation: entrar 0.2s ease-out;
     }
@@ -40,7 +40,7 @@ import { SnackbarService } from './snackbar.service';
       border-radius: 999px;
       background: var(--color-success);
       font-weight: 700;
-      font-size: 0.75rem;
+      font-size: var(--texto-chico);
       flex-shrink: 0;
     }
     .snackbar--error .snackbar__icono {

@@ -47,7 +47,8 @@
         </div>
       </div>
 
-      <div class="etapa" [class.etapa--seguimiento]="lineaBase()">
+      <div class="etapa resumen-obra" [class.resumen-obra--ok]="lineaBase()">
+        <span class="resumen-obra__icono" aria-hidden="true">{{ lineaBase() ? '✓' : 'i' }}</span>
         @if (lineaBase(); as base) {
           <div>
             <strong>Seguimiento</strong> · Línea base fijada el {{ fecha(base) }}.

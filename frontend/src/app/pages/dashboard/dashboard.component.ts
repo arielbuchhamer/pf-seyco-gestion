@@ -62,7 +62,7 @@ import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
     }
     .seccion__cabecera .panel__titulo {
       margin: 0;
-      font-size: 1rem;
+      font-size: var(--texto-destacado);
     }
     .seccion__cabecera .panel__subtitulo {
       margin: 0.15rem 0 0;
@@ -114,11 +114,11 @@ import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
       gap: 0.2rem;
     }
     .tarjeta__textos strong {
-      font-size: 0.95rem;
+      font-size: var(--texto-destacado);
       color: var(--color-ink);
     }
     .tarjeta__textos small {
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
       line-height: 1.4;
       color: var(--color-text-muted);
     }
