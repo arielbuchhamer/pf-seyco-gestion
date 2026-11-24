@@ -134,7 +134,7 @@ export interface AnclaMenu {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: var(--color-primary-dark);
+      background: var(--color-primary-fondo-oscuro);
       color: #fff;
       font-size: 0.85rem;
       font-weight: 600;

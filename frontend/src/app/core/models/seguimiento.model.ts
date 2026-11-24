@@ -27,6 +27,8 @@ export interface Alerta {
   nivel: NivelAlerta;
   titulo: string;
   detalle: string | null;
+  // Cuándo empezó la situación (ej. el fin plan en un atraso, el último gasto en un excedido).
+  fecha?: string | null;
 }
 
 export interface ResumenCertificacion {

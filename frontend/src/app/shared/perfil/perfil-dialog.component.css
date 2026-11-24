@@ -78,7 +78,7 @@ h2 {
 
 /* Igual que la columna Rol de la tabla de Usuarios. */
 .rol {
-  background: color-mix(in srgb, var(--color-primary) 14%, white);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   color: var(--color-primary-dark);
 }
 

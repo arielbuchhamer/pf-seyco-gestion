@@ -82,7 +82,7 @@
 }
 
 .fila-tarea {
-  background: #eef3fa;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   font-weight: 700;
 }
 

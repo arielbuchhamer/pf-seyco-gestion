@@ -117,7 +117,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (p of port.proyectos; track p.id) {
+                  @for (p of paginaObras.pagina().items; track p.id) {
                     <tr>
                       <td>
                         <a class="obra-link" [routerLink]="['/proyectos', p.id]">{{ p.nombre }}</a>
@@ -141,6 +141,7 @@
                 </tbody>
               </table>
             </div>
+            <app-paginador [pagina]="paginaObras.pagina()" (cambiar)="paginaObras.actual.set($event)" />
           </section>
 
           <app-avisos [alertas]="avisos()" vacio="Todas las obras vienen bien: sin atrasos, sobrecostos ni cobros pendientes." />

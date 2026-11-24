@@ -1,38 +1,9 @@
 <aside class="barra" [class.barra--contraida]="contraida()">
-  <a class="marca" routerLink="/dashboard" aria-label="Obralia, ir al menú principal">
-    <span class="marca__emblema">
-      <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
-        <defs>
-          <linearGradient id="emblema-fondo" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#1b74c2" />
-            <stop offset="1" stop-color="#0b4880" />
-          </linearGradient>
-        </defs>
-        <rect width="40" height="40" rx="9" fill="url(#emblema-fondo)" />
-        <circle
-          cx="20"
-          cy="20"
-          r="11.5"
-          fill="none"
-          stroke="#ffffff"
-          stroke-opacity="0.3"
-          stroke-width="2.6"
-        />
-        <path
-          d="M20 8.5a11.5 11.5 0 1 1-11.5 11.5"
-          fill="none"
-          stroke="#ffffff"
-          stroke-width="2.6"
-          stroke-linecap="round"
-        />
-        <path d="M21.6 11.5 14.5 21.7h4.7l-1.1 6.8 7.4-10.4h-4.8z" fill="#f2a93b" />
-      </svg>
-    </span>
-    @if (!contraida()) {
-      <span class="marca__texto">
-        <span class="marca__nombre">Obral<span>ia</span></span>
-        <span class="marca__lema">GESTIÓN DE OBRAS</span>
-      </span>
+  <a class="marca" routerLink="/dashboard" aria-label="Proxel, ir al menú principal">
+    @if (contraida()) {
+      <img class="marca__emblema" src="assets/img/proxel-emblema.png" alt="Proxel" width="38" height="38" />
+    } @else {
+      <img class="marca__logo" src="assets/img/proxel-logo-blanco.png" alt="Proxel - Proyectos y obras" width="174" height="48" />
     }
   </a>
 
@@ -66,6 +37,36 @@
       </div>
     }
   </nav>
+
+  <!-- Modo claro / oscuro (TemaService), arriba de la línea del pie. -->
+  <div class="preferencias">
+    <button
+      type="button"
+      class="item item--boton"
+      [attr.aria-label]="etiquetaTema()"
+      (click)="alternarTema()"
+      (mouseenter)="mostrarTooltip({ label: etiquetaTema() }, $event)"
+      (focus)="mostrarTooltip({ label: etiquetaTema() }, $event)"
+      (mouseleave)="ocultarTooltip()"
+      (blur)="ocultarTooltip()"
+    >
+      <span class="item__icono">
+        @if (tema() === 'oscuro') {
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7" />
+            <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+          </svg>
+        }
+      </span>
+      @if (!contraida()) {
+        <span class="item__texto">{{ etiquetaTema() }}</span>
+      }
+    </button>
+  </div>
 
   <div class="pie">
     <div #filaPie class="pie__fila">

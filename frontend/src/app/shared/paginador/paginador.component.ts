@@ -1,4 +1,7 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, Signal, WritableSignal, computed, input, linkedSignal, output } from '@angular/core';
+
+// Elementos por página en todas las tablas de la app.
+export const POR_PAGINA = 10;
 
 export interface Pagina<T> {
   items: T[];
@@ -23,6 +26,18 @@ export function paginar<T>(lista: T[], pagina: number, porPagina: number): Pagin
     desde: total === 0 ? 0 : inicio + 1,
     hasta: Math.min(inicio + porPagina, total),
   };
+}
+
+// Paginación de una lista ya filtrada: página actual (vuelve a la 1 cuando cambia la lista, ej. al
+// filtrar) y la página calculada. Uso en el componente:
+//   protected readonly obras = paginacion(() => this.filtradas());
+//   @for (o of obras.pagina().items; ...)  y  <app-paginador [pagina]="obras.pagina()" (cambiar)="obras.actual.set($event)" />
+export function paginacion<T>(
+  lista: () => T[],
+  porPagina = POR_PAGINA,
+): { actual: WritableSignal<number>; pagina: Signal<Pagina<T>> } {
+  const actual = linkedSignal({ source: lista, computation: () => 1 });
+  return { actual, pagina: computed(() => paginar(lista(), actual(), porPagina)) };
 }
 
 // Pie de tabla "1 - 10 de 25 · Página 1 de 3 ‹ ›" (como en el proyecto de referencia).

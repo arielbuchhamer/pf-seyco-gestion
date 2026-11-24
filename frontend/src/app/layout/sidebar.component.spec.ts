@@ -98,7 +98,7 @@ function q<T extends HTMLElement>(
 }
 
 function textos(fixture: ComponentFixture<SidebarComponent>): string[] {
-  return Array.from(el(fixture).querySelectorAll('.item')).map(
+  return Array.from(el(fixture).querySelectorAll('.nav .item')).map(
     (i) => i.getAttribute('aria-label') ?? '',
   );
 }
@@ -127,7 +127,8 @@ describe('SidebarComponent', () => {
       window.localStorage.setItem(CLAVE_CONTRAIDA, 'true');
       const fixture = crear([]);
       expect(q(fixture, '.barra--contraida')).not.toBeNull();
-      expect(q(fixture, '.marca__texto')).toBeNull();
+      expect(q(fixture, '.marca__logo')).toBeNull();
+      expect(q(fixture, '.marca__emblema')).not.toBeNull();
     });
 
     it('al expandir de nuevo guarda false', () => {
@@ -398,24 +399,42 @@ describe('SidebarComponent', () => {
       expect(q(fixture, '.campana')!.getAttribute('aria-label')).toBe('Avisos, sin avisos nuevos');
     });
 
-    it('el panel lista los avisos con el nivel en texto, título, detalle y obra', () => {
+    it('el panel resume un renglón por obra: aviso principal, nivel en texto y contadores', () => {
       const fixture = crear([]);
       abrirPanel(fixture);
 
       const panel = q(fixture, 'app-avisos-panel')!;
       expect(panel.textContent).toContain('3 para revisar · 1 de atención');
       const filas = panel.querySelectorAll('.aviso');
-      expect(filas.length).toBe(5);
+      expect(filas.length).toBe(3);
+      expect(filas[0].textContent).toContain('Obra 1');
       expect(filas[0].textContent).toContain('Para revisar');
       expect(filas[0].textContent).toContain('Rubro excedido');
-      expect(filas[0].textContent).toContain('Mano de obra');
-      expect(filas[0].textContent).toContain('Obra 1');
-      expect(filas[3].textContent).toContain('De atención');
-      expect(filas[4].textContent).toContain('Informativo');
+      expect(filas[0].textContent).toContain('2 para revisar');
+      expect(filas[1].textContent).toContain('Obra 2');
+      expect(filas[1].textContent).toContain('Atraso de 9 días');
+      expect(filas[1].textContent).toContain('1 para revisar');
+      expect(filas[1].textContent).toContain('1 de atención');
+      expect(filas[2].textContent).toContain('Informativo');
+      expect(filas[2].textContent).toContain('Línea base sin fijar');
       expect(filas[0].querySelector('svg')).not.toBeNull();
     });
 
-    it('muestra hasta 8 avisos y el enlace a todos', () => {
+    it('a igual nivel, el aviso principal de la obra es el más reciente', () => {
+      const fixture = crear([], true, {
+        totales: { criticos: 2, advertencias: 0, informativos: 0, proyectosConCriticos: 1 },
+        avisos: [
+          { ...aviso(1, 'CRITICA', 'Viejo'), fecha: '2026-01-10' },
+          { ...aviso(1, 'CRITICA', 'Reciente'), fecha: '2026-03-02' },
+        ],
+      });
+      abrirPanel(fixture);
+      const fila = q(fixture, 'app-avisos-panel .aviso')!;
+      expect(fila.textContent).toContain('Reciente');
+      expect(fila.textContent).not.toContain('Viejo');
+    });
+
+    it('muestra hasta 6 obras, cuántas quedan y el enlace a todos', () => {
       const muchos = Array.from({ length: 12 }, (_, i) => aviso(i, 'CRITICA', 'Aviso ' + i));
       const fixture = crear([], true, {
         totales: { criticos: 12, advertencias: 0, informativos: 0, proyectosConCriticos: 12 },
@@ -423,7 +442,8 @@ describe('SidebarComponent', () => {
       });
       abrirPanel(fixture);
 
-      expect(el(fixture).querySelectorAll('app-avisos-panel .aviso').length).toBe(8);
+      expect(el(fixture).querySelectorAll('app-avisos-panel .aviso').length).toBe(6);
+      expect(q(fixture, 'app-avisos-panel .mas')!.textContent).toContain('y 6 obras más');
       const enlace = q<HTMLAnchorElement>(fixture, '.panel__pie a')!;
       expect(enlace.textContent).toContain('Ver todos los avisos');
       expect(enlace.getAttribute('href')).toBe('/avisos');
@@ -458,19 +478,19 @@ describe('SidebarComponent', () => {
 
       panel.querySelector<HTMLButtonElement>('.reintentar')!.click();
       http.expectOne('/api/avisos').flush(AVISOS);
-        fixture.detectChanges();
-      expect(panel.querySelectorAll('.aviso').length).toBe(5);
+      fixture.detectChanges();
+      expect(panel.querySelectorAll('.aviso').length).toBe(3);
     });
 
-    it('cada aviso lleva a la solapa de su obra', async () => {
+    it('cada obra lleva a la solapa de su aviso principal', async () => {
       const fixture = crear([]);
       abrirPanel(fixture);
 
       const enlaces = el(fixture).querySelectorAll<HTMLAnchorElement>('app-avisos-panel a.aviso');
       expect(enlaces[0].getAttribute('href')).toBe('/proyectos/1?solapa=costos');
-      expect(enlaces[1].getAttribute('href')).toBe('/proyectos/1?solapa=certificaciones');
+      expect(enlaces[2].getAttribute('href')).toBe('/proyectos/3?solapa=indicadores');
 
-      enlaces[2].click();
+      enlaces[1].click();
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -482,7 +502,7 @@ describe('SidebarComponent', () => {
       const fixture = crear([]);
       abrirPanel(fixture);
 
-      el(fixture).querySelectorAll<HTMLElement>('app-avisos-panel a.aviso strong')[2].click();
+      el(fixture).querySelectorAll<HTMLElement>('app-avisos-panel a.aviso strong')[1].click();
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -506,7 +526,7 @@ describe('SidebarComponent', () => {
       await router.navigateByUrl('/proyectos/2?solapa=gantt');
       abrirPanel(fixture);
 
-      el(fixture).querySelectorAll<HTMLAnchorElement>('app-avisos-panel a.aviso')[2].click();
+      el(fixture).querySelectorAll<HTMLAnchorElement>('app-avisos-panel a.aviso')[1].click();
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -533,15 +553,14 @@ describe('SidebarComponent', () => {
         expect(q(fixture, '.campana')!.getAttribute('aria-label')).toBe('Avisos, 1 aviso nuevo');
       });
 
-      it('rotula "Nuevo" los avisos que lo eran al abrir y lo quita al cerrar', () => {
+      it('rotula "Nuevo" las obras con avisos nuevos al abrir y lo quita al cerrar', () => {
         const fixture = crear([]);
         abrirPanel(fixture);
 
         const filas = el(fixture).querySelectorAll('app-avisos-panel .aviso');
         expect(filas[0].textContent).toContain('Nuevo');
-        expect(filas[2].textContent).toContain('Nuevo');
-        expect(filas[3].textContent).not.toContain('Nuevo');
-        expect(filas[4].textContent).not.toContain('Nuevo');
+        expect(filas[1].textContent).toContain('Nuevo');
+        expect(filas[2].textContent).not.toContain('Nuevo');
 
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
         fixture.detectChanges();

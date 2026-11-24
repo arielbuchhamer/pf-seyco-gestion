@@ -23,7 +23,7 @@
 }
 
 .badge--rol {
-  background: color-mix(in srgb, var(--color-primary) 14%, white);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   color: var(--color-primary-dark);
   margin-right: 0.25rem;
 }

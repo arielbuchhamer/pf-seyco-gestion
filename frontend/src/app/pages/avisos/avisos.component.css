@@ -1,7 +1,14 @@
+/* Ancho completo, márgenes como el Portafolio y Cobranzas. */
+.page.avisos-page {
+  max-width: none;
+  padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 2rem;
+}
+
 .avisos-page__totales {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .avisos-page__filtros {
@@ -9,6 +16,7 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .avisos-page__filtros label {
@@ -68,7 +76,7 @@
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
-  background: #e3f4ea;
+  background: color-mix(in srgb, var(--color-success) 14%, var(--color-surface));
   color: #1f7a45;
   font-weight: 700;
 }

@@ -78,7 +78,7 @@ export const MENU: MenuSeccion[] = [
         path: '/usuarios',
         panel: PANELES.usuarios,
         descripcion: 'Altas, bajas y datos de las personas que usan el sistema.',
-        color: '#1f9d55',
+        color: '#0e7c86',
         icon: 'usuarios',
       },
       {

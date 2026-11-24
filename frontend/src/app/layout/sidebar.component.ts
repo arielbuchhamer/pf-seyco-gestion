@@ -14,6 +14,7 @@ import { filter } from 'rxjs';
 import { UsuarioSesion, iniciales, nombreCompleto } from '../core/models/usuario.model';
 import { AuthService } from '../core/services/auth.service';
 import { AvisosService } from '../core/services/avisos.service';
+import { TemaService } from '../core/services/tema.service';
 import { AvisosPanelComponent } from './avisos-panel.component';
 import { IconoMenuComponent } from './icono-menu.component';
 import { IconoMenu, menuVisible } from './menu';
@@ -74,6 +75,9 @@ export class SidebarComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly avisosSvc = inject(AvisosService);
+  private readonly temaSvc = inject(TemaService);
+  protected readonly tema = this.temaSvc.tema;
+  protected readonly etiquetaTema = computed(() => (this.tema() === 'oscuro' ? 'Modo claro' : 'Modo oscuro'));
 
   readonly perfil = output<void>();
   readonly faqs = output<void>();
@@ -135,6 +139,10 @@ export class SidebarComponent {
   protected etiquetaAvisos(): string {
     const n = this.avisosNuevos();
     return n ? `Avisos, ${n} ${n === 1 ? 'aviso nuevo' : 'avisos nuevos'}` : 'Avisos, sin avisos nuevos';
+  }
+
+  protected alternarTema(): void {
+    this.temaSvc.alternar();
   }
 
   protected alternarContraida(): void {
@@ -201,7 +209,7 @@ export class SidebarComponent {
     this[accion].emit();
   }
 
-  protected mostrarTooltip(item: ItemNav, evento: Event): void {
+  protected mostrarTooltip(item: Pick<ItemNav, 'label'>, evento: Event): void {
     if (!this.contraida()) return;
     const caja = (evento.currentTarget as HTMLElement).getBoundingClientRect();
     this.tooltip.set({

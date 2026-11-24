@@ -15,6 +15,7 @@ import { SeguimientoService } from '../../core/services/seguimiento.service';
 import { diasEntre, fecha, hoy, numero, pesos } from '../../core/utils/formato';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
 // Solapa "Certificaciones": certificar una obra es cobrarla. Se arranca con un anticipo (~30 %),
@@ -23,7 +24,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 @Component({
   selector: 'app-proyecto-certificaciones',
   standalone: true,
-  imports: [ReactiveFormsModule, PuedeDirective, ConfirmarDialogComponent],
+  imports: [ReactiveFormsModule, PuedeDirective, ConfirmarDialogComponent, PaginadorComponent],
   template: `
     <div class="seccion-apilada">
       @if (resumen.value(); as r) {
@@ -63,7 +64,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
           <table class="tabla-seguimiento">
             <thead><tr><th>N°</th><th>Tipo</th><th>Emisión</th><th>Factura</th><th class="num">%</th><th class="num">Monto</th><th>Estado</th><th></th></tr></thead>
             <tbody>
-              @for (c of lista.value(); track c.id) {
+              @for (c of certificaciones.pagina().items; track c.id) {
                 <tr>
                   <td>{{ c.numero }}</td>
                   <td>{{ tipoLabel[c.tipo] }}</td>
@@ -94,6 +95,9 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
             </tbody>
           </table>
         </div>
+        @if (lista.value().length) {
+          <app-paginador [pagina]="certificaciones.pagina()" (cambiar)="certificaciones.actual.set($event)" />
+        }
       </section>
     </div>
 
@@ -178,6 +182,7 @@ export class ProyectoCertificacionesComponent {
   }
 
   protected readonly lista = httpResource<Certificacion[]>(() => `/api/proyectos/${this.proyectoId()}/certificaciones`, { defaultValue: [] });
+  protected readonly certificaciones = paginacion(() => this.lista.value());
   protected readonly resumen = httpResource<ResumenCertificacion>(() => `/api/proyectos/${this.proyectoId()}/certificaciones/resumen`);
 
   protected readonly pesos = pesos;
