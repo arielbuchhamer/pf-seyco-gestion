@@ -102,8 +102,9 @@ import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
       width: 2.75rem;
       height: 2.75rem;
       border-radius: 10px;
-      color: var(--tono);
-      background: color-mix(in srgb, var(--tono) 12%, white);
+      color: #fff;
+      background: var(--tono);
+      box-shadow: 0 4px 10px -4px color-mix(in srgb, var(--tono) 70%, transparent);
     }
     .tarjeta__textos {
       flex: 1;

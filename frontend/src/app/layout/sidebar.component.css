@@ -33,35 +33,21 @@
   margin-inline: 0.5rem;
 }
 
+/* Logo Proxel (PNG): completo con el menú abierto, sólo el emblema (con marco blanco) contraído. */
+.marca__logo {
+  display: block;
+  width: 174px;
+  max-width: 100%;
+  height: auto;
+}
+
 .marca__emblema {
-  display: inline-flex;
+  display: block;
   flex-shrink: 0;
   padding: 3px;
   border-radius: 12px;
   background: #fff;
-}
-
-.marca__texto {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.marca__nombre {
-  font-size: 23px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.marca__nombre span {
-  color: #9cc7ec;
-}
-
-.marca__lema {
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: #b9d3ec;
+  box-sizing: content-box;
 }
 
 .nav {
@@ -259,6 +245,7 @@
   height: 44px;
 }
 
+
 .campana__globito {
   position: absolute;
   top: 2px;
@@ -279,12 +266,18 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Igual que las opciones del menú (.item): mismo tamaño de letra, color, alto y separación. */
 .contraer {
-  gap: 0.6rem;
-  height: 40px;
+  gap: 0.75rem;
+  height: 44px;
   padding: 0 0.75rem;
-  font-size: 14px;
-  color: #b9d3ec;
+  font-size: 14.5px;
+  color: #fff;
+}
+
+.contraer svg {
+  flex-shrink: 0;
+  color: #dbe9f6;
 }
 
 .barra--contraida .contraer {
@@ -324,4 +317,23 @@
   :host {
     transition: none;
   }
+}
+
+/* Botón "Modo oscuro / Modo claro": se ve igual que una opción del menú. */
+.preferencias {
+  padding: 0 0.75rem 0.5rem;
+}
+
+.item--boton {
+  font: inherit;
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item--boton:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }

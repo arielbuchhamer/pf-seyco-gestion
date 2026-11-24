@@ -3,7 +3,10 @@ import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { TemaService } from '../../core/services/tema.service';
 import { extraerMensajeError } from '../../core/utils/http-error';
+import { LoginFondoComponent } from './login-fondo.component';
+import { LoginPresentacionComponent } from './login-presentacion.component';
 
 // login: ingresar   recuperar: pedir el link por correo   restablecer: elegir la contraseña nueva
 type Seccion = 'login' | 'recuperar' | 'restablecer';
@@ -11,7 +14,7 @@ type Seccion = 'login' | 'recuperar' | 'restablecer';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, LoginPresentacionComponent, LoginFondoComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -19,6 +22,12 @@ export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly temaSvc = inject(TemaService);
+  // Botón de modo claro/oscuro de la esquina superior derecha.
+  protected readonly tema = this.temaSvc.tema;
+  protected alternarTema(): void {
+    this.temaSvc.alternar();
+  }
 
   // Token del link del correo de recuperación (/login?restablecer=<token>). Llega como input
   // gracias a withComponentInputBinding() (ver app.config.ts).

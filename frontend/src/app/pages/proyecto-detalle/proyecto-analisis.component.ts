@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { ComparacionRubro, Indicadores, RUBRO_COLOR, RUBRO_LABEL } from '../../core/models/seguimiento.model';
 import { dolares, fecha, numero, pesos, pesosCorto } from '../../core/utils/formato';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 
 // Debajo del tablero de la solapa Indicadores:
 //  · Cotizado vs. real por renglón: los gastos cargados con su renglón del presupuesto contra lo
@@ -10,6 +11,7 @@ import { dolares, fecha, numero, pesos, pesosCorto } from '../../core/utils/form
 @Component({
   selector: 'app-proyecto-analisis',
   standalone: true,
+  imports: [PaginadorComponent],
   template: `
     @let i = indicadores();
     <div class="tablero__fila tablero__fila--mitades analisis">
@@ -22,7 +24,7 @@ import { dolares, fecha, numero, pesos, pesosCorto } from '../../core/utils/form
             <table class="tabla-seguimiento">
               <thead><tr><th>Renglón</th><th>Rubro</th><th class="num">Cotizado</th><th class="num">Real</th><th class="num">Uso</th></tr></thead>
               <tbody>
-                @for (r of i.renglones; track r.itemId + r.rubro) {
+                @for (r of renglones.pagina().items; track r.itemId + r.rubro) {
                   <tr>
                     <td><span class="muted">{{ r.numero }}</span> {{ r.descripcion }}</td>
                     <td><span class="punto" [style.background]="rubroColor[r.rubro]"></span>{{ rubroLabel[r.rubro] }}</td>
@@ -34,6 +36,7 @@ import { dolares, fecha, numero, pesos, pesosCorto } from '../../core/utils/form
               </tbody>
             </table>
           </div>
+          <app-paginador [pagina]="renglones.pagina()" (cambiar)="renglones.actual.set($event)" />
         } @else {
           <p class="vacio-grafico">Todavía no hay gastos asignados a un renglón. Al cargar un gasto (solapa Costos reales) elegí su renglón del presupuesto, por ejemplo "Hora de grúa".</p>
         }
@@ -76,7 +79,7 @@ import { dolares, fecha, numero, pesos, pesosCorto } from '../../core/utils/form
   styles: `
     .analisis { margin-top: 1rem; }
     .punto { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 0.4rem; }
-    .tabla-scroll { max-height: 18rem; }
+
     .usd { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
     .usd div { display: flex; flex-direction: column; gap: 0.15rem; }
     .usd strong { font-size: 1.15rem; color: var(--color-ink); }
@@ -100,6 +103,8 @@ export class ProyectoAnalisisComponent {
   protected readonly pesosCorto = pesosCorto;
   protected readonly dolares = dolares;
   protected readonly fecha = fecha;
+
+  protected readonly renglones = paginacion(() => this.indicadores().renglones);
 
   protected readonly rubrosUsd = computed<ComparacionRubro[]>(() =>
     (this.indicadores().enDolares?.rubros ?? []).filter((r) => r.presupuestado > 0 || r.real > 0),

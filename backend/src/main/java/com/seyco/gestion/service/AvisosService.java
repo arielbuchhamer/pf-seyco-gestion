@@ -29,7 +29,7 @@ public class AvisosService {
 		List<AvisoProyecto> avisos = portafolio.proyectos().stream()
 				.flatMap(p -> p.alertas().stream()
 						.map(a -> new AvisoProyecto(p.id(), p.nombre(), a.nivel(), a.titulo(), a.detalle(),
-									solapa(a.titulo()))))
+									solapa(a.titulo()), a.fecha())))
 				.sorted(Comparator.comparing(AvisoProyecto::nivel, Comparator.reverseOrder())
 						.thenComparing(AvisoProyecto::proyectoNombre,
 								Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))

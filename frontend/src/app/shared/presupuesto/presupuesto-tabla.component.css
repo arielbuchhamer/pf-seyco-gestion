@@ -59,12 +59,12 @@
 }
 
 .fila--capitulo {
-  background: #eef3fa;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   font-weight: 700;
 }
 
 .fila--grupo {
-  background: #f8f9fc;
+  background: var(--color-bg);
   font-weight: 600;
 }
 
@@ -107,7 +107,7 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #e6eef8;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   color: var(--color-primary-dark);
 }
 

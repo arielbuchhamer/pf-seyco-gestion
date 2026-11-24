@@ -48,10 +48,10 @@ export type TonoKpi = 'ok' | 'riesgo' | 'critico' | 'neutro';
     .kpi-tarjeta { height: 100%; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px;
       padding: 0.8rem 0.95rem; display: flex; flex-direction: column; gap: 0.3rem; position: relative; overflow: hidden; }
     .kpi-tarjeta::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tono); }
-    .kpi-tarjeta--ok { --tono: var(--color-success); --tono-fondo: #e3f3ea; --tono-texto: var(--color-success-dark); }
-    .kpi-tarjeta--riesgo { --tono: var(--color-accent); --tono-fondo: #f8eedd; --tono-texto: #8a4f00; }
-    .kpi-tarjeta--critico { --tono: var(--color-danger); --tono-fondo: #fbe6e4; --tono-texto: #b3332b; }
-    .kpi-tarjeta--neutro { --tono: var(--color-primary); --tono-fondo: #e6eef8; --tono-texto: var(--color-primary-dark); }
+    .kpi-tarjeta--ok { --tono: var(--color-success); --tono-fondo: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)); --tono-texto: var(--color-success-dark); }
+    .kpi-tarjeta--riesgo { --tono: var(--color-accent); --tono-fondo: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); --tono-texto: var(--color-accent-texto); }
+    .kpi-tarjeta--critico { --tono: var(--color-danger); --tono-fondo: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface)); --tono-texto: var(--color-danger-texto); }
+    .kpi-tarjeta--neutro { --tono: var(--color-primary); --tono-fondo: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface)); --tono-texto: var(--color-primary-dark); }
     .cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
     .etiqueta { font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); }
     .chip { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;

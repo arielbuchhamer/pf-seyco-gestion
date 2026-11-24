@@ -22,7 +22,13 @@ public final class SeguimientoDtos {
 		INFO, ADVERTENCIA, CRITICA
 	}
 
-	public record Alerta(NivelAlerta nivel, String titulo, String detalle) {
+	// fecha: cuándo empezó la situación (ej. el fin plan en un atraso, el último gasto en un rubro
+	// excedido, la emisión en una certificación sin cobrar). Con ella se filtran los avisos por fecha.
+	public record Alerta(NivelAlerta nivel, String titulo, String detalle, LocalDate fecha) {
+
+		public Alerta(NivelAlerta nivel, String titulo, String detalle) {
+			this(nivel, titulo, detalle, null);
+		}
 	}
 
 	// Cobranza: cuánto del contrato (total del presupuesto) se certificó y cuánto se cobró.
@@ -115,7 +121,7 @@ public final class SeguimientoDtos {
 	// Un aviso de una obra. Se calcula al momento: no se guarda. solapa: la solapa de la obra donde se
 	// resuelve (fechas, gantt, indicadores, costos o certificaciones).
 	public record AvisoProyecto(Long proyectoId, String proyectoNombre, NivelAlerta nivel, String titulo,
-			String detalle, String solapa) {
+			String detalle, String solapa, LocalDate fecha) {
 	}
 
 	// proyectosConCriticos: obras con al menos un aviso crítico (no avisos críticos).

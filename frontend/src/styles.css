@@ -21,6 +21,12 @@
   --color-text-muted: #6b7280;
   --color-border: #e2e5ec;
   --color-danger: #d6483f;
+  /* Texto sobre los fondos de estado (etiquetas, avisos, KPI): oscuro en claro, claro en oscuro. */
+  --color-danger-texto: #a3241c;
+  /* Fondos de botones con letra blanca (hover, chips): oscuros en los dos temas. */
+  --color-primary-fondo-oscuro: #0b4880;
+  --color-success-fondo-oscuro: #167a41;
+  --color-accent-texto: #7a4500;
 
   --radius-lg: 24px;
   --radius-md: 14px;
@@ -30,6 +36,35 @@
 
   --font-sans:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── Modo oscuro (botón de la barra lateral, ver TemaService) ──
+   Sólo se redefinen las variables: las pantallas usan estos colores, así que cambian solas.
+   Los tonos de estado (verde, ámbar, rojo) se aclaran un poco para que se lean sobre fondo oscuro.
+   La barra lateral ya es azul oscura y el login es siempre claro (es la portada). */
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+
+  --color-bg: #0e1522;
+  --color-surface: #172133;
+  --color-ink: #eef2f8;
+  --color-text: #d5dce8;
+  --color-text-muted: #94a1b6;
+  --color-border: #2a3650;
+
+  --color-primary: #2f7fd4;
+  --color-primary-dark: #8cc0f2;
+  --color-primary-light: #5ea6e6;
+  --color-success: #2bb56a;
+  --color-success-dark: #5fd394;
+  --color-accent: #e0922c;
+  --color-danger: #ef6a61;
+  --color-danger-texto: #ff9a92;
+  --color-primary-fondo-oscuro: #2569b5;
+  --color-success-fondo-oscuro: #1d8a4c;
+  --color-accent-texto: #f2b45f;
+
+  --shadow-card: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -194,7 +229,7 @@ body {
 }
 
 .btn--primary:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-fondo-oscuro);
 }
 
 .btn--primary:disabled {
@@ -228,13 +263,13 @@ body {
 
 .badge--en_curso,
 .badge--en_progreso {
-  background: color-mix(in srgb, var(--color-primary) 22%, white);
+  background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
   color: var(--color-primary-dark);
 }
 
 .badge--finalizado,
 .badge--completada {
-  background: color-mix(in srgb, var(--color-success) 22%, white);
+  background: color-mix(in srgb, var(--color-success) 22%, var(--color-surface));
   color: var(--color-success-dark);
 }
 
@@ -597,7 +632,7 @@ body {
 
 .btn-chico--activo {
   border-color: var(--color-primary);
-  background: #eef3fa;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   color: var(--color-primary-dark);
   font-weight: 600;
 }
@@ -631,7 +666,7 @@ body {
 }
 
 .btn--exito:hover {
-  background: var(--color-success-dark);
+  background: var(--color-success-fondo-oscuro);
 }
 
 /* ── Seguimiento de obra (Portafolio, solapas Indicadores/Certificaciones y Reporte) ──
@@ -723,7 +758,7 @@ body {
 
 .alerta--critica {
   border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 6%, white);
+  background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
 }
 
 .alerta--critica .alerta__icono {
@@ -732,7 +767,7 @@ body {
 
 .alerta--advertencia {
   border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 7%, white);
+  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface));
 }
 
 .alerta--advertencia .alerta__icono {
@@ -744,17 +779,17 @@ body {
 }
 
 .badge--critico {
-  background: color-mix(in srgb, var(--color-danger) 18%, white);
-  color: #a3241c;
+  background: color-mix(in srgb, var(--color-danger) 18%, var(--color-surface));
+  color: var(--color-danger-texto);
 }
 
 .badge--riesgo {
-  background: color-mix(in srgb, var(--color-accent) 22%, white);
-  color: #7a4500;
+  background: color-mix(in srgb, var(--color-accent) 22%, var(--color-surface));
+  color: var(--color-accent-texto);
 }
 
 .badge--ok {
-  background: color-mix(in srgb, var(--color-success) 22%, white);
+  background: color-mix(in srgb, var(--color-success) 22%, var(--color-surface));
   color: var(--color-success-dark);
 }
 
@@ -794,7 +829,7 @@ body {
 }
 
 .tabla-seguimiento input:disabled {
-  background: #f4f6fb;
+  background: var(--color-bg);
   color: var(--color-text-muted);
 }
 
@@ -821,7 +856,7 @@ body {
 /* Reporte de obra: al imprimir sólo queda el contenido (sin barra superior, menú ni avisos). */
 @media print {
   body {
-    background: #fff;
+    background: var(--color-surface);
   }
 
   .topbar,
@@ -1019,7 +1054,7 @@ app-tareas .acciones {
 
 .boton-cabecera--activo {
   border-color: var(--color-primary);
-  background: #eef3fa;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   color: var(--color-primary-dark);
 }
 
@@ -1132,7 +1167,7 @@ app-tareas .acciones {
   font: inherit;
   font-size: 0.78rem;
   border: 1px solid var(--color-border);
-  background: #f8f9fc;
+  background: var(--color-bg);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
   cursor: pointer;
@@ -1196,7 +1231,7 @@ app-tareas .acciones {
 
 .filtro-check:has(input:checked) {
   border-color: var(--color-primary);
-  background: #eef3fa;
+  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   color: var(--color-primary-dark);
   font-weight: 600;
 }
@@ -1253,20 +1288,20 @@ app-tareas .acciones {
 }
 
 .resumen-obra--ok {
-  --fondo: #e9f6ef;
-  --borde: #b7e0c7;
+  --fondo: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+  --borde: color-mix(in srgb, var(--color-success) 35%, var(--color-surface));
   --icono: var(--color-success);
 }
 
 .resumen-obra--riesgo {
-  --fondo: #fbf3e6;
-  --borde: #ecd2a8;
+  --fondo: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+  --borde: color-mix(in srgb, var(--color-accent) 35%, var(--color-surface));
   --icono: var(--color-accent);
 }
 
 .resumen-obra--critico {
-  --fondo: #fcecea;
-  --borde: #f0c4c0;
+  --fondo: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  --borde: color-mix(in srgb, var(--color-danger) 35%, var(--color-surface));
   --icono: var(--color-danger);
 }
 
@@ -1352,7 +1387,7 @@ app-tareas .acciones {
 }
 
 .tabla-obras tbody tr:hover {
-  background: #f8f9fc;
+  background: var(--color-bg);
 }
 
 .obra-link {
@@ -1422,13 +1457,13 @@ app-tareas .acciones {
 }
 
 .conteo--critico {
-  background: #fbe6e4;
-  color: #b3332b;
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+  color: var(--color-danger-texto);
 }
 
 .conteo--riesgo {
-  background: #f8eedd;
-  color: #8a4f00;
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-accent-texto);
 }
 
 .avisos__lista {
@@ -1453,17 +1488,17 @@ app-tareas .acciones {
 
 .aviso--critica {
   --aviso-color: var(--color-danger);
-  --aviso-fondo: #fdf1f0;
+  --aviso-fondo: color-mix(in srgb, var(--color-danger) 7%, var(--color-surface));
 }
 
 .aviso--advertencia {
   --aviso-color: var(--color-accent);
-  --aviso-fondo: #fdf7ee;
+  --aviso-fondo: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
 }
 
 .aviso--info {
   --aviso-color: var(--color-primary);
-  --aviso-fondo: #f1f6fc;
+  --aviso-fondo: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
 }
 
 .aviso__icono {
@@ -1503,7 +1538,7 @@ app-tareas .acciones {
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 12px;
-  background: #e9f6ef;
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
   color: var(--color-success-dark);
 }
 
@@ -1551,7 +1586,7 @@ app-tareas .acciones {
 }
 
 .atrasada + .atrasada {
-  border-top: 1px solid #eef0f4;
+  border-top: 1px solid var(--color-border);
 }
 
 .atrasada__nombre {
@@ -1592,13 +1627,13 @@ app-tareas .acciones {
 }
 
 .atrasada__dias--riesgo {
-  background: #f8eedd;
-  color: #8a4f00;
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-accent-texto);
 }
 
 .atrasada__dias--critico {
-  background: #fbe6e4;
-  color: #b3332b;
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+  color: var(--color-danger-texto);
 }
 
 .tablero__fila--mitades {
@@ -1640,4 +1675,12 @@ app-tareas .acciones {
 
 .sin-corte {
   white-space: nowrap;
+}
+
+/* Pantalla Avisos: desde cuándo pasa cada aviso. */
+.aviso__fecha {
+  display: block;
+  margin-bottom: 0.1rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
 }

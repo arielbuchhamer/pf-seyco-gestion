@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Alerta, DesvioTarea } from '../../core/models/seguimiento.model';
+import { fecha } from '../../core/utils/formato';
 import { semaforoDesvio } from '../../core/utils/seguimiento';
 
 export interface Aviso extends Alerta {
@@ -54,6 +55,9 @@ export interface Aviso extends Alerta {
               @if (a.proyecto) {
                 <a class="aviso__obra" [routerLink]="['/proyectos', a.proyecto.id]" [queryParams]="a.solapa ? { solapa: a.solapa } : null">{{ a.proyecto.nombre }}</a>
               }
+              @if (mostrarFecha() && a.fecha) {
+                <span class="aviso__fecha">Desde el {{ formatoFecha(a.fecha) }}</span>
+              }
               <strong>{{ a.titulo }}</strong>
               <span class="sr-only">({{ a.nivel === 'CRITICA' ? 'para revisar' : a.nivel === 'ADVERTENCIA' ? 'de atención' : 'informativo' }})</span>
               @if (a.detalle) {
@@ -88,15 +92,21 @@ export class AvisosComponent {
   readonly alertas = input.required<Aviso[]>();
   readonly desvios = input<DesvioTarea[]>([]);
   readonly vacio = input('No hay atrasos, sobrecostos ni cobros pendientes para revisar.');
+  // Pantalla Avisos: muestra desde cuándo pasa cada aviso.
+  readonly mostrarFecha = input(false);
+  // Con paginación, alertas() es sólo la página: los contadores de arriba cuentan esta lista completa.
+  readonly todas = input<Aviso[] | null>(null);
 
   protected readonly semaforo = semaforoDesvio;
+  protected readonly formatoFecha = fecha;
 
   // Los críticos primero.
   protected readonly visibles = computed(() =>
     [...this.alertas()].sort((a, b) => peso(b.nivel) - peso(a.nivel)),
   );
-  protected readonly criticos = computed(() => this.alertas().filter((a) => a.nivel === 'CRITICA').length);
-  protected readonly advertencias = computed(() => this.alertas().filter((a) => a.nivel === 'ADVERTENCIA').length);
+  private readonly paraContar = computed(() => this.todas() ?? this.alertas());
+  protected readonly criticos = computed(() => this.paraContar().filter((a) => a.nivel === 'CRITICA').length);
+  protected readonly advertencias = computed(() => this.paraContar().filter((a) => a.nivel === 'ADVERTENCIA').length);
 }
 
 function peso(nivel: Alerta['nivel']): number {

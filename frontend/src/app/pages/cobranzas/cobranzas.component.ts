@@ -7,6 +7,7 @@ import { SeguimientoService } from '../../core/services/seguimiento.service';
 import { fecha, numero, pesos, pesosCorto } from '../../core/utils/formato';
 import { CabeceraComponent } from '../../shared/cabecera/cabecera.component';
 import { KpiComponent } from '../../shared/kpi/kpi.component';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
 // Cobranzas (Gestión global): toda la plata que falta entrar, en todas las obras, para que el
@@ -16,7 +17,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 @Component({
   selector: 'app-cobranzas',
   standalone: true,
-  imports: [RouterLink, CabeceraComponent, KpiComponent],
+  imports: [RouterLink, CabeceraComponent, KpiComponent, PaginadorComponent],
   template: `
     <section class="page cobranzas">
       <nav class="breadcrumb" aria-label="Ruta">
@@ -50,6 +51,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
             [nota]="c.obrasTerminadasConSaldo ? c.obrasTerminadasConSaldo + ' obras terminadas con saldo sin certificar' : 'Ninguna obra terminada con saldo'" />
         </div>
 
+        <div class="tablas">
         <section class="panel tablero__panel">
           <div class="tablero__cabecera">
             <div><h3>Obras con plata pendiente</h3><span class="muted chico">Primero las más urgentes</span></div>
@@ -64,7 +66,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
                   </tr>
                 </thead>
                 <tbody>
-                  @for (o of c.obras; track o.proyectoId) {
+                  @for (o of obras.pagina().items; track o.proyectoId) {
                     <tr>
                       <td><span class="badge" [class]="'badge ' + badge[o.nivel]">{{ prioridad[o.nivel] }}</span></td>
                       <td>
@@ -82,6 +84,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
                 </tbody>
               </table>
             </div>
+            <app-paginador [pagina]="obras.pagina()" (cambiar)="obras.actual.set($event)" />
           } @else {
             <p class="muted">No hay plata pendiente: todas las obras están certificadas y cobradas.</p>
           }
@@ -98,7 +101,7 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
                   <tr><th>Obra</th><th>Certificación</th><th>Emitida</th><th>Factura</th><th class="num">Monto</th><th class="num">Días sin cobrar</th></tr>
                 </thead>
                 <tbody>
-                  @for (f of c.facturas; track f.certificacionId) {
+                  @for (f of facturas.pagina().items; track f.certificacionId) {
                     <tr>
                       <td><a class="obra-link" [routerLink]="['/proyectos', f.proyectoId]">{{ f.proyecto }}</a></td>
                       <td>N.º {{ f.numero }} · {{ tipoLabel[f.tipo] }}</td>
@@ -111,20 +114,36 @@ import { SnackbarService } from '../../shared/snackbar/snackbar.service';
                 </tbody>
               </table>
             </div>
+            <app-paginador [pagina]="facturas.pagina()" (cambiar)="facturas.actual.set($event)" />
           } @else {
             <p class="muted">No hay facturas pendientes de cobro.</p>
           }
         </section>
+        </div>
       } @else {
         <p class="muted">Cargando cobranzas…</p>
       }
     </section>
   `,
   styles: `
-    .page.cobranzas { max-width: none; padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 2rem; }
+    /* Ancho completo y alto de la ventana: las dos tablas se reparten el alto que queda y
+       scrollean adentro, con el paginador siempre abajo. En pantallas bajas, alto natural. */
+    .page.cobranzas {
+      max-width: none;
+      padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 1.5rem;
+      height: calc(100dvh - var(--alto-topbar));
+      min-height: 44rem;
+      display: flex;
+      flex-direction: column;
+    }
     .tablero__kpis { margin-bottom: 1rem; }
-    .tablero__panel { margin-bottom: 1rem; }
-    .tabla-scroll { max-height: 26rem; overflow: auto; }
+    .tablas { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; }
+    .tablero__panel { display: flex; flex-direction: column; min-height: 0; }
+    .tabla-scroll { flex: 1; min-height: 0; overflow: auto; }
+    @media (max-width: 900px), (max-height: 700px) {
+      .page.cobranzas { height: auto; }
+      .tablas { grid-template-rows: auto auto; }
+    }
     .obra-link { color: var(--color-primary); font-weight: 600; text-decoration: none; }
     .obra-link:hover { text-decoration: underline; }
   `,
@@ -134,6 +153,8 @@ export class CobranzasComponent {
   private readonly snackbar = inject(SnackbarService);
 
   protected readonly recurso = httpResource<Cobranzas>(() => '/api/cobranzas');
+  protected readonly obras = paginacion(() => this.recurso.value()?.obras ?? []);
+  protected readonly facturas = paginacion(() => this.recurso.value()?.facturas ?? []);
   protected readonly descargando = signal(false);
 
   protected readonly pesos = pesos;

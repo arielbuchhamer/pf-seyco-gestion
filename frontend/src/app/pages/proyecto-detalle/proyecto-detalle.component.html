@@ -74,7 +74,7 @@
     } @else if (solapa() === 'fechas') {
       <app-tareas role="tabpanel" [proyecto]="'' + proyecto.id" [embebido]="true" (cambio)="recargar()" />
     } @else if (solapa() === 'gantt') {
-      <app-proyecto-gantt role="tabpanel" [tareas]="tareasResource.value()" [lineaBase]="!!proyecto.lineaBaseFecha" />
+      <app-proyecto-gantt role="tabpanel" [tareas]="tareasResource.value()" [lineaBase]="!!proyecto.lineaBaseFecha" [proyectoId]="proyecto.id" />
     } @else if (solapa() === 'indicadores') {
       <app-proyecto-indicadores role="tabpanel" [proyectoId]="proyecto.id" />
     } @else if (solapa() === 'costos') {

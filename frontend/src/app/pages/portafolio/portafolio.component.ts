@@ -24,6 +24,7 @@ import { FiltroFechasComponent } from '../../shared/filtros/filtro-fechas.compon
 import { PanelFiltrosComponent } from '../../shared/filtros/panel-filtros.component';
 import { KpiComponent } from '../../shared/kpi/kpi.component';
 import { TableroProyectoComponent } from '../../shared/tablero/tablero-proyecto.component';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 
 // Portafolio (Gestión global), en lenguaje simple: cuántas obras hay, cuánto se presupuestó,
 // cuánto se gastó y cuánto falta cobrar; el listado de obras con cómo viene cada una y los avisos.
@@ -41,6 +42,7 @@ import { TableroProyectoComponent } from '../../shared/tablero/tablero-proyecto.
     TableroProyectoComponent,
     AvisosComponent,
     ColumnasComponent,
+    PaginadorComponent,
   ],
   templateUrl: './portafolio.component.html',
   styleUrl: './portafolio.component.css',
@@ -111,6 +113,7 @@ export class PortafolioComponent {
   }
 
   protected readonly proyectos = computed(() => this.recurso.value()?.proyectos ?? []);
+  protected readonly paginaObras = paginacion(() => this.proyectos());
 
   // Un solo proyecto en el filtro: se muestra su tablero completo en vez del listado.
   protected readonly unico = computed(() => (this.proyectos().length === 1 ? this.proyectos()[0] : null));

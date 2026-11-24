@@ -11,6 +11,8 @@ export interface AvisoProyecto {
   titulo: string;
   detalle: string | null;
   solapa: SolapaAviso;
+  // Cuándo empezó la situación (filtro por fecha de la pantalla Avisos).
+  fecha?: string | null;
 }
 
 export interface TotalesAvisos {

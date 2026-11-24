@@ -6,6 +6,7 @@
   </nav>
 
   <app-cabecera titulo="Avisos" subtitulo="Lo que hay que revisar en todas las obras.">
+    <app-filtro-fechas [(desde)]="desde" [(hasta)]="hasta" etiqueta="Desde cuándo pasa el aviso" />
     <button
       type="button"
       class="boton-cabecera"
@@ -102,7 +103,8 @@
       </div>
 
       @if (filtrados().length) {
-        <app-avisos [alertas]="filtrados()" />
+        <app-avisos [alertas]="paginas.pagina().items" [todas]="filtrados()" [mostrarFecha]="true" />
+        <app-paginador [pagina]="paginas.pagina()" (cambiar)="paginas.actual.set($event)" />
       } @else {
         <p class="avisos-page__sin-resultados" role="status">
           Ningún aviso coincide con los filtros elegidos.

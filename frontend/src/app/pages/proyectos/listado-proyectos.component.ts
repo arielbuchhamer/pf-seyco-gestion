@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { Component, computed, input, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 import { ESTADO_PROYECTO_LABEL, EstadoProyecto, TIPO_CLIENTE_LABEL, TIPO_OBRA_LABEL, TipoCliente } from '../../core/models/proyecto.model';
 import { Portafolio, ResumenProyecto } from '../../core/models/seguimiento.model';
 import { fecha, iniciales, numero, pesosCorto } from '../../core/utils/formato';
@@ -27,7 +28,7 @@ export const OPCIONES_ORDEN: { campo: CampoOrden; texto: string; asc: boolean }[
 @Component({
   selector: 'app-listado-proyectos',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PaginadorComponent],
   template: `
     <section class="panel listado">
       <div class="tablero__cabecera">
@@ -52,7 +53,7 @@ export const OPCIONES_ORDEN: { campo: CampoOrden; texto: string; asc: boolean }[
             </tr>
           </thead>
           <tbody>
-            @for (p of visibles(); track p.id) {
+            @for (p of paginas.pagina().items; track p.id) {
               <tr [class.nuevo]="p.id === nuevoId()">
                 <td>
                   <a class="obra-link obra" [routerLink]="['/proyectos', p.id]">
@@ -92,11 +93,14 @@ export const OPCIONES_ORDEN: { campo: CampoOrden; texto: string; asc: boolean }[
           </tbody>
         </table>
       </div>
+      @if (visibles().length) {
+        <app-paginador [pagina]="paginas.pagina()" (cambiar)="paginas.actual.set($event)" />
+      }
     </section>
   `,
   styles: `
     :host { display: flex; min-height: 0; }
-    .listado { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0.9rem 1.1rem 0.4rem; }
+    .listado { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0.9rem 1.1rem 0.75rem; }
     .listado__scroll { flex: 1; min-height: 0; overflow: auto; }
     .orden { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; white-space: nowrap; }
     .orden:hover, .orden--activo { color: var(--color-primary-dark); }
@@ -104,10 +108,10 @@ export const OPCIONES_ORDEN: { campo: CampoOrden; texto: string; asc: boolean }[
     .bloque { display: block; font-weight: 400; }
     .obra .badge { margin-left: 0.35rem; }
     .inicial { width: 34px; height: 34px; flex: none; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
-    .inicial--planificado { background: #eceef2; color: #4b5563; }
-    .inicial--en_curso { background: #e6eef8; color: var(--color-primary-dark); }
-    .inicial--finalizado { background: #e6f4ec; color: var(--color-success-dark); }
-    tr.nuevo { background: #f0f8f3; }
+    .inicial--planificado { background: color-mix(in srgb, var(--color-text-muted) 14%, var(--color-surface)); color: #4b5563; }
+    .inicial--en_curso { background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface)); color: var(--color-primary-dark); }
+    .inicial--finalizado { background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)); color: var(--color-success-dark); }
+    tr.nuevo { background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)); }
     td .badge + .badge { margin-left: 0.3rem; }
   `,
 })
@@ -168,6 +172,8 @@ export class ListadoProyectosComponent {
       return asc ? cmp : -cmp;
     });
   });
+
+  protected readonly paginas = paginacion(() => this.visibles());
 
   // Primer clic: el orden natural de la columna; otro clic en la misma, lo invierte.
   ordenarPor(campo: CampoOrden): void {

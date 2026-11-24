@@ -72,7 +72,7 @@ const PREGUNTAS: Pregunta[] = [
     }
     .faq__item[open] {
       border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
-      background: color-mix(in srgb, var(--color-primary) 4%, white);
+      background: color-mix(in srgb, var(--color-primary) 4%, var(--color-surface));
     }
     summary {
       cursor: pointer;

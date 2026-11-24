@@ -9,6 +9,7 @@ import { SeguimientoService } from '../../core/services/seguimiento.service';
 import { fecha, hoy, numero, pesos } from '../../core/utils/formato';
 import { extraerMensajeError } from '../../core/utils/http-error';
 import { ConfirmarDialogComponent } from '../../shared/confirmar/confirmar-dialog.component';
+import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador.component';
 import { SnackbarService } from '../../shared/snackbar/snackbar.service';
 
 // Sangría de cada nivel del árbol en el selector de renglón.
@@ -27,7 +28,7 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
 @Component({
   selector: 'app-proyecto-costos',
   standalone: true,
-  imports: [ReactiveFormsModule, PuedeDirective, ConfirmarDialogComponent],
+  imports: [ReactiveFormsModule, PuedeDirective, ConfirmarDialogComponent, PaginadorComponent],
   template: `
     <div class="seccion-apilada">
       <div class="kpis">
@@ -61,7 +62,7 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
           <table class="tabla-seguimiento">
             <thead><tr><th>Fecha</th><th>Rubro</th><th>Descripción</th><th>Renglón</th><th>Comprobante</th><th class="num">Monto</th><th></th></tr></thead>
             <tbody>
-              @for (c of visibles(); track c.id) {
+              @for (c of gastos.pagina().items; track c.id) {
                 <tr>
                   <td>{{ fecha(c.fecha) }}</td>
                   <td><span class="punto" [style.background]="rubroColor[c.rubro]"></span>{{ rubroLabel[c.rubro] }}</td>
@@ -82,6 +83,9 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
             </tbody>
           </table>
         </div>
+        @if (visibles().length) {
+          <app-paginador [pagina]="gastos.pagina()" (cambiar)="gastos.actual.set($event)" />
+        }
       </section>
     </div>
 
@@ -177,6 +181,7 @@ export class ProyectoCostosComponent {
 
   protected readonly filtro = signal<Rubro | ''>('');
   protected readonly visibles = computed(() => this.recurso.value().filter((c) => !this.filtro() || c.rubro === this.filtro()));
+  protected readonly gastos = paginacion(() => this.visibles());
   protected readonly totalVisible = computed(() => this.visibles().reduce((s, c) => s + c.monto, 0));
 
   protected readonly consumo = computed(() => {

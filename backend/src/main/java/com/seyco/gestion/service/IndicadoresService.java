@@ -133,7 +133,7 @@ public class IndicadoresService {
 		List<PuntoCurvaS> curva = detalle ? curvaS(hojas, pesos, pesoTotal, plazo, lineaBase, hoy) : List.of();
 		List<DesvioTarea> desvios = detalle && lineaBase ? desvios(hojas, hoy) : List.of();
 		List<Alerta> alertas = alertas(proyecto, !tareas.isEmpty(), lineaBase, plazo, avanceReal, rubros,
-				renglones, certificacion, certificaciones, hoy);
+				renglones, certificacion, certificaciones, costos, hoy);
 		EnDolares enDolares = detalle ? enDolares(proyecto, presupuesto, total, rubros, costos, hoy) : null;
 
 		return new Indicadores(id, proyecto.getNombre(), lineaBase, plazo, redondear(avancePlan * 100),
@@ -368,38 +368,42 @@ public class IndicadoresService {
 
 	private static List<Alerta> alertas(Proyecto proyecto, boolean hayTareas, boolean lineaBase, Plazo plazo,
 			double avanceReal, List<ComparacionRubro> rubros, List<ComparacionRenglon> renglones,
-			ResumenCertificacion cert, List<Certificacion> certificaciones, LocalDate hoy) {
+			ResumenCertificacion cert, List<Certificacion> certificaciones, List<CostoReal> costos, LocalDate hoy) {
 		List<Alerta> alertas = new ArrayList<>();
+		// Fecha de cada aviso: cuándo empezó la situación (para filtrar la pantalla Avisos por fecha).
+		LocalDate inicioObra = proyecto.getFechaInicio() != null ? proyecto.getFechaInicio() : hoy;
 		boolean terminada = proyecto.getEstado() == EstadoProyecto.FINALIZADO || avanceReal >= 0.95;
 
 		if (hayTareas && !lineaBase) {
 			alertas.add(new Alerta(NivelAlerta.INFO, "Línea base sin fijar",
-					"Fijá la línea base en la solapa Carga de fechas para medir el avance real contra el plan."));
+					"Fijá la línea base en la solapa Carga de fechas para medir el avance real contra el plan.",
+					proyecto.getFechaImportacion() != null ? proyecto.getFechaImportacion().toLocalDate() : inicioObra));
 		}
 		Long desvio = plazo.desvioDias();
 		if (lineaBase && desvio != null && desvio > 0) {
 			alertas.add(new Alerta(desvio > 7 ? NivelAlerta.CRITICA : NivelAlerta.ADVERTENCIA,
 					"Atraso de " + desvio + (desvio == 1 ? " día" : " días"),
 					"Fin estimado " + FECHA.format(plazo.finEstimado()) + " contra " + FECHA.format(plazo.finPlan())
-							+ " de la línea base."));
+							+ " de la línea base.", plazo.finPlan()));
 		} else if (lineaBase && desvio != null && desvio < 0) {
 			alertas.add(new Alerta(NivelAlerta.INFO, "Adelanto de " + -desvio + (desvio == -1 ? " día" : " días"),
-					"Rendimiento positivo: el fin estimado es anterior al plan."));
+					"Rendimiento positivo: el fin estimado es anterior al plan.", plazo.finEstimado()));
 		}
 
 		for (ComparacionRubro r : rubros) {
 			String rubro = RUBRO_LABEL.get(r.rubro());
+			LocalDate ultimo = ultimoGasto(costos, c -> c.getRubro() == r.rubro(), hoy);
 			if (r.presupuestado().signum() > 0 && r.real().compareTo(r.presupuestado()) > 0) {
 				alertas.add(new Alerta(NivelAlerta.CRITICA, rubro + " excedido",
 						"Se gastaron " + pesos(r.real()) + " de " + pesos(r.presupuestado()) + " cotizados (+"
-								+ Math.round(r.porcentajeConsumido() - 100) + " %)."));
+								+ Math.round(r.porcentajeConsumido() - 100) + " %).", ultimo));
 			} else if (r.presupuestado().signum() > 0 && r.porcentajeConsumido() >= 90 && avanceReal < 0.9) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, rubro + " cerca del límite",
 						"Va el " + Math.round(r.porcentajeConsumido()) + " % de lo cotizado con un avance de "
-								+ Math.round(avanceReal * 100) + " %."));
+								+ Math.round(avanceReal * 100) + " %.", ultimo));
 			} else if (r.presupuestado().signum() == 0 && r.real().signum() > 0) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, rubro + " sin cotizar",
-						"Hay " + pesos(r.real()) + " de gastos en un rubro que no estaba en el presupuesto."));
+						"Hay " + pesos(r.real()) + " de gastos en un rubro que no estaba en el presupuesto.", ultimo));
 			}
 		}
 
@@ -412,7 +416,8 @@ public class IndicadoresService {
 				String nombre = r.descripcion() == null ? "Renglón " + r.numero() : r.descripcion();
 				alertas.add(new Alerta(NivelAlerta.CRITICA, nombre + " excedido",
 						"Se cotizaron " + pesos(r.cotizado()) + " de " + RUBRO_LABEL.get(r.rubro()).toLowerCase(Locale.ROOT)
-								+ " y van " + pesos(r.real()) + " (+" + Math.round(r.porcentajeConsumido() - 100) + " %)."));
+								+ " y van " + pesos(r.real()) + " (+" + Math.round(r.porcentajeConsumido() - 100) + " %).",
+						ultimoGasto(costos, c -> r.itemId().equals(c.getItemPresupuestoId()) && c.getRubro() == r.rubro(), hoy)));
 			}
 		}
 
@@ -420,21 +425,24 @@ public class IndicadoresService {
 			if (terminada && cert.saldoPorCertificar().signum() > 0) {
 				alertas.add(new Alerta(NivelAlerta.CRITICA, "Saldo sin certificar",
 						"Queda " + pesos(cert.saldoPorCertificar()) + " (" + Math.round(100 - cert.porcentajeCertificado())
-								+ " % del contrato) por certificar y la obra está terminada."));
+								+ " % del contrato) por certificar y la obra está terminada.",
+						plazo.finEstimado() != null ? plazo.finEstimado() : hoy));
 			}
 			if (lineaBase && certificaciones.isEmpty()) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, "Sin anticipo",
-						"La obra no tiene certificaciones: normalmente arranca con un anticipo del 30 %."));
+						"La obra no tiene certificaciones: normalmente arranca con un anticipo del 30 %.", inicioObra));
 			} else if (lineaBase && !terminada && cert.diasDesdeUltima() != null
 					&& cert.diasDesdeUltima() > DIAS_ALERTA_CERTIFICACION) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, "Sin certificar hace " + cert.diasDesdeUltima() + " días",
-						"Las obras se certifican cada 2 o 3 meses según el avance."));
+						"Las obras se certifican cada 2 o 3 meses según el avance.",
+						cert.ultimaCertificacion().plusDays(DIAS_ALERTA_CERTIFICACION)));
 			}
 			double sinCertificar = avanceReal * 100 - cert.porcentajeCertificado();
 			if (!terminada && sinCertificar > 15) {
 				alertas.add(new Alerta(NivelAlerta.ADVERTENCIA, "Avance sin certificar",
 						"La obra avanzó " + Math.round(avanceReal * 100) + " % y se certificó "
-								+ Math.round(cert.porcentajeCertificado()) + " %: hay trabajo hecho sin facturar."));
+								+ Math.round(cert.porcentajeCertificado()) + " %: hay trabajo hecho sin facturar.",
+						cert.ultimaCertificacion() != null ? cert.ultimaCertificacion() : inicioObra));
 			}
 		}
 		List<Certificacion> atrasadas = certificaciones.stream()
@@ -446,10 +454,17 @@ public class IndicadoresService {
 					atrasadas.size() == 1 ? "1 certificación sin cobrar" : atrasadas.size() + " certificaciones sin cobrar",
 					"Emitidas hace más de " + DIAS_ALERTA_COBRO + " días: "
 							+ pesos(atrasadas.stream().map(Certificacion::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add))
-							+ " pendientes de cobro."));
+							+ " pendientes de cobro.",
+					atrasadas.stream().map(Certificacion::getFechaEmision).min(Comparator.naturalOrder()).orElse(hoy)));
 		}
 		alertas.sort(Comparator.comparing(Alerta::nivel).reversed());
 		return alertas;
+	}
+
+	// Fecha del último gasto que cumple la condición (los gastos vienen del más nuevo al más viejo).
+	private static LocalDate ultimoGasto(List<CostoReal> costos, java.util.function.Predicate<CostoReal> condicion,
+			LocalDate siNoHay) {
+		return costos.stream().filter(condicion).map(CostoReal::getFecha).max(Comparator.naturalOrder()).orElse(siNoHay);
 	}
 
 	private static Long dias(LocalDate desde, LocalDate hasta) {
