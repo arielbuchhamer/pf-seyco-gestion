@@ -11,7 +11,7 @@
 }
 
 .titulo {
-  font-size: 0.68rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -57,7 +57,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.8rem;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }
 
@@ -68,6 +68,6 @@
 }
 
 .aviso {
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }

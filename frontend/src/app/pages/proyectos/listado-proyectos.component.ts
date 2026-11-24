@@ -107,7 +107,7 @@ export const OPCIONES_ORDEN: { campo: CampoOrden; texto: string; asc: boolean }[
     .obra { display: flex; align-items: center; gap: 0.65rem; }
     .bloque { display: block; font-weight: 400; }
     .obra .badge { margin-left: 0.35rem; }
-    .inicial { width: 34px; height: 34px; flex: none; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+    .inicial { width: 34px; height: 34px; flex: none; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: var(--texto-chico); font-weight: 700; }
     .inicial--planificado { background: color-mix(in srgb, var(--color-text-muted) 14%, var(--color-surface)); color: #4b5563; }
     .inicial--en_curso { background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface)); color: var(--color-primary-dark); }
     .inicial--finalizado { background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)); color: var(--color-success-dark); }

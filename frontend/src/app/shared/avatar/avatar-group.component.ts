@@ -31,7 +31,7 @@ import { AvatarComponent } from './avatar.component';
       height: 1.6rem;
       padding: 0 0.3rem;
       border-radius: 999px;
-      font-size: 0.65rem;
+      font-size: var(--texto-mini);
       font-weight: 600;
       color: var(--color-danger);
       background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));

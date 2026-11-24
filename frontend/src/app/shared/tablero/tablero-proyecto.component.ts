@@ -9,7 +9,7 @@ import { KpiComponent, TonoKpi } from '../kpi/kpi.component';
 
 // Tablero de UN proyecto, pensado para alguien que no es experto (estilo del prototipo VoltControl,
 // en claro): una frase que resume cómo va la obra, cuatro preguntas (¿va a tiempo?, ¿cuánto se
-// avanzó?, ¿cuánto se gastó?, ¿cuánto falta cobrar?), en qué se gastó y gastado vs. previsto por
+// avanzó?, ¿cuánto se certificó?, ¿cuánto falta cobrar?), en qué se gastó y gastado vs. previsto por
 // rubro, y abajo la curva S con los avisos. Lo usan la solapa Indicadores y el Portafolio con un proyecto.
 @Component({
   selector: 'app-tablero-proyecto',
@@ -25,14 +25,16 @@ import { KpiComponent, TonoKpi } from '../kpi/kpi.component';
 
       <div class="tablero__kpis tablero__kpis--4">
         <app-kpi etiqueta="¿Va a tiempo?" icono="reloj" [tono]="tonoPlazo()" [valor]="valorPlazo()" [nota]="notaPlazo()" />
-        <app-kpi etiqueta="¿Cuánto se avanzó?" icono="avance" [tono]="tonoAvance()" [valor]="redondo(i.avanceReal) + ' %'"
+        <app-kpi etiqueta="¿Cuánto se avanzó?" icono="avance" tono="neutro"[valor]="redondo(i.avanceReal) + ' %'"
           [progreso]="i.avanceReal" [marca]="i.lineaBaseFijada ? i.avancePlan : null" marcaTexto="Lo que debería ir a esta fecha"
           [nota]="i.lineaBaseFijada ? 'A esta fecha debería ir ' + redondo(i.avancePlan) + ' %' : 'Todavía no hay un plan fijado'" />
-        <app-kpi etiqueta="¿Cuánto se gastó?" icono="billetera" [tono]="tonoGasto()" [valor]="pesosCorto(i.costoReal)"
-          [secundario]="'de ' + pesosCorto(i.presupuesto)" [progreso]="porcentajeGastado()" [nota]="notaGasto()" />
-        <app-kpi etiqueta="¿Cuánto falta cobrar?" icono="factura" [valor]="pesosCorto(i.certificacion.saldoPorCobrar)"
+        <app-kpi etiqueta="¿Cuánto se certificó?" icono="billetera" tono="ok"
+          [valor]="pesosCorto(i.certificacion.cobradoPesos ?? i.certificacion.cobrado)"
+          [secundario]="'de ' + pesosCorto(i.certificacion.montoContrato ?? i.presupuesto)" [progreso]="i.certificacion.porcentajeCobrado"
+          [nota]="notaCobrado()" />
+        <app-kpi etiqueta="¿Cuánto falta cobrar?" icono="factura" tono="riesgo" [valor]="pesosCorto(i.certificacion.saldoPorCobrar)"
           [progreso]="i.certificacion.porcentajeCobrado"
-          [nota]="'Cobrado ' + pesosCorto(i.certificacion.cobrado) + ' (' + redondo(i.certificacion.porcentajeCobrado) + ' %)' + (i.certificacion.pendienteCobro > 0 ? ' · facturado sin cobrar ' + pesosCorto(i.certificacion.pendienteCobro) : '')" />
+          [nota]="(i.certificacion.pendienteCobro > 0 ? 'Facturado sin cobrar ' + pesosCorto(i.certificacion.pendienteCobro) + ' · ' : '') + 'Sin certificar ' + pesosCorto(i.certificacion.saldoPorCertificar)" />
       </div>
 
       <div class="tablero__fila tablero__fila--mitades">
@@ -126,25 +128,12 @@ export class TableroProyectoComponent {
     return d >= 0 ? (d === 0 ? 'En línea con el plan' : `${d} % adelantada`) : `${-d} % atrasada`;
   });
 
-  protected readonly porcentajeGastado = computed(() => {
-    const i = this.indicadores();
-    return i.presupuesto ? (i.costoReal / i.presupuesto) * 100 : 0;
-  });
-
-  protected readonly tonoGasto = computed<TonoKpi>(() => {
-    const i = this.indicadores();
-    if (!i.costoReal) return 'neutro';
-    return i.costoProyectado != null && i.costoProyectado > i.presupuesto ? 'critico' : 'ok';
-  });
-
-  // "Si sigue así": lo gastado llevado al 100 % del avance.
-  protected readonly notaGasto = computed(() => {
-    const i = this.indicadores();
-    if (!i.costoReal) return 'Todavía no se cargaron gastos';
-    if (i.costoProyectado == null) return `${this.redondo(this.porcentajeGastado())} % del presupuesto`;
-    return i.costoProyectado > i.presupuesto
-      ? `Si sigue así, costaría ${pesosCorto(i.costoProyectado)}: más de lo presupuestado`
-      : `Si sigue así, terminaría costando ${pesosCorto(i.costoProyectado)}`;
+  // Lo cobrado (certificaciones cobradas, con su actualización por CAC): hace par con "¿Cuánto falta cobrar?".
+  protected readonly notaCobrado = computed(() => {
+    const c = this.indicadores().certificacion;
+    if (!c.cobrado) return 'Todavía no se certificó nada';
+    return `${this.redondo(c.porcentajeCobrado)} % del contrato certificado` +
+      (c.ultimaCertificacion ? ` · última certificación ${fechaCorta(c.ultimaCertificacion)}` : '');
   });
 
   // La frase de arriba: lo más importante, en una línea.

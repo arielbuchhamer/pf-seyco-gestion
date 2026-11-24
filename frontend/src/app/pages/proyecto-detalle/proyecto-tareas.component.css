@@ -38,7 +38,7 @@
 }
 
 .btn-nueva {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   padding: 0.45rem 0.9rem;
 }
 
@@ -50,7 +50,7 @@
   width: 100%;
   min-width: 46rem;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .arbol th,
@@ -74,7 +74,7 @@
 
 .arbol th {
   border-top: 0;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 }
 
 .fechas {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   font-weight: 400;
   white-space: nowrap;
 }
@@ -130,7 +130,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 400;
   color: var(--color-text-muted);
 }
@@ -157,7 +157,7 @@
   padding: 1px 7px;
   margin-right: 0.6rem;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   color: var(--color-text-muted);
   cursor: pointer;

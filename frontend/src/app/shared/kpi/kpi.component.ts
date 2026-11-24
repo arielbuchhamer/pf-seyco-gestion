@@ -53,12 +53,12 @@ export type TonoKpi = 'ok' | 'riesgo' | 'critico' | 'neutro';
     .kpi-tarjeta--critico { --tono: var(--color-danger); --tono-fondo: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface)); --tono-texto: var(--color-danger-texto); }
     .kpi-tarjeta--neutro { --tono: var(--color-primary); --tono-fondo: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface)); --tono-texto: var(--color-primary-dark); }
     .cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
-    .etiqueta { font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); }
+    .etiqueta { font-size: var(--texto-cuerpo); font-weight: 600; color: var(--color-text-muted); }
     .chip { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;
       background: var(--tono-fondo); color: var(--tono-texto); flex: none; }
     .valor { font-size: 1.45rem; font-weight: 800; color: var(--color-ink); font-variant-numeric: tabular-nums; line-height: 1.1; letter-spacing: -0.01em; }
-    .secundario { font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); }
-    .nota { font-size: 0.72rem; color: var(--tono-texto); font-weight: 600; }
+    .secundario { font-size: var(--texto-cuerpo); font-weight: 600; color: var(--color-text-muted); }
+    .nota { font-size: var(--texto-chico); color: var(--tono-texto); font-weight: 600; }
     .barra { position: relative; height: 6px; border-radius: 999px; background: var(--color-border); margin-top: 0.15rem; }
     .barra__relleno { height: 100%; border-radius: 999px; background: var(--tono); }
     .barra__marca { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--color-ink); border-radius: 1px; }

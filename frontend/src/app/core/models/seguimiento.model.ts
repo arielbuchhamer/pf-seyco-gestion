@@ -43,6 +43,25 @@ export interface ResumenCertificacion {
   porcentajeCobrado: number;
   ultimaCertificacion: string | null;
   diasDesdeUltima: number | null;
+  // Lo que realmente entró: cada cobro con su actualización por índice CAC.
+  cobradoPesos?: number;
+}
+
+// Lo pendiente de cobro llevado a hoy con el índice CAC (monto × CAC actual / CAC del presupuesto).
+export interface ActualizacionCac {
+  disponible: boolean;
+  motivo: string | null;
+  periodoBase: string | null;
+  indiceBase: number | null;
+  periodoActual: string | null;
+  indiceActual: number | null;
+  // false = el CAC de este mes todavía no se publicó y se usa el del mes anterior.
+  mesActualPublicado: boolean;
+  variacion: number;
+  anticipoPorcentaje: number;
+  pendienteNominal: number;
+  pendienteActualizado: number | null;
+  certificaciones: { certificacionId: number; monto: number; montoActualizado: number | null }[];
 }
 
 export interface ComparacionRubro {
@@ -173,6 +192,10 @@ export interface Certificacion {
   estado: EstadoCertificacion;
   fechaCobro: string | null;
   observaciones: string | null;
+  // Al cobrar: el monto actualizado por CAC al mes del cobro (queda fijo).
+  montoCobrado?: number | null;
+  indiceCac?: number | null;
+  cacPeriodo?: string | null;
 }
 
 // Monto o porcentaje: si viene sólo el porcentaje, el backend calcula el monto sobre el contrato.
@@ -269,6 +292,9 @@ export interface FacturaPendiente {
   nroFactura: string | null;
   monto: number;
   dias: number;
+  // El monto llevado a hoy con el índice CAC (null si no hay índice) y el mes del índice usado.
+  montoActualizado?: number | null;
+  cacPeriodo?: string | null;
 }
 
 export interface Cobranzas {
@@ -280,4 +306,6 @@ export interface Cobranzas {
   obrasTerminadasConSaldo: number;
   obras: ObraCobranza[];
   facturas: FacturaPendiente[];
+  // Lo facturado sin cobrar actualizado a hoy por índice CAC (null si no hay índice).
+  facturadoSinCobrarCac?: number | null;
 }

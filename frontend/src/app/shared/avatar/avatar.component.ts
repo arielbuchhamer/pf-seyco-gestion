@@ -40,12 +40,12 @@ const COLORES = ['#0f5fa6', '#167a41', '#b0680c', '#6d4bb8', '#0e7c86', '#b23c5a
     .avatar--sm {
       width: 1.6rem;
       height: 1.6rem;
-      font-size: 0.65rem;
+      font-size: var(--texto-mini);
     }
     .avatar--md {
       width: 2.1rem;
       height: 2.1rem;
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
     }
     .avatar--lg {
       width: 4.75rem;

@@ -1,15 +1,15 @@
 import { httpResource } from '@angular/common/http';
-import { Component, ElementRef, computed, inject, input, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { Indicadores } from '../../core/models/seguimiento.model';
 import { Tarea } from '../../core/models/tarea.model';
 import { diasEntre, fecha, fechaCorta, hoy, sumarDias } from '../../core/utils/formato';
 import { SEMAFORO_LABEL, aplanarTareas, avanceTarea, desvioTarea, finEstimado, semaforoDesvio } from '../../core/utils/seguimiento';
 import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.component';
 
-// Solapa "Gantt", a todo el ancho: por cada tarea, la barra de la línea base (plan) y debajo la
+// Solapa "Gantt": el cronograma ocupa el 80 % del ancho y a su derecha (20 %) la columna de
+// desvíos y avisos de la obra. Por cada tarea, la barra de la línea base (plan) y debajo la
 // real (inicio real → fin estimado/real), coloreada según el desvío y rellena según el % de avance.
-// Arriba, una franja con el resumen de desvíos (las peores como chips: llevan a su fila) y el botón
-// que abre el panel lateral con todas las tareas desviadas y los avisos de la obra. El cronograma
+// Arriba, una franja con el resumen de desvíos (las peores como chips: llevan a su fila). El cronograma
 // ocupa el alto de la ventana y scrollea adentro, con las fechas y las tareas siempre visibles; los
 // capítulos se pliegan. Se dibuja con posiciones en % sobre el rango total de fechas.
 @Component({
@@ -21,15 +21,11 @@ import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.comp
       <div class="franja franja--info">
         <span class="franja__icono" aria-hidden="true">i</span>
         <span>Los desvíos se miden después de fijar la línea base (solapa Carga de fechas).</span>
-        <button type="button" class="franja__boton" (click)="abrir('avisos')">Avisos de la obra</button>
       </div>
     } @else if (!desviadas().length) {
       <div class="franja franja--ok">
         <span class="franja__icono" aria-hidden="true">✓</span>
         <span><strong>Todas las tareas en fecha.</strong> Ninguna se pasó de su fin planificado.</span>
-        <button type="button" class="franja__boton" (click)="abrir('avisos')">
-          Avisos de la obra{{ alertas() ? ' (' + alertas()!.length + ')' : '' }}
-        </button>
       </div>
     } @else {
       <div class="franja" [class.franja--critico]="hayCriticas()" [class.franja--riesgo]="!hayCriticas()">
@@ -45,12 +41,10 @@ import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.comp
             </button>
           }
         </span>
-        <button type="button" class="franja__boton" (click)="abrir('tareas')">
-          Ver detalle{{ alertas() ? ' · ' + alertas()!.length + ' avisos' : '' }} ▸
-        </button>
       </div>
     }
 
+    <div class="cuerpo">
     <section class="panel panel--tabla cronograma">
       <div class="panel__cabecera">
         <div>
@@ -128,10 +122,9 @@ import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.comp
       }
     </section>
 
-    @if (panel(); as solapa) {
-      <app-proyecto-desvios [desviadas]="desviadas()" [alertas]="alertas()" [lineaBase]="lineaBase()" [solapa]="solapa"
-        (cerrar)="panel.set(null)" (ir)="panel.set(null); irA($event)" />
-    }
+    <app-proyecto-desvios [desviadas]="desviadas()" [alertas]="alertas()" [lineaBase]="lineaBase()" [(solapa)]="solapaLateral"
+      (ir)="irA($event)" />
+    </div>
   `,
   styles: `
     :host { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -139,29 +132,29 @@ import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.comp
     .franja {
       --c: var(--color-primary);
       display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem 0.9rem;
-      padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.86rem; color: var(--color-ink);
+      padding: 0.65rem 0.9rem; border-radius: 12px; font-size: var(--texto-cuerpo); color: var(--color-ink);
       background: color-mix(in srgb, var(--c) 9%, var(--color-surface));
       border: 1px solid color-mix(in srgb, var(--c) 35%, var(--color-surface));
     }
     .franja--ok { --c: var(--color-success); }
     .franja--riesgo { --c: var(--color-accent); }
     .franja--critico { --c: var(--color-danger); }
-    .franja__icono { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; flex: none;
-      border-radius: 50%; background: var(--c); color: #fff; font-weight: 800; font-size: 0.85rem; }
+    .franja__icono { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; flex: none;
+      border-radius: 50%; background: var(--c); color: #fff; font-weight: 800; font-size: var(--texto-cuerpo); }
     .franja__texto { color: var(--color-text); }
     .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .chip { font: inherit; font-size: 0.76rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; cursor: pointer;
+    .chip { font: inherit; font-size: var(--texto-chico); font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; cursor: pointer;
       border: 1px solid transparent; }
     .chip--critico { background: color-mix(in srgb, var(--color-danger) 16%, var(--color-surface)); color: var(--color-danger-texto); }
     .chip--riesgo { background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)); color: var(--color-accent-texto); }
     .chip:hover { border-color: currentColor; }
-    .franja__boton { font: inherit; font-size: 0.82rem; font-weight: 700; margin-left: auto; padding: 0.4rem 0.8rem; cursor: pointer;
-      border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-primary); }
-    .franja__boton:hover { border-color: var(--color-primary); }
-    /* Cronograma: alto de la ventana y scroll adentro, con encabezado y columnas de tarea fijos. */
-    .cronograma { display: flex; flex-direction: column; height: calc(100dvh - 18.5rem); min-height: 24rem; }
+    /* Cronograma (80 %) y columna de desvíos y avisos (20 %), del alto de la ventana y con scroll
+       adentro; el cronograma tiene encabezado y columnas de tarea fijos. */
+    .cuerpo { display: grid; grid-template-columns: minmax(0, 4fr) minmax(15rem, 1fr); gap: 0.75rem;
+      height: calc(100dvh - 18.5rem); min-height: 24rem; }
+    .cronograma { display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: 0; }
     .scroll { flex: 1; min-height: 0; overflow: auto; }
-    .herramientas { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--color-text-muted); }
+    .herramientas { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: var(--texto-chico); color: var(--color-text-muted); }
     .ref { display: inline-flex; align-items: center; gap: 0.3rem; }
     .muestra { width: 14px; height: 8px; border-radius: 3px; display: inline-block; }
     .muestra--plan, .barra--plan { background: #b9cde3; }
@@ -185,13 +178,16 @@ import { ProyectoDesviosComponent, SolapaDesvios } from './proyecto-desvios.comp
     .plegar svg.girado { transform: rotate(-90deg); }
     .linea-tiempo { position: relative; width: 100%; min-width: 22rem; height: 38px; padding: 0 !important; }
     th.linea-tiempo { height: 32px; }
-    .marca { position: absolute; top: 9px; font-size: 0.68rem; color: var(--color-text-muted); border-left: 1px solid var(--color-border); padding-left: 3px; height: 100%; }
+    .marca { position: absolute; top: 9px; font-size: var(--texto-chico); color: var(--color-text-muted); border-left: 1px solid var(--color-border); padding-left: 3px; height: 100%; }
     .hoy { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--color-danger); opacity: 0.6; }
     .barra { position: absolute; border-radius: 4px; min-width: 3px; }
     .barra--plan { top: 7px; height: 9px; }
     .barra--real { top: 19px; height: 12px; overflow: hidden; background: color-mix(in srgb, var(--c) 30%, var(--color-surface)); }
     .barra__avance { display: block; height: 100%; background: var(--c); }
-    @media (max-width: 900px), (max-height: 640px) { .cronograma { height: auto; } }
+    @media (max-width: 1100px), (max-height: 640px) {
+      .cuerpo { grid-template-columns: 1fr; height: auto; }
+      .cronograma { max-height: 75dvh; }
+    }
   `,
 })
 export class ProyectoGanttComponent {
@@ -207,11 +203,13 @@ export class ProyectoGanttComponent {
   protected readonly soloDesviadas = signal(false);
   protected readonly plegados = signal<ReadonlySet<number>>(new Set());
   protected readonly resaltada = signal<number | null>(null);
-  protected readonly panel = signal<SolapaDesvios | null>(null);
+
 
   // Avisos de la obra (los mismos de la pantalla Avisos), para la franja y el panel lateral.
   private readonly indicadores = httpResource<Indicadores>(() => `/api/proyectos/${this.proyectoId()}/indicadores`);
   protected readonly alertas = computed(() => this.indicadores.value()?.alertas ?? null);
+  // Solapa de la columna derecha: arranca en desvíos si hay tareas atrasadas; si no, en avisos.
+  protected readonly solapaLateral = linkedSignal<SolapaDesvios>(() => (this.desviadas().length ? 'tareas' : 'avisos'));
 
   private readonly datos = computed(() =>
     aplanarTareas(this.tareas()).map(({ tarea, subtarea, tieneSubtareas }) => {
@@ -292,10 +290,6 @@ export class ProyectoGanttComponent {
 
   protected plegarTodo(): void {
     this.plegados.set(this.todoPlegado() ? new Set() : new Set(this.padres()));
-  }
-
-  protected abrir(solapa: SolapaDesvios): void {
-    this.panel.set(solapa);
   }
 
   // Lleva el cronograma a la fila de la tarea (desplegando su capítulo) y la resalta un momento.

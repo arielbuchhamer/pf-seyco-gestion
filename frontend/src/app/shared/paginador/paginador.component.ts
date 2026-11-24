@@ -77,7 +77,7 @@ export function paginacion<T>(
       justify-content: space-between;
       gap: 0.75rem;
       padding: 0.75rem 0.25rem 0;
-      font-size: 0.85rem;
+      font-size: var(--texto-cuerpo);
       color: var(--color-text-muted);
     }
     .paginador__nav {
@@ -89,7 +89,7 @@ export function paginacion<T>(
       margin-left: 0;
       width: 1.9rem;
       height: 1.9rem;
-      font-size: 1.1rem;
+      font-size: var(--texto-titulo);
     }
   `,
 })

@@ -130,13 +130,13 @@ import { CurvaSComponent } from '../../shared/graficos/curva-s.component';
     .encabezado h1 { margin: 0; font-size: 1.3rem; color: var(--color-ink); }
     .logo { height: 2.6rem; }
     h2 { margin: 1.25rem 0 0.5rem; color: var(--color-ink); }
-    h3 { margin: 1.4rem 0 0.5rem; font-size: 0.95rem; color: var(--color-primary-dark); text-transform: uppercase; letter-spacing: 0.03em; }
-    .datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.4rem 1.5rem; margin: 0; font-size: 0.85rem; }
-    .datos dt { color: var(--color-text-muted); font-size: 0.72rem; text-transform: uppercase; }
+    h3 { margin: 1.4rem 0 0.5rem; font-size: var(--texto-destacado); color: var(--color-primary-dark); text-transform: uppercase; letter-spacing: 0.03em; }
+    .datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.4rem 1.5rem; margin: 0; font-size: var(--texto-cuerpo); }
+    .datos dt { color: var(--color-text-muted); font-size: var(--texto-chico); text-transform: uppercase; }
     .datos dd { margin: 0; font-weight: 600; }
-    .tabla { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 0.6rem; }
+    .tabla { width: 100%; border-collapse: collapse; font-size: var(--texto-secundario); margin-bottom: 0.6rem; }
     .tabla th, .tabla td { border-bottom: 1px solid var(--color-border); padding: 0.4rem 0.5rem; text-align: left; }
-    .tabla thead th { font-size: 0.7rem; text-transform: uppercase; color: var(--color-text-muted); }
+    .tabla thead th { font-size: var(--texto-chico); text-transform: uppercase; color: var(--color-text-muted); }
     .tabla tbody th { font-weight: 500; }
     .tabla .num { text-align: right; }
     .excedido td { color: var(--color-danger); font-weight: 600; }

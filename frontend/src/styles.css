@@ -1,6 +1,21 @@
-/* Paleta y variables compartidas por toda la app â€” mantiene el CSS de cada
+/* Paleta y variables compartidas por toda la app: mantiene el CSS de cada
    componente liviano (hay un budget de 4kB/8kB por componente en angular.json). */
 :root {
+  /* Escala de tamaños de letra: toda la app usa sólo estos (salvo títulos de página y números
+     grandes de los KPI). No usar font-size sueltos: elegir el que corresponda.
+       titulo      títulos de sección y de diálogos
+       destacado   títulos de tarjetas y paneles
+       cuerpo      texto normal, tablas, carteles y avisos
+       secundario  subtítulos, ayudas y texto de apoyo
+       chico       etiquetas, badges, notas y encabezados de tabla
+       mini        marcas de ejes y contadores muy chicos */
+  --texto-titulo: 1.1rem;
+  --texto-destacado: 0.95rem;
+  --texto-cuerpo: 0.875rem;
+  --texto-secundario: 0.8rem;
+  --texto-chico: 0.72rem;
+  --texto-mini: 0.625rem;
+
   /* Alto de la barra superior: ya no hay (la navegación es la barra lateral), queda en 0 para que
      las pantallas de tablero (Usuarios, Roles, Proyectos) ocupen toda la altura. */
   --alto-topbar: 0px;
@@ -117,7 +132,7 @@ body {
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-danger) 10%, transparent);
   color: var(--color-danger);
-  font-size: 0.9rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .card {
@@ -144,7 +159,7 @@ body {
 }
 
 .table th {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
@@ -247,7 +262,7 @@ body {
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -291,7 +306,7 @@ body {
      margin normal (no rompe nada donde .pager se use sin el wrapper). */
   margin-top: auto;
   padding-top: 1.5rem;
-  font-size: 0.9rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .filters input[type='search'] {
@@ -334,7 +349,7 @@ body {
 
 .dialog h2 {
   margin: 0 0 1rem;
-  font-size: 1.2rem;
+  font-size: var(--texto-titulo);
   color: var(--color-ink);
 }
 
@@ -348,7 +363,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   font-weight: 500;
   color: var(--color-text);
 }
@@ -441,7 +456,7 @@ body {
 
   .table td[data-label]::before {
     content: attr(data-label);
-    font-size: 0.75rem;
+    font-size: var(--texto-chico);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -478,7 +493,7 @@ body {
   align-items: center;
   gap: 0.4rem;
   margin: 0 0 0.75rem;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -585,7 +600,7 @@ body {
 
 .panel__titulo {
   margin: 0 0 0.9rem;
-  font-size: 0.95rem;
+  font-size: var(--texto-destacado);
   color: var(--color-ink);
 }
 
@@ -594,7 +609,7 @@ body {
 }
 
 .panel__subtitulo {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
   margin-top: 2px;
 }
@@ -616,7 +631,7 @@ body {
 
 .btn-chico {
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text);
@@ -653,7 +668,7 @@ body {
   border: 0;
   outline: none;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   flex: 1;
   min-width: 0;
   background: transparent;
@@ -685,7 +700,7 @@ body {
 }
 
 .kpi__etiqueta {
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -702,7 +717,7 @@ body {
 
 .kpi__nota {
   margin-top: 0.2rem;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }
 
@@ -736,7 +751,7 @@ body {
   padding: 0.6rem 0.8rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  font-size: 0.82rem;
+  font-size: var(--texto-secundario);
 }
 
 .alerta__icono {
@@ -747,7 +762,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   color: #fff;
 }
 
@@ -797,7 +812,7 @@ body {
 .tabla-seguimiento {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .tabla-seguimiento th,
@@ -810,7 +825,7 @@ body {
 
 .tabla-seguimiento th {
   border-top: 0;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -821,7 +836,7 @@ body {
 .tabla-seguimiento input,
 .tabla-seguimiento select {
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -939,13 +954,13 @@ body {
 
 .tablero__cabecera h3 {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: var(--texto-cuerpo);
   color: var(--color-ink);
 }
 
 .tablero h4 {
   margin: 0.9rem 0 0.4rem;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
@@ -960,7 +975,7 @@ body {
 }
 
 .chico {
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
 }
 
 .atrasos {
@@ -969,7 +984,7 @@ body {
   padding: 0;
   display: grid;
   gap: 0.3rem;
-  font-size: 0.78rem;
+  font-size: var(--texto-secundario);
 }
 
 .atrasos li {
@@ -1019,7 +1034,7 @@ app-tareas .acciones {
 
 .cabecera-pagina p {
   margin: 0.15rem 0 0;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   color: var(--color-text-muted);
 }
 
@@ -1041,7 +1056,7 @@ app-tareas .acciones {
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -1065,14 +1080,14 @@ app-tareas .acciones {
   border-radius: 999px;
   background: var(--color-primary);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: var(--texto-chico);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .boton-cabecera__quitar {
-  font-size: 1.1rem;
+  font-size: var(--texto-titulo);
   line-height: 1;
   margin-left: 0.1rem;
   color: var(--color-text-muted);
@@ -1093,7 +1108,7 @@ app-tareas .acciones {
 }
 
 .btn--chico {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   padding: 0.4rem 0.9rem;
 }
 
@@ -1102,7 +1117,7 @@ app-tareas .acciones {
   background: none;
   padding: 0;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   font-weight: 600;
   color: var(--color-primary);
   cursor: pointer;
@@ -1142,7 +1157,7 @@ app-tareas .acciones {
 
 .desplegable__titulo,
 .filtro-grupo__titulo {
-  font-size: 0.7rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1165,7 +1180,7 @@ app-tareas .acciones {
 
 .atajo {
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--texto-secundario);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   border-radius: 999px;
@@ -1188,7 +1203,7 @@ app-tareas .acciones {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }
 
@@ -1196,7 +1211,7 @@ app-tareas .acciones {
 .filtro-campo input,
 .filtro-campo select {
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--texto-secundario);
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -1221,7 +1236,7 @@ app-tareas .acciones {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
@@ -1266,7 +1281,7 @@ app-tareas .acciones {
   border-radius: 12px;
   border: 1px solid var(--borde, var(--color-border));
   background: var(--fondo, var(--color-surface));
-  font-size: 0.95rem;
+  font-size: var(--texto-cuerpo);
   color: var(--color-ink);
 }
 
@@ -1317,7 +1332,7 @@ app-tareas .acciones {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.82rem;
+  font-size: var(--texto-secundario);
 }
 
 .consumo__fila span {
@@ -1356,7 +1371,7 @@ app-tareas .acciones {
 
 .consumo__detalle {
   margin-top: 0.2rem;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }
 
@@ -1364,7 +1379,7 @@ app-tareas .acciones {
 .tabla-obras {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .tabla-obras th {
@@ -1372,7 +1387,7 @@ app-tareas .acciones {
   top: 0;
   z-index: 1;
   background: var(--color-surface);
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   color: var(--color-text-muted);
   text-align: left;
@@ -1439,7 +1454,7 @@ app-tareas .acciones {
 
 .avisos__cabecera h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--texto-destacado);
   color: var(--color-ink);
 }
 
@@ -1450,7 +1465,7 @@ app-tareas .acciones {
 }
 
 .conteo {
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
@@ -1514,19 +1529,19 @@ app-tareas .acciones {
 
 .aviso__texto {
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: var(--texto-cuerpo);
   color: var(--color-ink);
 }
 
 .aviso__texto p {
   margin: 0.15rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
 }
 
 .aviso__obra {
   display: block;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 600;
   color: var(--color-primary);
   text-decoration: none;
@@ -1544,7 +1559,7 @@ app-tareas .acciones {
 
 .todo-ok p {
   margin: 0.1rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
 }
 
 .todo-ok__icono {
@@ -1568,7 +1583,7 @@ app-tareas .acciones {
 }
 
 .atrasadas__titulo {
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1582,7 +1597,7 @@ app-tareas .acciones {
   align-items: center;
   gap: 0.6rem;
   padding: 0.35rem 0;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
 }
 
 .atrasada + .atrasada {
@@ -1619,7 +1634,7 @@ app-tareas .acciones {
 }
 
 .atrasada__dias {
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
@@ -1656,7 +1671,7 @@ app-tareas .acciones {
   padding: 2rem 1rem;
   text-align: center;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
   border: 1px dashed var(--color-border);
   border-radius: 12px;
 }
@@ -1668,7 +1683,7 @@ app-tareas .acciones {
 }
 
 .consumo__monto {
-  font-size: 0.78rem;
+  font-size: var(--texto-secundario);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -1681,6 +1696,26 @@ app-tareas .acciones {
 .aviso__fecha {
   display: block;
   margin-bottom: 0.1rem;
-  font-size: 0.7rem;
+  font-size: var(--texto-chico);
+  color: var(--color-text-muted);
+}
+
+/* Montos actualizados por índice CAC (Certificaciones y Cobranzas): valor y, debajo, un cartelito
+   que dice con qué índice se actualizó. */
+.monto-cac {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.nota-cac {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--texto-chico);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-primary-dark);
+}
+
+.nota-cac--gris {
   color: var(--color-text-muted);
 }

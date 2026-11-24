@@ -5,33 +5,47 @@ interface Pregunta {
   respuesta: string;
 }
 
-// Preguntas frecuentes de ejemplo: se reemplazan por las definitivas cuando el sistema esté
-// más desarrollado.
+// Preguntas frecuentes: lo básico para usar el sistema, en pocas líneas.
 const PREGUNTAS: Pregunta[] = [
   {
-    pregunta: '¿Cómo creo un proyecto nuevo?',
+    pregunta: '¿Cómo cargo una obra nueva?',
     respuesta:
-      'Desde el menú, entrá a Proyectos y usá el botón "Nuevo proyecto". Solo pueden hacerlo los roles con permiso para dar de alta proyectos.',
+      'En Proyectos, arrastrá (o elegí) el Excel del presupuesto, revisá los datos y tocá "Crear proyecto". El sistema arma solo las tareas y el presupuesto de la obra.',
   },
   {
-    pregunta: '¿Cómo cambio el estado de una tarea?',
+    pregunta: '¿Cómo sé si una obra va atrasada?',
     respuesta:
-      'En el tablero de tareas, elegí el nuevo estado en la tarjeta de la tarea. Podés cambiar las tareas que tenés asignadas.',
+      'En la solapa Carga de fechas cargá las fechas y fijá la línea base. Después, el Gantt y los Indicadores muestran el desvío de cada tarea: verde en fecha, naranja en riesgo y rojo desviada.',
+  },
+  {
+    pregunta: '¿Dónde cargo los gastos de la obra?',
+    respuesta:
+      'En la solapa Costos reales. Así podés comparar lo gastado contra lo presupuestado en cada rubro.',
+  },
+  {
+    pregunta: '¿Cómo registro una certificación y su cobro?',
+    respuesta:
+      'En la solapa Certificaciones usá "Nueva certificación". Cuando el cliente pague, tocá "Registrar cobro". La primera suele ser el anticipo del 30 %.',
+  },
+  {
+    pregunta: '¿Qué significa "actualizado con el índice CAC"?',
+    respuesta:
+      'Lo que falta cobrar se lleva a valores de hoy según el aumento del índice CAC desde el mes del presupuesto. Si el índice del mes todavía no salió, se usa el del mes anterior. Lo ya cobrado no cambia.',
+  },
+  {
+    pregunta: '¿Qué son los avisos?',
+    respuesta:
+      'Alertas automáticas cuando una obra se atrasa, gasta más de lo previsto o tiene saldos sin certificar o sin cobrar. Las ves en la campanita y en la pantalla Avisos.',
+  },
+  {
+    pregunta: '¿Cómo cambio mi contraseña?',
+    respuesta:
+      'Abrí tu usuario (abajo en la barra lateral) y entrá a "Mi perfil". Si la olvidaste, usá "¿Olvidaste tu contraseña?" en el inicio de sesión.',
   },
   {
     pregunta: '¿Por qué no veo algunas opciones del menú?',
     respuesta:
-      'Cada rol tiene acceso a ciertas pantallas. Si necesitás ver otra sección, pedile al administrador que revise los permisos de tu rol.',
-  },
-  {
-    pregunta: 'Olvidé mi contraseña, ¿qué hago?',
-    respuesta:
-      'En la pantalla de inicio de sesión usá "¿Olvidaste tu contraseña?". Te llega un enlace por correo para elegir una nueva.',
-  },
-  {
-    pregunta: '¿Cuánto dura mi sesión?',
-    respuesta:
-      'Depende de tu rol. Cuando la sesión vence, el sistema te lleva de nuevo al inicio de sesión.',
+      'Cada rol tiene acceso a ciertas pantallas. Si necesitás otra sección, pedile al administrador que revise los permisos de tu rol.',
   },
 ];
 
@@ -85,7 +99,7 @@ const PREGUNTAS: Pregunta[] = [
     .faq__item p {
       margin: 0.5rem 0 0;
       color: var(--color-text);
-      font-size: 0.9rem;
+      font-size: var(--texto-cuerpo);
       line-height: 1.5;
     }
   `,

@@ -22,7 +22,7 @@
   border-radius: 12px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 0.9rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .unico .badge,
@@ -43,5 +43,5 @@
 
 .desplazable a {
   color: var(--color-primary);
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
 }

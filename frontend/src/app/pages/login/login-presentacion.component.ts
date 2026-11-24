@@ -120,7 +120,7 @@ const FUNCIONES: Funcion[] = [
     .bajada {
       max-width: 32rem;
       margin: 0 0 3rem;
-      font-size: 1.05rem;
+      font-size: var(--texto-titulo);
       line-height: 1.6;
       color: #4b5563;
     }
@@ -147,7 +147,7 @@ const FUNCIONES: Funcion[] = [
       background: rgba(255, 255, 255, 0.92);
       box-shadow: 0 8px 20px -14px rgba(15, 40, 90, 0.4);
       color: #0f172a;
-      font-size: 0.86rem;
+      font-size: var(--texto-cuerpo);
       line-height: 1.25;
       overflow: hidden;
       cursor: default;
@@ -174,7 +174,7 @@ const FUNCIONES: Funcion[] = [
       padding: 0.8rem;
       background: var(--tono);
       color: #fff;
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
       font-weight: 500;
       line-height: 1.4;
       opacity: 0;

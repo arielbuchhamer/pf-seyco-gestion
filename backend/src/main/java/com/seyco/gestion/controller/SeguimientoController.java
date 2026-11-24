@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.seyco.gestion.dto.SeguimientoDtos.Cobranzas;
 import com.seyco.gestion.dto.SeguimientoDtos.Indicadores;
 import com.seyco.gestion.dto.SeguimientoDtos.Portafolio;
+import com.seyco.gestion.dto.SeguimientoDtos.ActualizacionCac;
 import com.seyco.gestion.dto.SeguimientoDtos.ResumenCertificacion;
 import com.seyco.gestion.entity.Certificacion;
 import com.seyco.gestion.entity.CostoReal;
@@ -162,6 +163,13 @@ public class SeguimientoController {
 	@PreAuthorize("hasAuthority('proyectos:leer')")
 	public ResumenCertificacion resumenCertificaciones(@PathVariable Long proyectoId) {
 		return certificacionService.resumen(proyectoId);
+	}
+
+	// Lo pendiente de cobro actualizado a hoy con el índice CAC.
+	@GetMapping("/proyectos/{proyectoId}/certificaciones/actualizacion-cac")
+	@PreAuthorize("hasAuthority('proyectos:leer')")
+	public ActualizacionCac actualizacionCac(@PathVariable Long proyectoId) {
+		return certificacionService.actualizacionCac(proyectoId);
 	}
 
 	@GetMapping("/proyectos/{proyectoId}/certificaciones/excel")

@@ -136,7 +136,7 @@ export interface AnclaMenu {
       border-radius: 50%;
       background: var(--color-primary-fondo-oscuro);
       color: #fff;
-      font-size: 0.85rem;
+      font-size: var(--texto-cuerpo);
       font-weight: 600;
     }
     .tarjeta__datos {
@@ -144,7 +144,7 @@ export interface AnclaMenu {
       flex-direction: column;
       min-width: 0;
       color: var(--color-text);
-      font-size: 0.9rem;
+      font-size: var(--texto-cuerpo);
     }
     .tarjeta__datos strong,
     .tarjeta__datos span {
@@ -154,7 +154,7 @@ export interface AnclaMenu {
     }
     .tarjeta__datos span {
       color: var(--color-text-muted);
-      font-size: 0.8rem;
+      font-size: var(--texto-secundario);
     }
     .opcion {
       font: inherit;
@@ -168,7 +168,7 @@ export interface AnclaMenu {
       border-radius: var(--radius-sm);
       background: none;
       color: var(--color-text);
-      font-size: 0.9rem;
+      font-size: var(--texto-cuerpo);
       text-align: left;
       cursor: pointer;
     }

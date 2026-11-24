@@ -1,7 +1,7 @@
 # Base de datos
 
 Scripts para crear la base `seyco` a mano (PostgreSQL 16), separados por módulo.
-El diagrama de todas las tablas está en [DER.png](DER.png).
+El diagrama de todas las tablas (DER.png) se guarda sólo en local: no se sube al repositorio.
 
 > El backend también crea las tablas solo al arrancar (`ddl-auto=update`). Estos scripts
 > sirven para crear la base desde pgAdmin y como guía del modelo.

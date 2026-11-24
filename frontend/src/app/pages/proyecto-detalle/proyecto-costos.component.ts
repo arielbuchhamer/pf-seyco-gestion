@@ -140,8 +140,8 @@ const CAMPO_RUBRO: Record<Rubro, keyof TotalesRubro> = {
     .barra div { height: 100%; background: var(--color-primary); border-radius: 999px; }
     .barra div.excedida { background: var(--color-danger); }
     .acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .filtro { font: inherit; font-size: 0.8rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0 0.6rem; min-height: 2.25rem; background: var(--color-surface); }
-    .btn-chico-primario { font-size: 0.8rem; padding: 0.45rem 0.9rem; }
+    .filtro { font: inherit; font-size: var(--texto-secundario); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0 0.6rem; min-height: 2.25rem; background: var(--color-surface); }
+    .btn-chico-primario { font-size: var(--texto-secundario); padding: 0.45rem 0.9rem; }
   `,
 })
 export class ProyectoCostosComponent {

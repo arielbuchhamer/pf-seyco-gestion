@@ -82,15 +82,15 @@ import { PaginadorComponent, paginacion } from '../../shared/paginador/paginador
 
     .usd { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
     .usd div { display: flex; flex-direction: column; gap: 0.15rem; }
-    .usd strong { font-size: 1.15rem; color: var(--color-ink); }
-    .usd small { font-size: 0.72rem; }
+    .usd strong { font-size: var(--texto-titulo); color: var(--color-ink); }
+    .usd small { font-size: var(--texto-chico); }
     .consumo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
-    .consumo__fila { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.82rem; }
+    .consumo__fila { display: flex; justify-content: space-between; gap: 0.5rem; font-size: var(--texto-secundario); }
     .consumo__fila i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 0.4rem; }
     .consumo__monto { color: var(--color-text-muted); white-space: nowrap; }
     .consumo__barra { height: 6px; margin-top: 0.3rem; background: var(--color-border); border-radius: 999px; overflow: hidden; }
     .consumo__barra div { height: 100%; border-radius: 999px; }
-    .vacio-grafico { color: var(--color-text-muted); font-size: 0.85rem; margin: 0.5rem 0; }
+    .vacio-grafico { color: var(--color-text-muted); font-size: var(--texto-cuerpo); margin: 0.5rem 0; }
     @media (max-width: 640px) { .usd { grid-template-columns: 1fr; } }
   `,
 })

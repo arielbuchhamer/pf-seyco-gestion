@@ -42,11 +42,10 @@
 }
 
 .btn-accion {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   padding: 0.45rem 0.9rem;
 }
 
-.etapa,
 .barra-cambios {
   display: flex;
   align-items: center;
@@ -54,17 +53,23 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.75rem 1.4rem;
-  font-size: 0.85rem;
+  font-size: var(--texto-cuerpo);
 }
 
+/* Cartel de etapa: mismo estilo que los demás carteles (resumen-obra); azul en planificación,
+   verde (resumen-obra--ok) en seguimiento. */
 .etapa {
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
-  border-left: 4px solid var(--color-primary);
+  margin: 0 1.4rem 0.9rem;
+  flex-wrap: wrap;
 }
 
-.etapa--seguimiento {
-  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
-  border-left-color: var(--color-success);
+.etapa:not(.resumen-obra--ok) {
+  --fondo: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
+  --borde: color-mix(in srgb, var(--color-primary) 30%, var(--color-surface));
+}
+
+.etapa > div {
+  flex: 1;
 }
 
 .etapa__falta {
@@ -91,7 +96,7 @@
   width: 100%;
   min-width: 56rem;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--texto-cuerpo);
 }
 
 .arbol th,
@@ -109,7 +114,7 @@
 
 .arbol th {
   border-top: 0;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -152,7 +157,7 @@
   padding: 0.1rem 0.4rem;
   border-radius: 6px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   color: #fff;
   background: var(--color-primary);
@@ -194,14 +199,14 @@
 }
 
 .fecha {
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   font-weight: 400;
   white-space: nowrap;
 }
 
 .fecha-input {
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--texto-secundario);
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-surface));
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.4rem;
@@ -216,7 +221,7 @@
 .desvio,
 .situacion {
   display: inline-block;
-  font-size: 0.72rem;
+  font-size: var(--texto-chico);
   font-weight: 700;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
@@ -261,7 +266,7 @@
   margin: 0;
   padding: 0.75rem 1.4rem;
   border-top: 1px solid var(--color-border);
-  font-size: 0.75rem;
+  font-size: var(--texto-chico);
   color: var(--color-text-muted);
 }
 
